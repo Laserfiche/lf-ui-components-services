@@ -100,7 +100,7 @@ steps:
     testResultsFiles: 'junit.xml'
 
 - task: Npm@0
-  displayName: 'npm version laserfiche-ui-components-services'
+  displayName: 'npm version lf-ui-components-services'
   inputs:
     cwd: './'
     command: version
@@ -119,7 +119,7 @@ steps:
     NPM_AUTH_TOKEN: $(npmauthtoken)
 
 - task: Npm@1
-  displayName: 'publish to @laserfiche/laserfiche-ui-components-services'
+  displayName: 'publish to @laserfiche/lf-ui-components-services'
   inputs:
     command: 'custom'
     workingDir: './'

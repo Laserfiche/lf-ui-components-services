@@ -1,7 +1,7 @@
 {
-  "name": "@laserfiche/laserfiche-ui-components-services",
-  "version": "4.0.0",
-  "description": "A library for services that interact with the Laserfiche API and can be used by laserfiche-ui-components",
+  "name": "@laserfiche/lf-ui-components-services",
+  "version": "3.0.0",
+  "description": "A library for services that interact with the Laserfiche API and can be used by lf-ui-components",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://v-dev-tfs.laserfiche.com/DefaultCollection/Integrations/_git/laserfiche-ui-components-services"
+    "url": "https://github.com/Laserfiche/lf-ui-components-services"
   },
   "keywords": [],
   "author": "",
