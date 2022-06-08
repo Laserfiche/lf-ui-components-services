@@ -1,0 +1,44 @@
+{
+  "name": "@laserfiche/laserfiche-ui-components-services",
+  "version": "4.0.0",
+  "description": "A library for services that interact with the Laserfiche API and can be used by laserfiche-ui-components",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "test": "jest",
+    "test:ci": "npm run test -- --watchAll=false --reporters=default --reporters=jest-junit",
+    "lint": "eslint . --ext .ts",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://v-dev-tfs.laserfiche.com/DefaultCollection/Integrations/_git/laserfiche-ui-components-services"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@laserfiche/lf-js-utils": "^3.0.5",
+    "@laserfiche/lf-repository-api-client": "^1.0.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.16.7",
+    "@babel/plugin-transform-modules-commonjs": "^7.16.8",
+    "@laserfiche/types-laserfiche-ui-components": "^3.0.4",
+    "@types/jest": "^27.4.0",
+    "@types/node": "^17.0.5",
+    "@typescript-eslint/eslint-plugin": "^5.8.1",
+    "@typescript-eslint/parser": "^5.8.1",
+    "babel-jest": "^27.4.6",
+    "eslint": "^8.5.0",
+    "jest": "^27.4.5",
+    "jest-codemods": "^0.25.0",
+    "jest-junit": "^13.0.0",
+    "ts-jest": "^27.1.5",
+    "ts-node": "^10.4.0",
+    "typescript": "4.2.4"
+  }
+}

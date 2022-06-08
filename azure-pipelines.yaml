@@ -1,0 +1,130 @@
+# Node.js
+# Build a general Node.js project with npm.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+
+trigger:
+- master
+
+parameters:
+- name: isProduction
+  displayName: isProduction
+  type: boolean
+  default: False
+
+name: $(Build.BuildId)
+
+pool:
+  name: Release Build Agents
+  demands:
+  - Agent.OS -equals Linux
+
+workspace:
+    clean: all
+
+variables:
+- group: LFNPMPackages
+
+- name: MAJOR_VERSION
+  value: '3'
+- name: MINOR_VERSION
+  value: '0'
+- name: PATCH_VERSION
+  value: '0'
+- name: NODE_EXTRA_CA_CERTS
+  value: '/etc/ssl/certs/ca-certificates.crt'
+- name: CURRENT_VERSION
+  value: '$(MAJOR_VERSION).$(MINOR_VERSION).$(PATCH_VERSION)'
+
+- name: NpmPackageVersion
+  ${{ if eq(parameters.isProduction, True)}}:
+    value: '$(CURRENT_VERSION)'
+  ${{ if eq(parameters.isProduction, False)}}:
+    value: '$(CURRENT_VERSION)-preview-$(Build.BuildNumber)'
+
+steps:
+
+- script: echo '$(npmauthtoken)'
+  displayName: 'Echo npmauthtoken'
+
+- script: echo '$(Build.BuildNumber)'
+  displayName: 'Echo build number'
+
+- script: echo '$(NpmPackageVersion)'
+  displayName: 'Echo NPM package version'
+
+- task: NodeTool@0
+  displayName: 'Use Node 14.x'
+  inputs:
+    versionSpec: '14.x'
+  env:
+    NPM_AUTH_TOKEN: $(npmauthtoken)
+
+- script: 'git config user.email "fakebuilduser@laserfiche.com"'
+  displayName: 'Config git so we can use npm version (user.email)'
+
+- script: 'git config user.name "fakebuilduser"'
+  displayName: 'Config git so we can use npm version (user.name)'
+
+- task: Npm@1
+  displayName: 'npm ci'
+  inputs:
+    command: custom
+    verbose: true
+    customCommand: 'ci'
+  env:
+    NPM_AUTH_TOKEN: $(npmauthtoken)
+
+- task: Npm@1
+  displayName: 'npm run lint'
+  inputs:
+    command: custom
+    verbose: false
+    customCommand: 'run lint'
+  timeoutInMinutes: 5
+  env:
+    NPM_AUTH_TOKEN: $(npmauthtoken)
+
+- task: Npm@1
+  displayName: npm run test
+  inputs:
+    command: 'custom'
+    customCommand: 'run test:ci'
+  env:
+    NPM_AUTH_TOKEN: $(npmauthtoken)
+
+- task: PublishTestResults@2
+  displayName: 'Report Test Results'
+  condition: succeededOrFailed() # because otherwise we won't know what tests failed
+  inputs:
+    testResultsFiles: 'junit.xml'
+
+- task: Npm@0
+  displayName: 'npm version laserfiche-ui-components-services'
+  inputs:
+    cwd: './'
+    command: version
+    arguments: '$(NpmPackageVersion) --no-git-tag-version'
+  env:
+    NPM_AUTH_TOKEN: $(npmauthtoken)
+  
+- task: Npm@1
+  displayName: 'npm run build'
+  inputs:
+    command: custom
+    verbose: false
+    customCommand: 'run build'
+  timeoutInMinutes: 5
+  env:
+    NPM_AUTH_TOKEN: $(npmauthtoken)
+
+- task: Npm@1
+  displayName: 'publish to @laserfiche/laserfiche-ui-components-services'
+  inputs:
+    command: 'custom'
+    workingDir: './'
+    customCommand: 'publish'
+    customRegistry: 'useFeed'
+    customFeed: 'b4aac291-96e7-43d0-abcb-8fb49e0ab410'
+  env:
+    NPM_AUTH_TOKEN: $(npmauthtoken)
