@@ -1,8 +1,8 @@
 # lf-ui-components-services
 
-Laserfiche javascript utility functions and localization service.
+This library contains the data sources implementation to connect the [Laserfiche UI Components](https://www.npmjs.com/package/@laserfiche/lf-ui-components) to live data from Laserfiche API services.
 
-[Documentation](https://unpkg.com/@laserfiche/lf-ui-components-services@3/dist/doc/index.html)
+[Documentation](https://developer.laserfiche.com/)
 
 ## Getting started
 
