@@ -10,7 +10,7 @@ This library contains the data sources implementation to connect the [Laserfiche
 
 ## Contribution
 
-We welcome contributions and feedback. Please follow our [contributing guidelines](https://github.com/Laserfiche/lf-ui-components-services/blob/main/CONTRIBUTING.md).
+We welcome contributions and feedback. Please follow our [contributing guidelines](./CONTRIBUTING.md).
 
 ### Development prerequisite
 
