@@ -27,7 +27,7 @@
   "devDependencies": {
     "@babel/core": "^7.16.7",
     "@babel/plugin-transform-modules-commonjs": "^7.16.8",
-    "@laserfiche/types-laserfiche-ui-components": "^3.0.4",
+    "@laserfiche/types-lf-ui-components": "^12.0.0",
     "@types/jest": "^27.4.0",
     "@types/node": "^17.0.5",
     "@typescript-eslint/eslint-plugin": "^5.8.1",
