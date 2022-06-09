@@ -1,5 +1,5 @@
 import { EntryType } from "@laserfiche/lf-repository-api-client";
-import { TreeNode } from "@laserfiche/types-laserfiche-ui-components";
+import { TreeNode } from "@laserfiche/types-lf-ui-components";
 
 export interface LfRepoTreeNode extends TreeNode {
   parentId?: string;

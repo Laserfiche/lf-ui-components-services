@@ -1,4 +1,4 @@
-import { LfFieldInfo, TemplateFieldInfo, FieldType, FieldFormat } from '@laserfiche/types-laserfiche-ui-components';
+import { LfFieldInfo, TemplateFieldInfo, FieldType, FieldFormat } from '@laserfiche/types-lf-ui-components';
 import { WFieldInfo, WFieldType, WFieldFormat, TemplateFieldInfo as ApiTemplateFieldInfo } from '@laserfiche/lf-repository-api-client';
 import { validateDefined } from '@laserfiche/lf-js-utils';
 

@@ -1,7 +1,7 @@
 import {
   FieldValue, FieldValues, LfFieldContainerService, LfFieldInfo,
   TemplateFieldInfo, TemplateInfo
-} from '@laserfiche/types-laserfiche-ui-components';
+} from '@laserfiche/types-lf-ui-components';
 import { LfDefaultFieldsService } from '../helper-types/lf-default-fields.service.js';
 import { convertApiToLfFieldInfo, convertApiToLfTemplateFieldInfo } from '../utils/types-utils.js';
 import {

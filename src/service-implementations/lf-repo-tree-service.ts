@@ -1,4 +1,4 @@
-import { LfTreeService } from '@laserfiche/types-laserfiche-ui-components';
+import { LfTreeService } from '@laserfiche/types-lf-ui-components';
 import { LfRepoTreeEntryType, LfRepoTreeNode } from '../helper-types/lf-tree-types.js';
 import {
     LfLocalizationService,

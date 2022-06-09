@@ -1,4 +1,4 @@
-import { FieldValues, FieldType, TemplateFieldInfo } from '@laserfiche/types-laserfiche-ui-components';
+import { FieldValues, FieldType, TemplateFieldInfo } from '@laserfiche/types-lf-ui-components';
 import { LfFieldsService } from './lf-fields.service.js';
 import { TemplateFieldInfo as ApiTemplateFieldInfo, WFieldType } from '@laserfiche/lf-repository-api-client';
 import { RepositoryApiClientMockBuilder } from './repository-api-client-mock-builder.js';

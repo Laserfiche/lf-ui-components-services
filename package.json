@@ -11,7 +11,8 @@
     "test": "jest",
     "test:ci": "npm run test -- --watchAll=false --reporters=default --reporters=jest-junit",
     "lint": "eslint . --ext .ts",
-    "build": "tsc"
+    "build": "tsc",
+    "generate-doc": "npx typedoc src/index.ts --out ./dist/doc --excludePrivate"
   },
   "repository": {
     "type": "git",
@@ -27,13 +28,14 @@
   "devDependencies": {
     "@babel/core": "^7.16.7",
     "@babel/plugin-transform-modules-commonjs": "^7.16.8",
-    "@laserfiche/types-laserfiche-ui-components": "^3.0.4",
+    "@laserfiche/types-lf-ui-components": "^12.0.0",
     "@types/jest": "^27.4.0",
     "@types/node": "^17.0.5",
     "@typescript-eslint/eslint-plugin": "^5.8.1",
     "@typescript-eslint/parser": "^5.8.1",
     "babel-jest": "^27.4.6",
     "eslint": "^8.5.0",
+    "isomorphic-fetch": "^3.0.0",
     "jest": "^27.4.5",
     "jest-codemods": "^0.25.0",
     "jest-junit": "^13.0.0",
