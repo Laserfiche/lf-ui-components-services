@@ -88,7 +88,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: npm_preview
     if: ${{ (github.run_attempt != 1) }}
-    needs: [ build ] # wait for build to finish
+    needs: [ build_and_test ] # wait for build to finish
     steps:
       - uses: actions/checkout@v2
         with:
@@ -130,7 +130,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: npm_production
     if: ${{ (github.run_attempt != 1) }}
-    needs: [ build ]
+    needs: [ build_and_test ]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -169,7 +169,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: publish_to_S3
     if: ${{ (github.run_attempt != 1) }}
-    needs: [ build ]
+    needs: [ build_and_test ]
     steps:
       - uses: actions/checkout@v2
         with:
