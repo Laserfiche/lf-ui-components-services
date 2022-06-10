@@ -192,7 +192,6 @@ export class LfRepoTreeService implements LfTreeService {
 
     private async createNodeAsync(entry: Entry, fullPath?: string): Promise<LfRepoTreeNode | undefined> {
         let treeNode: LfRepoTreeNode | undefined;
-        console.log('entryType', EntryType)
         if (entry.entryType) {
             if (entry.entryType === EntryType.Folder &&
                 this.viewableEntryTypes.includes(LfRepoTreeEntryType.Folder)) {
