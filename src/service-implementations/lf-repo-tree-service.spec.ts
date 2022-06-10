@@ -44,7 +44,8 @@ const mockChildren: Entry[] = [
 ]
 
 const mockRepoClient = new RepositoryApiClientMockBuilder()
-    .withRepoId('r-23456789')
+    .withGetCurrentRepoId(async () => { return 'r-23456789' })
+    .withGetCurrentRepoName(async () => { return 'Test Name' })
     .withEntriesClient({
         getEntryListing: jest.fn((args: {
             repoId: string;
