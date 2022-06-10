@@ -180,6 +180,7 @@ jobs:
         uses: actions/download-artifact@v2.1.0
         with:
           name: doc-publish-artifact
+          path: docs
 
       - name: Test
         run: ls
@@ -192,4 +193,4 @@ jobs:
           aws-region: us-west-2 # Use your bucket region here
 
       - name: Upload docs to S3 bucket
-        run: aws s3 sync ./doc-publish-artifact s3://apiserver-publish-client-library-docs/${GITHUB_REPOSITORY##*/}/docs/${GITHUB_REF##*/} --delete
+        run: aws s3 sync ./docs s3://apiserver-publish-client-library-docs/${GITHUB_REPOSITORY##*/}/docs/${GITHUB_REF##*/} --delete
