@@ -30,7 +30,8 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
       return Promise.resolve({ value: mockTemplateFields, init: undefined, toJSON: undefined });
     })
   })
-  .withRepoId('r-23456789')
+  .withGetCurrentRepoId(async () => { return 'r-23456789' })
+  .withGetCurrentRepoName(async () => { return 'Test Name' })
   .build();
 
 describe('LfFieldsService', () => {
