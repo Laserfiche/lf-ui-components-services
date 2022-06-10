@@ -88,7 +88,7 @@ describe('LfRepoTreeService', () => {
         expect(service).toBeTruthy();
     });
 
-    it('should create folder if entryType is Folder', () => {
+    it('should create folder if entryType is Folder', async () => {
         const expectedNode: LfRepoTreeNode = {
             name: 'DummyFolder',
             path: '\\DummyFolder',
@@ -100,11 +100,11 @@ describe('LfRepoTreeService', () => {
             isLeaf: false,
         };
         // @ts-ignore
-        const createdNode = service.createNode(dummyFolderEntry);
+        const createdNode = await service.createNodeAsync(dummyFolderEntry);
         expect(createdNode).toEqual(expectedNode);
     });
 
-    it('should rewrite root folder name to \\ if name is empty', () => {
+    it('should rewrite root folder name to \\ if name is empty', async () => {
         const expectedNode: LfRepoTreeNode = {
             name: '\\',
             path: '\\',
@@ -116,11 +116,11 @@ describe('LfRepoTreeService', () => {
             isLeaf: false,
         };
         // @ts-ignore
-        const createdNode = service.createNode(dummyFolderRootEntry);
+        const createdNode = await service.createNodeAsync(dummyFolderRootEntry);
         expect(createdNode).toEqual(expectedNode);
     });
 
-    it('should create leaf node if entryType is Document', () => {
+    it('should create leaf node if entryType is Document', async () => {
         const expectedNode: LfRepoTreeNode = {
             name: 'DummyDocument',
             path: '\\DummyDocument',
@@ -132,13 +132,13 @@ describe('LfRepoTreeService', () => {
             isLeaf: true,
         };
         // @ts-ignore
-        const createdNode = service.createNode(dummyDocumentEntry);
+        const createdNode = await service.createNodeAsync(dummyDocumentEntry);
         expect(createdNode).toEqual(expectedNode);
     });
 
-    it('should return undefined TreeNode if entryType not set', () => {
+    it('should return undefined TreeNode if entryType not set', async () => {
         // @ts-ignore
-        const createdNode = service.createNode(dummyInvalidEntry);
+        const createdNode = await service.createNodeAsync(dummyInvalidEntry);
         expect(createdNode).toEqual(undefined);
     });
 
@@ -175,7 +175,7 @@ describe('LfRepoTreeService', () => {
         // Act
         const rootNodes = await service.getRootNodesAsync();
         // @ts-ignore
-        const expectedNode = service.createNode(mockChildren[0]);
+        const expectedNode = await service.createNodeAsync(mockChildren[0]);
 
         // Assert
         expect(rootNodes.length).toEqual(1);
