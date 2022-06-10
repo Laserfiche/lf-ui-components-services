@@ -104,9 +104,9 @@ describe('LfRepoTreeService', () => {
         expect(createdNode).toEqual(expectedNode);
     });
 
-    it('should rewrite root folder name to \\ if name is empty', async () => {
+    it('should rewrite root folder name to repo name if name is empty', async () => {
         const expectedNode: LfRepoTreeNode = {
-            name: '\\',
+            name: 'Test Name',
             path: '\\',
             id: '1',
             parentId: undefined,
