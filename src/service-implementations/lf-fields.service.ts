@@ -113,12 +113,10 @@ export class LfFieldsService implements LfFieldContainerService {
     }
 
     const currentDynamicValues: { [key: string]: string } = this.getDynamicFieldValues(currentValues);
-    const dynamicRequest: GetDynamicFieldLogicValueRequest = {
+    const dynamicRequest: GetDynamicFieldLogicValueRequest = new GetDynamicFieldLogicValueRequest({
       templateId,
-      fieldValues: currentDynamicValues,
-      init: undefined,
-      toJSON: undefined
-    };
+      fieldValues: currentDynamicValues
+    });
 
     // Have to call get_dynamic_field_values on an entry but we don't have an entry yet
     const hardcodedRootEntryId: number = 1;

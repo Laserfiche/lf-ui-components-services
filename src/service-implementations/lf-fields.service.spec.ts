@@ -1,11 +1,11 @@
 import { FieldValues, FieldType, TemplateFieldInfo } from '@laserfiche/types-lf-ui-components';
 import { LfFieldsService } from './lf-fields.service.js';
-import { TemplateFieldInfo as ApiTemplateFieldInfo, WFieldType } from '@laserfiche/lf-repository-api-client';
+import { ODataValueContextOfIListOfTemplateFieldInfo, TemplateFieldInfo as ApiTemplateFieldInfo, WFieldType } from '@laserfiche/lf-repository-api-client';
 import { RepositoryApiClientMockBuilder } from './repository-api-client-mock-builder.js';
 
 const mockTemplateFields: ApiTemplateFieldInfo[] = [
-  { id: 1, name: 'test', fieldType: WFieldType.String, init: undefined, toJSON: undefined },
-  { id: 2, name: 'test', fieldType: WFieldType.String, init: undefined, toJSON: undefined },
+  new ApiTemplateFieldInfo({ id: 1, name: 'test', fieldType: WFieldType.String }),
+  new ApiTemplateFieldInfo({ id: 2, name: 'test', fieldType: WFieldType.String }),
 ];
 
 const mockRepoClient = new RepositoryApiClientMockBuilder()
@@ -15,7 +15,17 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
     }),
   })
   .withTemplateDefinitionsClient({
-    getTemplateFieldDefinitionsByTemplateName: jest.fn((args: { repoId: string; templateName: string; prefer?: string; culture?: string; select?: string; orderby?: string; top?: number; skip?: number; count?: boolean; }) => Promise.resolve({ value: mockTemplateFields, init: undefined, toJSON: undefined })),
+    getTemplateFieldDefinitionsByTemplateName: jest.fn((args: {
+      repoId: string;
+      templateName: string;
+      prefer?: string;
+      culture?: string;
+      select?: string;
+      orderby?: string;
+      top?: number;
+      skip?: number;
+      count?: boolean;
+    }) => Promise.resolve(new ODataValueContextOfIListOfTemplateFieldInfo({ value: mockTemplateFields }))),
     getTemplateFieldDefinitions: jest.fn((args: {
       repoId: string;
       templateId: number;
@@ -27,7 +37,7 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
       skip?: number;
       count?: boolean;
     }) => {
-      return Promise.resolve({ value: mockTemplateFields, init: undefined, toJSON: undefined });
+      return Promise.resolve(new ODataValueContextOfIListOfTemplateFieldInfo({ value: mockTemplateFields }));
     })
   })
   .withGetCurrentRepoId(async () => { return 'r-23456789' })

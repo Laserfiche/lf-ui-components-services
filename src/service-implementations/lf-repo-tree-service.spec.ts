@@ -1,31 +1,28 @@
 import { LfRepoTreeService } from './lf-repo-tree-service'
 import { LfRepoTreeEntryType, LfRepoTreeNode } from '../helper-types/lf-tree-types';
-import { Entry, PostEntryChildrenRequest, EntryType } from '@laserfiche/lf-repository-api-client';
+import { Entry, PostEntryChildrenRequest, EntryType, ODataValueContextOfIListOfEntry } from '@laserfiche/lf-repository-api-client';
 import { RepositoryApiClientMockBuilder } from './repository-api-client-mock-builder';
 
-const dummyFolderEntry: Entry = {
+const dummyFolderEntry: Entry = new Entry({
     id: 10,
     name: 'DummyFolder',
     fullPath: '\\DummyFolder',
-    entryType: EntryType.Folder,
-    init: undefined,
-    toJSON: undefined
-};
+    entryType: EntryType.Folder
+});
 
-const dummyFolderRootEntry: Entry = {
+const dummyFolderRootEntry: Entry = new Entry({
     id: 1,
     name: '',
     fullPath: '\\',
-    entryType: EntryType.Folder, init: undefined, toJSON: undefined
-};
+    entryType: EntryType.Folder
+});
 
-const dummyDocumentEntry: Entry = {
+const dummyDocumentEntry: Entry = new Entry({
     id: 11,
     name: 'DummyDocument',
     fullPath: '\\DummyDocument',
-    entryType: EntryType.Document,
-    init: undefined, toJSON: undefined
-};
+    entryType: EntryType.Document
+});
 
 const dummyInvalidEntry = {
     id: 12,
@@ -36,11 +33,11 @@ const dummyInvalidEntry = {
 let service: LfRepoTreeService;
 
 const mockChildren: Entry[] = [
-    { id: 1, name: 'root', fullPath: '\\', entryType: EntryType.Folder, parentId: 0, init: undefined, toJSON: undefined },
-    { id: 11, name: 'DocInRoot', fullPath: '\\DocInRoot', entryType: EntryType.Document, init: undefined, toJSON: undefined },
-    { id: 12, name: 'FolderInRoot', fullPath: '\\FolderInRoot', entryType: EntryType.Folder, init: undefined, toJSON: undefined },
-    { id: 13, name: 'DocInFolderInRoot', fullPath: '\\FolderInRoot\\DocInFolderInRoot', entryType: EntryType.Document, init: undefined, toJSON: undefined },
-    { id: 20, name: 'RsInFolderInRoot', fullPath: '\\FolderInRoot\\RsInFolderInRoot', entryType: EntryType.Document, init: undefined, toJSON: undefined },
+    new Entry({ id: 1, name: 'root', fullPath: '\\', entryType: EntryType.Folder, parentId: 0 }),
+    new Entry({ id: 11, name: 'DocInRoot', fullPath: '\\DocInRoot', entryType: EntryType.Document }),
+    new Entry({ id: 12, name: 'FolderInRoot', fullPath: '\\FolderInRoot', entryType: EntryType.Folder }),
+    new Entry({ id: 13, name: 'DocInFolderInRoot', fullPath: '\\FolderInRoot\\DocInFolderInRoot', entryType: EntryType.Document }),
+    new Entry({ id: 20, name: 'RsInFolderInRoot', fullPath: '\\FolderInRoot\\RsInFolderInRoot', entryType: EntryType.Document }),
 ]
 
 const mockRepoClient = new RepositoryApiClientMockBuilder()
@@ -60,9 +57,9 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
             top?: number;
             skip?: number;
             count?: boolean;
-        }) => Promise.resolve({ value: mockChildren, init: undefined, toJSON: undefined })),
+        }) => Promise.resolve(new ODataValueContextOfIListOfEntry({ value: mockChildren }))),
         getEntry: jest.fn((args: { repoId, entryId }) => {
-            let matchedChild: Entry = { init: undefined, toJSON: undefined };
+            let matchedChild: Entry = new Entry();
             mockChildren.forEach(child => {
                 if (child.id === args.entryId) {
                     matchedChild = child;
@@ -71,7 +68,7 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
             return Promise.resolve(matchedChild);
         }),
         createOrCopyEntry: jest.fn((args: { repoId: string, entryId: number, request: PostEntryChildrenRequest }) => {
-            const newFolder = { id: 100, name: args.request.name, fullPath: '\\', entryType: EntryType.Folder, parentId: 0, init: undefined, toJSON: undefined }
+            const newFolder: Entry = new Entry({ id: 100, name: args.request.name, fullPath: '\\', entryType: EntryType.Folder, parentId: 0 });
             mockChildren.push(newFolder);
             return Promise.resolve(newFolder);
         })

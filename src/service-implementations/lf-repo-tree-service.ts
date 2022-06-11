@@ -173,12 +173,10 @@ export class LfRepoTreeService implements LfTreeService {
     async addNewFolderAsync(parentNode: LfRepoTreeNode, folderName: string): Promise<void> {
         const requestParameters: { entryId: number, postEntryChildrenRequest: PostEntryChildrenRequest } = {
             entryId: parseInt(parentNode.id, 10),
-            postEntryChildrenRequest: {
+            postEntryChildrenRequest: new PostEntryChildrenRequest({
                 name: folderName,
-                entryType: PostEntryChildrenEntryType.Folder,
-                init: undefined,
-                toJSON: undefined
-            }
+                entryType: PostEntryChildrenEntryType.Folder
+            })
         }
         const repoId: string = await this.repoClient.getCurrentRepoId();
         await this.repoClient?.entriesClient.createOrCopyEntry(
