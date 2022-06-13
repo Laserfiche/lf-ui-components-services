@@ -1,31 +1,28 @@
 import { LfRepoTreeService } from './lf-repo-tree-service'
 import { LfRepoTreeEntryType, LfRepoTreeNode } from '../helper-types/lf-tree-types';
-import { Entry, PostEntryChildrenRequest, EntryType } from '@laserfiche/lf-repository-api-client';
+import { Entry, PostEntryChildrenRequest, EntryType, ODataValueContextOfIListOfEntry } from '@laserfiche/lf-repository-api-client';
 import { RepositoryApiClientMockBuilder } from './repository-api-client-mock-builder';
 
-const dummyFolderEntry: Entry = {
+const dummyFolderEntry: Entry = new Entry({
     id: 10,
     name: 'DummyFolder',
     fullPath: '\\DummyFolder',
-    entryType: EntryType.Folder,
-    init: undefined,
-    toJSON: undefined
-};
+    entryType: EntryType.Folder
+});
 
-const dummyFolderRootEntry: Entry = {
+const dummyFolderRootEntry: Entry = new Entry({
     id: 1,
     name: '',
     fullPath: '\\',
-    entryType: EntryType.Folder, init: undefined, toJSON: undefined
-};
+    entryType: EntryType.Folder
+});
 
-const dummyDocumentEntry: Entry = {
+const dummyDocumentEntry: Entry = new Entry({
     id: 11,
     name: 'DummyDocument',
     fullPath: '\\DummyDocument',
-    entryType: EntryType.Document,
-    init: undefined, toJSON: undefined
-};
+    entryType: EntryType.Document
+});
 
 const dummyInvalidEntry = {
     id: 12,
@@ -36,15 +33,16 @@ const dummyInvalidEntry = {
 let service: LfRepoTreeService;
 
 const mockChildren: Entry[] = [
-    { id: 1, name: 'root', fullPath: '\\', entryType: EntryType.Folder, parentId: 0, init: undefined, toJSON: undefined },
-    { id: 11, name: 'DocInRoot', fullPath: '\\DocInRoot', entryType: EntryType.Document, init: undefined, toJSON: undefined },
-    { id: 12, name: 'FolderInRoot', fullPath: '\\FolderInRoot', entryType: EntryType.Folder, init: undefined, toJSON: undefined },
-    { id: 13, name: 'DocInFolderInRoot', fullPath: '\\FolderInRoot\\DocInFolderInRoot', entryType: EntryType.Document, init: undefined, toJSON: undefined },
-    { id: 20, name: 'RsInFolderInRoot', fullPath: '\\FolderInRoot\\RsInFolderInRoot', entryType: EntryType.Document, init: undefined, toJSON: undefined },
+    new Entry({ id: 1, name: 'root', fullPath: '\\', entryType: EntryType.Folder, parentId: 0 }),
+    new Entry({ id: 11, name: 'DocInRoot', fullPath: '\\DocInRoot', entryType: EntryType.Document }),
+    new Entry({ id: 12, name: 'FolderInRoot', fullPath: '\\FolderInRoot', entryType: EntryType.Folder }),
+    new Entry({ id: 13, name: 'DocInFolderInRoot', fullPath: '\\FolderInRoot\\DocInFolderInRoot', entryType: EntryType.Document }),
+    new Entry({ id: 20, name: 'RsInFolderInRoot', fullPath: '\\FolderInRoot\\RsInFolderInRoot', entryType: EntryType.Document }),
 ]
 
 const mockRepoClient = new RepositoryApiClientMockBuilder()
-    .withRepoId('r-23456789')
+    .withGetCurrentRepoId(async () => { return 'r-23456789' })
+    .withGetCurrentRepoName(async () => { return 'Test Name' })
     .withEntriesClient({
         getEntryListing: jest.fn((args: {
             repoId: string;
@@ -59,9 +57,9 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
             top?: number;
             skip?: number;
             count?: boolean;
-        }) => Promise.resolve({ value: mockChildren, init: undefined, toJSON: undefined })),
+        }) => Promise.resolve(new ODataValueContextOfIListOfEntry({ value: mockChildren }))),
         getEntry: jest.fn((args: { repoId, entryId }) => {
-            let matchedChild: Entry = { init: undefined, toJSON: undefined };
+            let matchedChild: Entry = new Entry();
             mockChildren.forEach(child => {
                 if (child.id === args.entryId) {
                     matchedChild = child;
@@ -70,7 +68,7 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
             return Promise.resolve(matchedChild);
         }),
         createOrCopyEntry: jest.fn((args: { repoId: string, entryId: number, request: PostEntryChildrenRequest }) => {
-            const newFolder = { id: 100, name: args.request.name, fullPath: '\\', entryType: EntryType.Folder, parentId: 0, init: undefined, toJSON: undefined }
+            const newFolder: Entry = new Entry({ id: 100, name: args.request.name, fullPath: '\\', entryType: EntryType.Folder, parentId: 0 });
             mockChildren.push(newFolder);
             return Promise.resolve(newFolder);
         })
@@ -87,7 +85,7 @@ describe('LfRepoTreeService', () => {
         expect(service).toBeTruthy();
     });
 
-    it('should create folder if entryType is Folder', () => {
+    it('should create folder if entryType is Folder', async () => {
         const expectedNode: LfRepoTreeNode = {
             name: 'DummyFolder',
             path: '\\DummyFolder',
@@ -99,13 +97,13 @@ describe('LfRepoTreeService', () => {
             isLeaf: false,
         };
         // @ts-ignore
-        const createdNode = service.createNode(dummyFolderEntry);
+        const createdNode = await service.createNodeAsync(dummyFolderEntry);
         expect(createdNode).toEqual(expectedNode);
     });
 
-    it('should rewrite root folder name to \\ if name is empty', () => {
+    it('should rewrite root folder name to repo name if name is empty', async () => {
         const expectedNode: LfRepoTreeNode = {
-            name: '\\',
+            name: 'Test Name',
             path: '\\',
             id: '1',
             parentId: undefined,
@@ -115,11 +113,11 @@ describe('LfRepoTreeService', () => {
             isLeaf: false,
         };
         // @ts-ignore
-        const createdNode = service.createNode(dummyFolderRootEntry);
+        const createdNode = await service.createNodeAsync(dummyFolderRootEntry);
         expect(createdNode).toEqual(expectedNode);
     });
 
-    it('should create leaf node if entryType is Document', () => {
+    it('should create leaf node if entryType is Document', async () => {
         const expectedNode: LfRepoTreeNode = {
             name: 'DummyDocument',
             path: '\\DummyDocument',
@@ -131,13 +129,13 @@ describe('LfRepoTreeService', () => {
             isLeaf: true,
         };
         // @ts-ignore
-        const createdNode = service.createNode(dummyDocumentEntry);
+        const createdNode = await service.createNodeAsync(dummyDocumentEntry);
         expect(createdNode).toEqual(expectedNode);
     });
 
-    it('should return undefined TreeNode if entryType not set', () => {
+    it('should return undefined TreeNode if entryType not set', async () => {
         // @ts-ignore
-        const createdNode = service.createNode(dummyInvalidEntry);
+        const createdNode = await service.createNodeAsync(dummyInvalidEntry);
         expect(createdNode).toEqual(undefined);
     });
 
@@ -174,7 +172,7 @@ describe('LfRepoTreeService', () => {
         // Act
         const rootNodes = await service.getRootNodesAsync();
         // @ts-ignore
-        const expectedNode = service.createNode(mockChildren[0]);
+        const expectedNode = await service.createNodeAsync(mockChildren[0]);
 
         // Assert
         expect(rootNodes.length).toEqual(1);

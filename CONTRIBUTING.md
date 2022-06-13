@@ -10,7 +10,7 @@ We encourage and appreciate feedback and contribution from the community!
 
 ## <a name="coc"></a> Code of Conduct
 
- Please read and follow our [Code of Conduct](https://github.com/Laserfiche/lf-ui-components-services/blob/main/code_of_conduct.md).
+ Please read and follow our [Code of Conduct](./code_of_conduct.md).
 
 ## <a name="question"></a> Question or Problem?
 
