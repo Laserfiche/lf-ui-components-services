@@ -2,20 +2,27 @@ import { IEntriesClient, ITemplateDefinitionsClient } from "@laserfiche/lf-repos
 import { IRepositoryApiClientEx } from "../helper-types/repository-api-ex.js";
 
 export class RepositoryApiClientMockBuilder {
-    private _repoId: string | undefined;
     private _entriesClient: IEntriesClient;
     private _templateDefinitionsClient: ITemplateDefinitionsClient;
+    private _repoId: () => Promise<string>;
+    private _repoName: () => Promise<string>;
 
     build(): IRepositoryApiClientEx {
         return {
             entriesClient: this._entriesClient,
             templateDefinitionsClient: this._templateDefinitionsClient,
-            repoId: this._repoId
+            getCurrentRepoId: this._repoId,
+            getCurrentRepoName: this._repoName
         } as IRepositoryApiClientEx;
     }
 
-    withRepoId(repoId: string): RepositoryApiClientMockBuilder {
+    withGetCurrentRepoId(repoId: () => Promise<string>): RepositoryApiClientMockBuilder {
         this._repoId = repoId;
+        return this;
+    }
+
+    withGetCurrentRepoName(repoName: () => Promise<string>): RepositoryApiClientMockBuilder {
+        this._repoName = repoName;
         return this;
     }
 

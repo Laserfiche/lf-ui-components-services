@@ -27,13 +27,11 @@ export function convertApiToLfFieldInfo(val: WFieldInfo): LfFieldInfo {
 export function convertLfToApiFieldInfo(val: LfFieldInfo): WFieldInfo {
   const fieldType = convertLfToApiFieldType(val.fieldType);
   const format = val.format !== undefined ? convertLfToApiFieldFormat(val.format) : undefined;
-  const result: WFieldInfo = {
+  const result: WFieldInfo = new WFieldInfo({
     ...val,
     fieldType,
     format,
-    init: undefined,
-    toJSON: undefined
-  };
+  });
 
   if (result.format === undefined) {
     delete result.format;
