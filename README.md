@@ -2,6 +2,8 @@
 
 This library contains the data sources implementation to connect the [Laserfiche UI Components](https://www.npmjs.com/package/@laserfiche/lf-ui-components) to live data from Laserfiche API services.
 
+You can use these pre-built services to display data using the UI components.
+
 [Documentation](https://developer.laserfiche.com/)
 
 ## Getting started
