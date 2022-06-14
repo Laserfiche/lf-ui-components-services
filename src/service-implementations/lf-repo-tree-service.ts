@@ -6,7 +6,6 @@ import {
     PathUtils
 } from '@laserfiche/lf-js-utils';
 import { getFolderChildrenDefaultParametersAsync } from '../utils/repo-client-utils.js';
-import { NotificationService } from '../helper-types/lf-notification.js';
 import { Entry, PostEntryChildrenRequest, PostEntryChildrenEntryType, Shortcut, Document, ODataValueContextOfIListOfEntry, EntryType } from '@laserfiche/lf-repository-api-client';
 import { IRepositoryApiClientEx } from '../helper-types/repository-api-ex.js';
 
@@ -22,7 +21,6 @@ export class LfRepoTreeService implements LfTreeService {
 
     constructor(
         private repoClient: IRepositoryApiClientEx,
-        public notificationService?: NotificationService,
     ) { }
 
     async getParentNodeAsync(node: LfRepoTreeNode): Promise<LfRepoTreeNode | undefined> {
@@ -119,7 +117,6 @@ export class LfRepoTreeService implements LfTreeService {
             }
         }
         catch (err: any) {
-            this.notificationService?.error(`${this.localizationService.getString('ERRORS.FAILED_TO_OPEN_FOLDER')}: ${err.message}`);
             if (this.cachedChildNodes[node.id]) {
                 delete this.cachedChildNodes[node.id];
             }
