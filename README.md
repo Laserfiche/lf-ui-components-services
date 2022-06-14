@@ -7,7 +7,7 @@ This library contains the data sources implementation to connect the [Laserfiche
 ## Getting started
 
 1. `npm install @laserfiche/lf-ui-components-services`
-1. Create an instance of IRepositoryClientEx
+1. Create an instance of IRepositoryClientEx. See [IRepositoryClient documentation](https://developer.laserfiche.com/) to create partialRepoClient.
 
     ```ts
     const partialRepoClient = IRepositoryClient.createFromHttpHandler({...});
