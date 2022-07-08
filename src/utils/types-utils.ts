@@ -1,12 +1,12 @@
 import { LfFieldInfo, TemplateFieldInfo, FieldType, FieldFormat } from '@laserfiche/types-lf-ui-components';
 import { WFieldInfo, WFieldType, WFieldFormat, TemplateFieldInfo as ApiTemplateFieldInfo } from '@laserfiche/lf-repository-api-client';
-import { validateDefined } from '@laserfiche/lf-js-utils';
+import { CoreUtils } from '@laserfiche/lf-js-utils';
 
 /** @internal */
 export function convertApiToLfFieldInfo(val: WFieldInfo): LfFieldInfo {
-  const id = validateDefined(val.id, 'id');
-  const name = validateDefined(val.name, 'name')!;
-  const fieldType = convertApiToLfFieldType(validateDefined(val.fieldType, 'fieldType'));
+  const id = CoreUtils.validateDefined(val.id, 'id');
+  const name = CoreUtils.validateDefined(val.name, 'name')!;
+  const fieldType = convertApiToLfFieldType(CoreUtils.validateDefined(val.fieldType, 'fieldType'));
   const format = val.format !== undefined ? convertApiToLfFieldFormat(val.format) : undefined;
   const result: LfFieldInfo = {
     ...val,
