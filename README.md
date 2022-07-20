@@ -34,6 +34,10 @@ You can use these pre-built services to display data using the UI components.
 
 For detailed information about how to utilize these services see the sample projects available in Github (in [Angular](https://github.com/Laserfiche/lf-sample-OAuth-SPA-angular) and [React](https://github.com/Laserfiche/lf-sample-OAuth-SPA-react))
 
+## Change Log
+
+See CHANGELOG [here](./CHANGELOG.md).
+
 ## Contribution
 
 We welcome contributions and feedback. Please follow our [contributing guidelines](./CONTRIBUTING.md).
