@@ -42,6 +42,6 @@
     "typescript": "4.2.4"
   },
   "peerDependencies": {
-    "@laserfiche/types-lf-ui-components": "^13.0.0"
+    "@laserfiche/types-lf-ui-components": "13.0.1"
   }
 }
