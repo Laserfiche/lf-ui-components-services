@@ -23,7 +23,8 @@
   "license": "MIT",
   "dependencies": {
     "@laserfiche/lf-js-utils": "^4.0.2",
-    "@laserfiche/lf-repository-api-client": "^1.0.6"
+    "@laserfiche/lf-repository-api-client": "^1.0.6",
+    "@laserfiche/lf-ui-components": "^13.0.1--preview-2891421393"
   },
   "devDependencies": {
     "@babel/core": "^7.16.7",
@@ -42,6 +43,6 @@
     "typescript": "4.2.4"
   },
   "peerDependencies": {
-    "@laserfiche/types-lf-ui-components": "^12.0.2"
+    "@laserfiche/types-lf-ui-components": "^13.0.1--preview-2891421393"
   }
 }

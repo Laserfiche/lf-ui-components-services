@@ -1,5 +1,5 @@
-import { LfTreeService } from '@laserfiche/types-lf-ui-components';
-import { LfRepoTreeEntryType, LfRepoTreeNode } from '../helper-types/lf-tree-types.js';
+import { LfTreeNodeService, LfTreeNodePage, LfTreeNode } from '@laserfiche/types-lf-ui-components';
+import { LfRepoTreeEntryType, LfRepoTreeNodePage, LfRepoTreeNode } from '../helper-types/lf-repo-browser-types';
 import {
     LfLocalizationService,
     IconUtils,
@@ -9,47 +9,46 @@ import { getFolderChildrenDefaultParametersAsync } from '../utils/repo-client-ut
 import { Entry, PostEntryChildrenRequest, PostEntryChildrenEntryType, Shortcut, Document, ODataValueContextOfIListOfEntry, EntryType } from '@laserfiche/lf-repository-api-client';
 import { IRepositoryApiClientEx } from '../helper-types/repository-api-ex.js';
 
-export class LfRepoTreeService implements LfTreeService {
+export class LfRepoTreeNodeService implements LfTreeNodeService {
 
     viewableEntryTypes: LfRepoTreeEntryType[] = Object.values(LfRepoTreeEntryType);
-    selectableEntryTypes: LfRepoTreeEntryType[] = Object.values(LfRepoTreeEntryType);
 
     private localizationService = new LfLocalizationService();
 
     private cachedNodes: Record<string, LfRepoTreeNode> = {};
-    private cachedChildNodes: Record<string, LfRepoTreeNode[]> = {};
+    private cachedChildNodes: Record<string, Record<string, LfRepoTreeNodePage>> = {};
 
     constructor(
         private repoClient: IRepositoryApiClientEx,
     ) { }
 
-    async getParentNodeAsync(node: LfRepoTreeNode): Promise<LfRepoTreeNode | undefined> {
+    async getParentTreeNodeAsync(treeNode: LfRepoTreeNode): Promise<LfTreeNode | undefined>  {
         if (!this.repoClient) {
             console.error('getParentNodeAsync() _selectedRepositoryClient was undefined');
             throw new Error(this.localizationService.getString('ERRORS.ENTRY_NOT_FOUND'));
         }
 
-        if (!node.parentId) {
+        if (!treeNode.parentId) {
             return undefined;
         }
 
         try {
-            const parentNode = await this.getNodeByIdAsync(node.parentId);
+            const parentNode = await this.getTreeNodeByIdAsync(treeNode.parentId);
             return parentNode;
         }
         catch (err: any) {
             if (err.message === 'Access denied. [9013]') {
-                const rootNode = await this.getNodeByIdAsync('1');
+                const rootNode = await this.getTreeNodeByIdAsync('1');
                 return rootNode;
             }
         }
 
-        return await this.getNodeByIdAsync(node.parentId);
+        return await this.getTreeNodeByIdAsync(treeNode.parentId);
     }
 
-    async getNodeByIdAsync(id: string): Promise<LfRepoTreeNode | undefined> {
+    async getTreeNodeByIdAsync(id: string): Promise<LfTreeNode | undefined>  {
         if (!this.repoClient) {
-            console.error('getNodeByIdAsync() _selectedRepositoryClient was undefined');
+            console.error('getTreeNodeByIdAsync() _selectedRepositoryClient was undefined');
             throw new Error(this.localizationService.getString('ERRORS.ENTRY_NOT_FOUND'));
         }
 
@@ -61,7 +60,7 @@ export class LfRepoTreeService implements LfTreeService {
 
         else {
             if (isNaN(parseInt(id, 10))) {
-                console.error('getNodeByIdAsync() id was NaN');
+                console.error('getTreeNodeByIdAsync() id was NaN');
                 throw new Error(this.localizationService.getString('ERRORS.ENTRY_NOT_FOUND'));
             }
 
@@ -77,62 +76,85 @@ export class LfRepoTreeService implements LfTreeService {
         }
     }
 
-    async getChildrenAsync(node: LfRepoTreeNode): Promise<LfRepoTreeNode[]> {
+    async getFolderChildrenAsync(folder: LfRepoTreeNode, nextPage?: string | undefined): Promise<LfTreeNodePage> {
+      console.debug('nextPage', nextPage);
+      const nextPageStr = nextPage ?? '0';
+      const childNextPage = (Number.parseInt(nextPageStr, 10) + 20).toString();
         try {
-            if (this.cachedChildNodes[node.id]) {
-                // eslint-disable-next-line no-restricted-syntax
-                console.debug(`using cached children for entry ${node.id}`);
-                return this.cachedChildNodes[node.id];
+            if (this.cachedChildNodes[folder.id] && this.cachedChildNodes[folder.id][childNextPage]) {
+                console.debug(`using cached children for entry ${folder.id}`);
+                return this.cachedChildNodes[folder.id][childNextPage];
             }
-
             else {
-                const dataMap: LfRepoTreeNode[] = [];
-                let entryId: number;
-                if (node.targetId) {
-                    entryId = node.targetId;
-                }
-                else {
-                    entryId = parseInt(node.id, 10);
-                }
-                const repoId: string = await this.repoClient.getCurrentRepoId();
-                const requestParameters = await getFolderChildrenDefaultParametersAsync(repoId, entryId);
-                const listChildrenEntriesResponse: ODataValueContextOfIListOfEntry =
-                    await this.repoClient.entriesClient.getEntryListing(
-                        requestParameters
-                    );
-                const childrenEntries: Entry[] = listChildrenEntriesResponse.value;
-                if (childrenEntries) {
-                    for (const childEntry of childrenEntries) {
-                        if (childEntry) {
-                            const path = node.path ? PathUtils.combinePaths(node.path, childEntry.name!) : undefined;
-                            const childNode: LfRepoTreeNode | undefined = await this.createNodeAsync(childEntry, path);
-                            if (childNode) {
-                                dataMap.push(childNode);
-                            }
-                        }
-                    }
-                }
-                this.cachedChildNodes[node.id] = dataMap;
-                return dataMap;
+                return await this.getRemoteTreeNodePage(folder, nextPageStr, childNextPage);
             }
         }
         catch (err: any) {
-            if (this.cachedChildNodes[node.id]) {
-                delete this.cachedChildNodes[node.id];
+            if (this.cachedChildNodes[folder.id]) {
+                delete this.cachedChildNodes[folder.id];
             }
             throw err;
         }
     }
 
-    async getRootNodesAsync(): Promise<LfRepoTreeNode[]> {
+  private async getRemoteTreeNodePage(folder: LfRepoTreeNode, nextPage: string, childNextPage: string): Promise<LfTreeNodePage>{
+    const dataMap: LfRepoTreeNode[] = [];
+    let entryId: number;
+    if (folder.targetId) {
+      entryId = folder.targetId;
+    }
+    else {
+      entryId = parseInt(folder.id, 10);
+    }
+    const repoId: string = await this.repoClient.getCurrentRepoId();
+    const requestParameters = await getFolderChildrenDefaultParametersAsync(repoId, entryId, Number.parseInt(nextPage ?? '0', 10));
+    const listChildrenEntriesResponse: ODataValueContextOfIListOfEntry = await this.repoClient.entriesClient.getEntryListing(
+      requestParameters
+    );
+    const childrenEntries: Entry[] | undefined = listChildrenEntriesResponse.value;
+    if (childrenEntries) {
+      for (const childEntry of childrenEntries) {
+        if (childEntry) {
+          const path = folder.path ? PathUtils.combinePaths(folder.path, childEntry.name!) : undefined;
+          const childNode: LfRepoTreeNode | undefined = await this.createNodeAsync(childEntry, path);
+          if (childNode) {
+            dataMap.push(childNode);
+          }
+          // childNextPage = childNode?.id ?? '0'; // TODO: what if id doesn't exist? also next page should not be the last node's id
+        }
+      }
+    }
+    if (dataMap.length > 0) {
+      this.cachedChildNodes[folder.id] = this.cachedChildNodes[folder.id] ?? {};
+      this.cachedChildNodes[folder.id][childNextPage] = {
+        page: dataMap,
+        nextPage: childNextPage
+      };
+      console.debug('returning getFolderChildrenAsync', childNextPage);
+      return Promise.resolve({
+        page: dataMap,
+        nextPage: childNextPage
+      });
+    }
+    else {
+        // we have hit the end of the paging, returns undefined
+        console.debug(`Returned all children`);
+        return Promise.resolve({
+          page: [],
+          nextPage: undefined
+        });
+    }
+
+  }
+
+    async getRootTreeNodeAsync(): Promise<LfRepoTreeNode | undefined> {
         const rootEntryId: string = '1';
         if (this.cachedNodes[rootEntryId]) {
             // eslint-disable-next-line no-restricted-syntax
             console.debug('using cached root entry');
-            return [this.cachedNodes[rootEntryId]];
+            return this.cachedNodes[rootEntryId];
         }
         else {
-            const dataMap: LfRepoTreeNode[] = [];
             const rootFolderId: number = 1;
             const repoId: string = await this.repoClient.getCurrentRepoId();
 
@@ -147,18 +169,17 @@ export class LfRepoTreeService implements LfTreeService {
             if (rootEntry) {
                 const rootNode: LfRepoTreeNode | undefined = await this.createNodeAsync(rootEntry);
                 if (rootNode) {
-                    dataMap.push(rootNode);
                     this.cachedNodes[rootEntryId] = rootNode;
+                    return rootNode;
                 }
             }
-            return dataMap;
         }
     }
 
-    async refreshAsync(node: LfRepoTreeNode): Promise<LfRepoTreeNode[]> {
-        this.clearCache();
-        return await this.getChildrenAsync(node);
-    }
+    // async refreshAsync(node: LfRepoTreeNode): Promise<LfRepoTreeNode[]> {
+    //     this.clearCache();
+    //     return await this.getChildrenAsync(node);
+    // }
 
     clearCache() {
         // eslint-disable-next-line no-restricted-syntax
@@ -190,12 +211,12 @@ export class LfRepoTreeService implements LfTreeService {
         if (entry.entryType) {
             if (entry.entryType === EntryType.Folder &&
                 this.viewableEntryTypes.includes(LfRepoTreeEntryType.Folder)) {
-                treeNode = await this.createFolderNodeAsync(entry, this.selectableEntryTypes.includes(LfRepoTreeEntryType.Folder), false, fullPath);
+                treeNode = await this.createFolderNodeAsync(entry, false, fullPath);
             } else if (
                 entry.entryType === EntryType.Document
                 && this.viewableEntryTypes.includes(LfRepoTreeEntryType.Document)
             ) {
-                treeNode = this.createLeafDocumentNode(entry, this.selectableEntryTypes.includes(LfRepoTreeEntryType.Document), fullPath);
+                treeNode = this.createLeafDocumentNode(entry, fullPath);
             } else if (entry.entryType === EntryType.Shortcut) {
                 treeNode = await this.createShortcutNodeAsync(entry, fullPath);
             } else if (entry.entryType === EntryType.RecordSeries &&
@@ -220,10 +241,10 @@ export class LfRepoTreeService implements LfTreeService {
         let treeNode: LfRepoTreeNode | undefined;
         if (targetType === EntryType.Folder &&
             this.viewableEntryTypes.includes(LfRepoTreeEntryType.ShortcutFolder)) {
-            treeNode = await this.getFolderShortcutNodeAsync(shortcut, this.selectableEntryTypes.includes(LfRepoTreeEntryType.ShortcutFolder), fullPath);
+            treeNode = await this.getFolderShortcutNodeAsync(shortcut, fullPath);
         } else if (targetType === EntryType.Document &&
             this.viewableEntryTypes.includes(LfRepoTreeEntryType.ShortcutDocument)) {
-            treeNode = this.getLeafShortcutNode(shortcut, this.selectableEntryTypes.includes(LfRepoTreeEntryType.ShortcutDocument), fullPath);
+            treeNode = this.getLeafShortcutNode(shortcut,  fullPath);
         }
         if (targetType && treeNode) {
             treeNode.targetType = targetType;
@@ -234,8 +255,8 @@ export class LfRepoTreeService implements LfTreeService {
         return treeNode;
     }
 
-    private createLeafDocumentNode(entry: Entry, isSelectable: boolean, fullPath?: string): LfRepoTreeNode {
-        const leafNode: LfRepoTreeNode = this.createLeafNode(entry, isSelectable, false, fullPath);
+    private createLeafDocumentNode(entry: Entry, fullPath?: string): LfRepoTreeNode {
+        const leafNode: LfRepoTreeNode = this.createLeafNode(entry, false, fullPath);
 
         if (entry.entryType === EntryType.Document) {
             const document: Document = entry as Document;
@@ -254,7 +275,7 @@ export class LfRepoTreeService implements LfTreeService {
     }
 
 
-    private createLeafNode(entry: Entry, isSelectable: boolean, isShortcut: boolean = false, fullPath?: string) {
+    private createLeafNode(entry: Entry, isShortcut: boolean = false, fullPath?: string) {
         let parentId = entry.parentId?.toString();
         if (parentId === '0') {
             parentId = undefined;
@@ -274,15 +295,14 @@ export class LfRepoTreeService implements LfTreeService {
             parentId,
             icon: iconUrls,
             isContainer: false,
-            isSelectable,
             isLeaf: true
         };
         return leafNode;
     }
 
-    private async getFolderShortcutNodeAsync(shortcut: Shortcut, isSelectable: boolean, fullPath?: string): Promise<LfRepoTreeNode> {
+    private async getFolderShortcutNodeAsync(shortcut: Shortcut, fullPath?: string): Promise<LfRepoTreeNode> {
         const extension = shortcut.extension;
-        const folderNode: LfRepoTreeNode = await this.createFolderNodeAsync(shortcut, isSelectable, true, fullPath);
+        const folderNode: LfRepoTreeNode = await this.createFolderNodeAsync(shortcut, true, fullPath);
 
         if (extension) {
             folderNode.extension = extension;
@@ -290,10 +310,10 @@ export class LfRepoTreeService implements LfTreeService {
         return folderNode;
     }
 
-    private getLeafShortcutNode(shortcut: Shortcut, isSelectable: boolean, fullPath?: string): LfRepoTreeNode {
+    private getLeafShortcutNode(shortcut: Shortcut, fullPath?: string): LfRepoTreeNode {
         const extension = shortcut.extension;
 
-        const leafNode: LfRepoTreeNode = this.createLeafNode(shortcut, isSelectable, true, fullPath);
+        const leafNode: LfRepoTreeNode = this.createLeafNode(shortcut, true, fullPath);
 
         if (extension) {
             leafNode.extension = extension;
@@ -305,7 +325,7 @@ export class LfRepoTreeService implements LfTreeService {
         return leafNode;
     }
 
-    private async createFolderNodeAsync(entry: Entry, isSelectable: boolean, shortcut: boolean = false, fullPath?: string): Promise<LfRepoTreeNode> {
+    private async createFolderNodeAsync(entry: Entry, shortcut: boolean = false, fullPath?: string): Promise<LfRepoTreeNode> {
         let entryName = entry.name!;
 
         if (entry.id === 1) {
@@ -336,7 +356,6 @@ export class LfRepoTreeService implements LfTreeService {
             parentId,
             icon: iconUrls,
             isContainer: true,
-            isSelectable,
             isLeaf: false,
         };
         return folderNode;
