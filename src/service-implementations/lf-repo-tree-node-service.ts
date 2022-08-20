@@ -207,8 +207,6 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     }
 
     private async createNodeAsync(entry: Entry, fullPath?: string): Promise<LfRepoTreeNode | undefined> {
-      if (entry.id == 11 ) {
-      }
         let treeNode: LfRepoTreeNode | undefined;
         if (entry.entryType) {
             if (entry.entryType === EntryType.Folder &&
