@@ -120,30 +120,25 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
           if (childNode) {
             dataMap.push(childNode);
           }
-          // childNextPage = childNode?.id ?? '0'; // TODO: what if id doesn't exist? also next page should not be the last node's id
         }
       }
     }
-    if (dataMap.length > 0) {
-      this.cachedChildNodes[folder.id] = this.cachedChildNodes[folder.id] ?? {};
-      this.cachedChildNodes[folder.id][childNextPage] = {
-        page: dataMap,
-        nextPage: childNextPage
-      };
-      console.debug('returning getFolderChildrenAsync', childNextPage);
-      return Promise.resolve({
-        page: dataMap,
-        nextPage: childNextPage
-      });
+    this.cachedChildNodes[folder.id] = this.cachedChildNodes[folder.id] ?? {};
+    this.cachedChildNodes[folder.id][childNextPage] = {
+      page: dataMap,
+      nextPage: childNextPage
+    };
+    if (childrenEntries?.length < 20 ) {
+      // we have hit the end of the paging, nextPage is undefined
+      console.debug('Maximum page size reached');
+      childNextPage = undefined;
     }
-    else {
-        // we have hit the end of the paging, returns undefined
-        console.debug(`Returned all children`);
-        return Promise.resolve({
-          page: [],
-          nextPage: undefined
-        });
-    }
+
+    console.debug('returning getFolderChildrenAsync', childNextPage);
+    return Promise.resolve({
+      page: dataMap,
+      nextPage: childNextPage
+    });
 
   }
 
