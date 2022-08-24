@@ -46,21 +46,6 @@ const mockChildren: Entry[] = [
     new Entry({ id: 59, name: 'FolderInRoot8', fullPath: '\\FolderInRoot8', entryType: EntryType.Folder }),
     new Entry({ id: 60, name: 'FolderInRoot9', fullPath: '\\FolderInRoot9', entryType: EntryType.Folder }),
     new Entry({ id: 61, name: 'FolderInRoot10', fullPath: '\\FolderInRoot10', entryType: EntryType.Folder }),
-    new Entry({ id: 62, name: 'FolderInRoot11', fullPath: '\\FolderInRoot11', entryType: EntryType.Folder }),
-    new Entry({ id: 63, name: 'FolderInRoot12', fullPath: '\\FolderInRoot12', entryType: EntryType.Folder }),
-    new Entry({ id: 64, name: 'FolderInRoot13', fullPath: '\\FolderInRoot13', entryType: EntryType.Folder }),
-    new Entry({ id: 65, name: 'FolderInRoot14', fullPath: '\\FolderInRoot14', entryType: EntryType.Folder }),
-    new Entry({ id: 66, name: 'FolderInRoot15', fullPath: '\\FolderInRoot15', entryType: EntryType.Folder }),
-    new Entry({ id: 67, name: 'FolderInRoot16', fullPath: '\\FolderInRoot16', entryType: EntryType.Folder }),
-    new Entry({ id: 68, name: 'FolderInRoot17', fullPath: '\\FolderInRoot17', entryType: EntryType.Folder }),
-    new Entry({ id: 69, name: 'FolderInRoot18', fullPath: '\\FolderInRoot18', entryType: EntryType.Folder }),
-    new Entry({ id: 70, name: 'FolderInRoot19', fullPath: '\\FolderInRoot19', entryType: EntryType.Folder }),
-    new Entry({ id: 71, name: 'FolderInRoot20', fullPath: '\\FolderInRoot20', entryType: EntryType.Folder }),
-    new Entry({ id: 72, name: 'FolderInRoot21', fullPath: '\\FolderInRoot21', entryType: EntryType.Folder }),
-    new Entry({ id: 73, name: 'FolderInRoot22', fullPath: '\\FolderInRoot22', entryType: EntryType.Folder }),
-    new Entry({ id: 74, name: 'FolderInRoot23', fullPath: '\\FolderInRoot23', entryType: EntryType.Folder }),
-    new Entry({ id: 75, name: 'FolderInRoot24', fullPath: '\\FolderInRoot24', entryType: EntryType.Folder }),
-    new Entry({ id: 76, name: 'FolderInRoot25', fullPath: '\\FolderInRoot25', entryType: EntryType.Folder }),
     new Entry({ id: 13, name: 'DocInFolderInRoot', fullPath: '\\FolderInRoot\\DocInFolderInRoot', entryType: EntryType.Document }),
     new Entry({ id: 20, name: 'RsInFolderInRoot', fullPath: '\\FolderInRoot\\RsInFolderInRoot', entryType: EntryType.Document }),
     new Entry({ id: 21, name: 'RsInFolderInRoot1', fullPath: '\\FolderInRoot\\RsInFolderInRoot1', entryType: EntryType.Document }),
@@ -72,20 +57,6 @@ const mockChildren: Entry[] = [
     new Entry({ id: 27, name: 'RsInFolderInRoot7', fullPath: '\\FolderInRoot\\RsInFolderInRoot7', entryType: EntryType.Document }),
     new Entry({ id: 28, name: 'RsInFolderInRoot8', fullPath: '\\FolderInRoot\\RsInFolderInRoot8', entryType: EntryType.Document }),
     new Entry({ id: 29, name: 'RsInFolderInRoot9', fullPath: '\\FolderInRoot\\RsInFolderInRoot9', entryType: EntryType.Document }),
-    new Entry({ id: 30, name: 'RsInFolderInRoot10', fullPath: '\\FolderInRoot\\RsInFolderInRoot10', entryType: EntryType.Document }),
-    new Entry({ id: 31, name: 'RsInFolderInRoot11', fullPath: '\\FolderInRoot\\RsInFolderInRoot11', entryType: EntryType.Document }),
-    new Entry({ id: 32, name: 'RsInFolderInRoot12', fullPath: '\\FolderInRoot\\RsInFolderInRoot12', entryType: EntryType.Document }),
-    new Entry({ id: 33, name: 'RsInFolderInRoot13', fullPath: '\\FolderInRoot\\RsInFolderInRoot13', entryType: EntryType.Document }),
-    new Entry({ id: 34, name: 'RsInFolderInRoot14', fullPath: '\\FolderInRoot\\RsInFolderInRoot14', entryType: EntryType.Document }),
-    new Entry({ id: 35, name: 'RsInFolderInRoot15', fullPath: '\\FolderInRoot\\RsInFolderInRoot15', entryType: EntryType.Document }),
-    new Entry({ id: 36, name: 'RsInFolderInRoot16', fullPath: '\\FolderInRoot\\RsInFolderInRoot16', entryType: EntryType.Document }),
-    new Entry({ id: 37, name: 'RsInFolderInRoot17', fullPath: '\\FolderInRoot\\RsInFolderInRoot17', entryType: EntryType.Document }),
-    new Entry({ id: 38, name: 'RsInFolderInRoot18', fullPath: '\\FolderInRoot\\RsInFolderInRoot18', entryType: EntryType.Document }),
-    new Entry({ id: 39, name: 'RsInFolderInRoot19', fullPath: '\\FolderInRoot\\RsInFolderInRoot19', entryType: EntryType.Document }),
-    new Entry({ id: 40, name: 'RsInFolderInRoot20', fullPath: '\\FolderInRoot\\RsInFolderInRoot20', entryType: EntryType.Document }),
-    new Entry({ id: 41, name: 'RsInFolderInRoot21', fullPath: '\\FolderInRoot\\RsInFolderInRoot21', entryType: EntryType.Document }),
-    new Entry({ id: 42, name: 'RsInFolderInRoot22', fullPath: '\\FolderInRoot\\RsInFolderInRoot22', entryType: EntryType.Document }),
-    new Entry({ id: 43, name: 'RsInFolderInRoot23', fullPath: '\\FolderInRoot\\RsInFolderInRoot23', entryType: EntryType.Document }),
 ]
 
 const mockRepoClient = new RepositoryApiClientMockBuilder()
@@ -106,9 +77,16 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
             skip?: number;
             count?: boolean;
         }) => {
-          const filteredChildren = '';
           return Promise.resolve(
-          new ODataValueContextOfIListOfEntry({ value: mockChildren.slice(0, args.top)}))
+          new ODataValueContextOfIListOfEntry({ value: mockChildren.slice(0, 20), odataNextLink: 'a test link returned by getEntryListing' }))
+        }),
+        getEntryListingNextLink: jest.fn((args: {
+          nextLink: string;
+          maxPageSize?: number
+        }) => {
+          return Promise.resolve(
+            new ODataValueContextOfIListOfEntry({ value: mockChildren.slice(0, args.maxPageSize), odataNextLink: 'a test link returned by getEntryListingNextLink'})
+          )
         }),
         getEntry: jest.fn((args: { repoId, entryId }) => {
             let matchedChild: Entry = new Entry();
@@ -127,7 +105,7 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
     })
     .build();
 
-describe('LfRepoTreeService', () => {
+describe('LfRepoTreeNodeService', () => {
 
     beforeEach(() => {
         service = new LfRepoTreeNodeService(mockRepoClient);
@@ -182,7 +160,7 @@ describe('LfRepoTreeService', () => {
         expect(createdNode).toEqual(expectedNode);
     });
 
-    it('should return undefined TreeNode if entryType not set', async () => {
+    it('should return undefined LfTreeNode if entryType not set', async () => {
         // @ts-ignore
         const createdNode = await service.createNodeAsync(dummyInvalidEntry);
         expect(createdNode).toEqual(undefined);
@@ -192,35 +170,16 @@ describe('LfRepoTreeService', () => {
         // Act
         service.viewableEntryTypes = [LfRepoTreeEntryType.Folder];
 
-        const childrenNodes = await service.getFolderChildrenAsync({ id: '1' } as LfRepoTreeNode, '3');
+        const childrenNodes = await service.getFolderChildrenAsync({ id: '1' } as LfRepoTreeNode);
 
         // Assert
         const expectedIds = ['1', '12', '52', '53', '54',
                             '55', '56', '57', '58', '59',
-                            '60', '61', '62', '63', '64',
-                            '65', '66', '67', '68'];
+                            '60', '61'];
         const actualIds = childrenNodes.page.map((entry) => entry.id).sort();
         expect(actualIds).toEqual(expectedIds);
-        expect(childrenNodes.page.length).toEqual(19);
-        expect(childrenNodes.nextPage).toEqual('23');
+        expect(childrenNodes.page.length).toEqual(12);
     });
-
-    // it('can make only documents selectable', async () => {
-    //     // Act
-    //     service.selectableEntryTypes = [LfRepoTreeEntryType.Document];
-    //     const childrenNodes = await service.getChildrenAsync({} as LfRepoTreeNode);
-
-    //     // Assert
-    //     childrenNodes.forEach((treeNode) => {
-    //         const entry = mockChildren.find((_entry) => _entry.id === parseInt(treeNode.id, 10));
-    //         expect(entry).toBeDefined();
-    //         if (entry?.entryType === EntryType.Document) {
-    //             expect(treeNode.isSelectable).toBeTruthy();
-    //         } else {
-    //             expect(treeNode.isSelectable).toBeFalsy();
-    //         }
-    //     });
-    // });
 
     it('getRootNodesAsync should call API getEntryAsync and coerce parentId = 0 into parentId = undefined', async () => {
         // Act
@@ -234,29 +193,29 @@ describe('LfRepoTreeService', () => {
         expect(rootNodes).toEqual(expectedNode);
     });
 
-    it('getFolderChildrenAsync should call API getChildrenAsync ', async () => {
+    it('getFolderChildrenAsync with undefined nextPage should call API getEntryListing ', async () => {
         // Act
-        const childrenNodes = await service.getFolderChildrenAsync({} as LfRepoTreeNode, '3');
+        const childrenNodes = await service.getFolderChildrenAsync({} as LfRepoTreeNode);
 
         // Assert
         expect(childrenNodes.page.length).toEqual(20);
-        expect(childrenNodes.nextPage).toEqual("23");
+        expect(childrenNodes.nextPage).toEqual("a test link returned by getEntryListing");
         childrenNodes.page.forEach((childNode, i) => {
             expect(childNode.name).toEqual(mockChildren[i].name);
         })
     });
 
-    it('addNewFolderAsync should call API addNewFolderAsync', async () => {
-        // Act
-        await service.addNewFolderAsync({} as LfRepoTreeNode, "testAddedNode");
-        const childrenNodes = await service.getFolderChildrenAsync({} as LfRepoTreeNode);
-        const newAddedNodes = await service.getTreeNodeByIdAsync("100");
+    it('getFolderChildrenAsync with nextPage should call API getEntryListingNextLink ', async () => {
+      // Act
+      const childrenNodes = await service.getFolderChildrenAsync({} as LfRepoTreeNode, '3');
 
-        // Assert
-        expect(childrenNodes.page.length).toEqual(20);
-        expect(childrenNodes.nextPage).toEqual("20"); // TODO: is this correct?
-        expect(newAddedNodes?.name).toEqual("testAddedNode");
-    });
+      // Assert
+      expect(childrenNodes.page.length).toEqual(20);
+      expect(childrenNodes.nextPage).toEqual('a test link returned by getEntryListingNextLink');
+      childrenNodes.page.forEach((childNode, i) => {
+          expect(childNode.name).toEqual(mockChildren[i].name);
+      })
+  });
 
     it('getNodeByIdAsync should call API getEntryAsync', async () => {
         // Act
@@ -267,4 +226,171 @@ describe('LfRepoTreeService', () => {
         expect(testNode1?.name).toEqual("FolderInRoot");
         expect(testNode2?.name).toEqual("RsInFolderInRoot");
     });
+
+    it('updateCacheChildrenNodes should update cache if entry does not exist in cache', async () => {
+      // Arrange
+      const addedFolder = { id: '10' } as LfRepoTreeNode;
+      const nextPage = 'updated next page';
+
+      // Act
+      // @ts-ignore
+      service.updateCacheChildrenNodes('1', '0', [addedFolder], nextPage);
+
+      // Assert
+      // @ts-ignore
+      expect(service.cachedChildNodes).toEqual({
+        '1': {
+          '0': {
+            page: [addedFolder],
+            nextPage: nextPage
+          }
+        }
+      });
+  });
+
+    it('updateCacheChildrenNodes should overwrite cache if entry exists in cache', async () => {
+      // Arrange
+      const addedFolder = { id: '10' } as LfRepoTreeNode;
+      // @ts-ignore
+      service.cachedChildNodes = {
+        '1': {
+          '0': {
+            page: [],
+            nextPage: undefined
+            }
+          }
+      };
+      const nextPage = 'updated next page';
+
+      // Act
+      // @ts-ignore
+      service.updateCacheChildrenNodes('1', '0', [addedFolder], nextPage);
+
+      // Assert
+      // @ts-ignore
+      expect(
+        // @ts-ignore
+        service.cachedChildNodes
+        ).toEqual({
+        '1': {
+          '0': {
+            page: [addedFolder],
+            nextPage: nextPage
+          }
+        }
+      });
+  });
+
+  it('updateCacheChildrenNodes should update cache if entry exists in cache', async () => {
+    // Arrange
+    const addedFolder = { id: '10' } as LfRepoTreeNode;
+    // @ts-ignore
+    service.cachedChildNodes = {
+      '1': {
+        '0': {
+          page: [addedFolder],
+          nextPage: undefined
+          }
+        }
+    };
+    const nextPage = 'updated next page';
+
+    // Act
+    // @ts-ignore
+    service.updateCacheChildrenNodes('1', '30', [addedFolder, addedFolder], nextPage);
+
+    // Assert
+    // @ts-ignore
+    expect(
+      // @ts-ignore
+      service.cachedChildNodes
+      ).toEqual({
+      '1': {
+        '0': {
+          page: [addedFolder],
+          nextPage: undefined
+        },
+        '30': {
+          page: [addedFolder, addedFolder],
+          nextPage: nextPage
+        }
+      }
+    });
+});
+
+  it('getFolderChildrenAsync uses cache if requested nextPage is undefined, but exists in cache colder', async () => {
+    // Arrange
+    const addedFolder = { id: '10' } as LfRepoTreeNode;
+    // @ts-ignore
+    service.cachedChildNodes = {
+      '10': {
+        '0': {
+          page: [addedFolder],
+          nextPage: 'updated next page'
+        }
+      }
+    };
+
+    // Act
+    const childrenNodes = await service.getFolderChildrenAsync(addedFolder, undefined);
+
+    // Assert
+    // @ts-ignore
+    expect(childrenNodes).toEqual(service.cachedChildNodes['10']['0']);
+});
+
+it('getFolderChildrenAsync uses cache if requested nextPage is defined, but exists in cache colder', async () => {
+  // Arrange
+  const addedFolder = { id: '10' } as LfRepoTreeNode;
+  // @ts-ignore
+  service.cachedChildNodes = {
+    '10': {
+      'a random string': {
+        page: [addedFolder],
+        nextPage: 'updated next page'
+      }
+    }
+  };
+
+  // Act
+  const childrenNodes = await service.getFolderChildrenAsync(addedFolder, 'a random string');
+
+  // Assert
+  // @ts-ignore
+  expect(childrenNodes).toEqual(service.cachedChildNodes['10']['a random string']);
+});
+
+it('getFolderChildrenAsync calls API getEntryListing if requested nextPage is undefined, and nextPage does not exist in cached folder', async () => {
+  // Arrange
+  const addedFolder = { id: '10' } as LfRepoTreeNode;
+  // @ts-ignore
+  service.cachedChildNodes = {
+    '10': {
+      'a random key': {
+        page: [addedFolder],
+        nextPage: undefined}
+    }
+  };
+
+  // Act
+  const childrenNodes = await service.getFolderChildrenAsync(addedFolder, undefined);
+
+  // Assert
+  // @ts-ignore
+  expect(childrenNodes.nextPage).toEqual('a test link returned by getEntryListing');
+});
+
+it('getFolderChildrenAsync calls API getEntryListingNextLink if requested nextPage is defined, and nextPage does not exist in cached folder', async () => {
+    // Arrange
+    const addedFolder = { id: '10' } as LfRepoTreeNode;
+    const nextPage = 'updated next page';
+
+    // Act
+    const childrenNodes = await service.getFolderChildrenAsync(addedFolder, nextPage);
+
+    // Assert
+    expect(childrenNodes.nextPage).toEqual('a test link returned by getEntryListingNextLink');
+    // @ts-ignore
+    expect(service.cachedChildNodes['10'][nextPage]).toEqual(childrenNodes);
+});
 })
