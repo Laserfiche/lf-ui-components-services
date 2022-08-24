@@ -91,7 +91,7 @@ describe('LfRepoTreeService', () => {
             path: '\\DummyFolder',
             id: '10',
             parentId: undefined,
-            icon: ['https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@3/resources/icons/document-icons.svg#folder-20'],
+            icon: ['https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20'],
             isContainer: true,
             isSelectable: true,
             isLeaf: false,
@@ -107,7 +107,7 @@ describe('LfRepoTreeService', () => {
             path: '\\',
             id: '1',
             parentId: undefined,
-            icon: ['https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@3/resources/icons/document-icons.svg#folder-20'],
+            icon: ['https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20'],
             isContainer: true,
             isSelectable: true,
             isLeaf: false,
@@ -123,7 +123,7 @@ describe('LfRepoTreeService', () => {
             path: '\\DummyDocument',
             id: '11',
             parentId: undefined,
-            icon: ['https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@3/resources/icons/document-icons.svg#document-20'],
+            icon: ['https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#document-20'],
             isContainer: false,
             isSelectable: true,
             isLeaf: true,
@@ -200,7 +200,7 @@ describe('LfRepoTreeService', () => {
 
         // Assert
         expect(childrenNodes.length).toEqual(6);
-        expect(newAddedNodes.name).toEqual("testAddedNode");
+        expect(newAddedNodes?.name).toEqual("testAddedNode");
     });
 
     it('getNodeByIdAsync should call API getEntryAsync', async () => {
@@ -209,7 +209,7 @@ describe('LfRepoTreeService', () => {
         const testNode2 = await service.getNodeByIdAsync("20");
 
         // Assert
-        expect(testNode1.name).toEqual("FolderInRoot");
-        expect(testNode2.name).toEqual("RsInFolderInRoot");
+        expect(testNode1?.name).toEqual("FolderInRoot");
+        expect(testNode2?.name).toEqual("RsInFolderInRoot");
     });
 })
