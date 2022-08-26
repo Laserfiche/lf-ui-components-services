@@ -6,30 +6,36 @@ import {
   PathUtils
 } from '@laserfiche/lf-js-utils';
 import { getFolderChildrenDefaultParametersAsync } from '../utils/repo-client-utils.js';
-import { Entry, Shortcut, Document, ODataValueContextOfIListOfEntry, EntryType } from '@laserfiche/lf-repository-api-client';
+import { Entry, Shortcut, Document, ODataValueContextOfIListOfEntry, EntryType, Folder } from '@laserfiche/lf-repository-api-client';
 import { IRepositoryApiClientEx } from '../helper-types/repository-api-ex.js';
+
+export const nodeAttrName_extension = 'extension';
+export const nodeAttrName_elecDocumentSize = 'elecDocumentSize';
+export const nodeAttrName_templateName = 'templateName';
 
 export class LfRepoTreeNodeService implements LfTreeNodeService {
 
-  viewableEntryTypes: LfRepoTreeEntryType[] = Object.values(LfRepoTreeEntryType);
+  viewableEntryTypes: EntryType[] = [];
+
 
   private localizationService = new LfLocalizationService();
 
-  private cachedNodes: Record<string, LfRepoTreeNode> = {};
-  private cachedChildNodes: Record<string, Record<string, LfRepoTreeNodePage>> = {};
-
   constructor(
     private repoClient: IRepositoryApiClientEx,
-  ) { }
-
-  async getParentTreeNodeAsync(treeNode: LfRepoTreeNode): Promise<LfTreeNode | undefined> {
+  ) {
     if (!this.repoClient) {
       console.error('getParentNodeAsync() _selectedRepositoryClient was undefined');
       throw new Error(this.localizationService.getString('ERRORS.ENTRY_NOT_FOUND'));
     }
+  }
 
+  async getParentTreeNodeAsync(treeNode: LfRepoTreeNode): Promise<LfTreeNode | undefined> {
     if (!treeNode.parentId) {
-      return undefined;
+      if (treeNode.id === '1') {
+        // the root node does not have a parent tree node
+        return undefined;
+      }
+      throw new Error('treeNode.parentId is undefined');
     }
 
     try {
@@ -37,284 +43,209 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       return parentNode;
     }
     catch (err: any) {
-      if (err.message === 'Access denied. [9013]') {
+      if (err.errorCode === 9013) {
         const rootNode = await this.getTreeNodeByIdAsync('1');
         return rootNode;
       }
+      else {
+        throw err;
+      }
     }
-
-    return await this.getTreeNodeByIdAsync(treeNode.parentId);
   }
 
   async getTreeNodeByIdAsync(id: string): Promise<LfTreeNode | undefined> {
-    if (!this.repoClient) {
-      console.error('getTreeNodeByIdAsync() _selectedRepositoryClient was undefined');
-      throw new Error(this.localizationService.getString('ERRORS.ENTRY_NOT_FOUND'));
+    const entryId = parseInt(id, 10);
+
+    if (isNaN(entryId)) {
+      throw new Error('id cannot be parsed as Laserfiche EntryId');
     }
 
-    if (this.cachedNodes[id]) {
-      // eslint-disable-next-line no-restricted-syntax
-      console.debug(`using cached entry ${id}`);
-      return this.cachedNodes[id];
-    }
-
-    else {
-      if (isNaN(parseInt(id, 10))) {
-        console.error('getTreeNodeByIdAsync() id was NaN');
-        throw new Error(this.localizationService.getString('ERRORS.ENTRY_NOT_FOUND'));
-      }
-
-      const entryId = parseInt(id, 10);
-      const repoId: string = await this.repoClient.getCurrentRepoId();
+    const repoId: string = await this.repoClient.getCurrentRepoId();
+    const repoName: string = await this.repoClient.getCurrentRepoName();
+    try {
       const entry: Entry = await this.repoClient.entriesClient.getEntry({ repoId, entryId });
-
-      const node: LfRepoTreeNode | undefined = await this.createNodeAsync(entry);
-      if (node) {
-        this.cachedNodes[id] = node;
-      }
+      const node: LfRepoTreeNode = this.createNode(entry, repoName);
       return node;
     }
-  }
-
-  async getFolderChildrenAsync(folder: LfRepoTreeNode, nextPage?: string | undefined): Promise<LfTreeNodePage> {
-    let listChildrenEntriesResponse: ODataValueContextOfIListOfEntry;
-    try {
-      if (this.cachedChildNodes[folder.id]) {
-        const cachedChildNode = this.cachedChildNodes[folder.id];
-        const nextPageAsCacheEntry = nextPage ?? '0';
-        if (cachedChildNode[nextPageAsCacheEntry]) {
-          return cachedChildNode[nextPageAsCacheEntry];
-        }
-      }
-      if (!nextPage) {
-        listChildrenEntriesResponse = await this.getFolderChildrenFirstPageAsync(folder);
-      }
-      else {
-        listChildrenEntriesResponse = await this.repoClient.entriesClient.getEntryListingNextLink({ nextLink: nextPage, maxPageSize: 20 })
-      }
-      const dataMap = await this.parseFolderChildrenResponse(folder, listChildrenEntriesResponse);
-      const nextPageLink: string | undefined = listChildrenEntriesResponse.odataNextLink;
-      this.updateCacheChildrenNodes(folder.id, nextPage, dataMap, nextPageLink);
-      return Promise.resolve({
-        page: dataMap,
-        nextPage: nextPageLink
-      });
-
-    }
-    catch (err: any) {
-      // TODO: delete whole cache?
-      if (this.cachedChildNodes[folder.id]) {
-        delete this.cachedChildNodes[folder.id];
+    catch (err) {
+      if (err.errorCode === 9001) {
+        // Entry not found
+        return undefined;
       }
       throw err;
     }
   }
 
-  async getRootTreeNodeAsync(): Promise<LfRepoTreeNode | undefined> {
-    const rootEntryId: string = '1';
-    if (this.cachedNodes[rootEntryId]) {
-      // eslint-disable-next-line no-restricted-syntax
-      console.debug('using cached root entry');
-      return this.cachedNodes[rootEntryId];
+  async getFolderChildrenAsync(folder: LfRepoTreeNode, nextPage?: string | undefined): Promise<LfTreeNodePage> {
+    const repoName: string = await this.repoClient.getCurrentRepoName();
+    let listChildrenEntriesResponse: ODataValueContextOfIListOfEntry;
+    if (!nextPage) {
+      listChildrenEntriesResponse = await this.getFolderChildrenFirstPageAsync(folder);
     }
     else {
-      const rootFolderId: number = 1;
-      const repoId: string = await this.repoClient.getCurrentRepoId();
-
-      const response: Entry = await this.repoClient.entriesClient.getEntry(
-        {
-          repoId,
-          entryId: rootFolderId
-        }
-      );
-
-      const rootEntry = response;
-      if (rootEntry) {
-        const rootNode: LfRepoTreeNode | undefined = await this.createNodeAsync(rootEntry);
-        if (rootNode) {
-          this.cachedNodes[rootEntryId] = rootNode;
-          return rootNode;
-        }
-      }
-      return undefined;
+      listChildrenEntriesResponse = await this.repoClient.entriesClient.getEntryListingNextLink({ nextLink: nextPage, maxPageSize: 20 })
     }
+    const dataMap = this.parseFolderChildrenResponse(folder, repoName, listChildrenEntriesResponse);
+    const nextPageLink: string | undefined = listChildrenEntriesResponse.odataNextLink;
+    return Promise.resolve({
+      page: dataMap,
+      nextPage: nextPageLink
+    });
   }
 
-  clearCache() {
-    // eslint-disable-next-line no-restricted-syntax
-    console.debug('clearing cache');
-    this.cachedNodes = {};
-    this.cachedChildNodes = {};
+  async getRootTreeNodeAsync(): Promise<LfRepoTreeNode> {
+    const repoName: string = await this.repoClient.getCurrentRepoName();
+    const repoId: string = await this.repoClient.getCurrentRepoId();
+    const rootFolderId: number = 1;
+    const rootEntry: Entry = await this.repoClient.entriesClient.getEntry(
+      {
+        repoId,
+        entryId: rootFolderId
+      }
+    );
+    return this.createNode(rootEntry, repoName);
   }
 
-  private async createNodeAsync(entry: Entry, fullPath?: string): Promise<LfRepoTreeNode | undefined> {
+  private isViewable(entry: Entry): boolean {
+    return entry.entryType !== EntryType.RecordSeries && (this.viewableEntryTypes.includes(entry.entryType)
+      || (entry.entryType === EntryType.Shortcut && this.viewableEntryTypes.includes((entry as Shortcut).targetType)));
+  }
+
+  private createNode(entry: Entry, repoName: string, parent?: LfRepoTreeNode): LfRepoTreeNode {
     let treeNode: LfRepoTreeNode | undefined;
-    if (entry.entryType) {
-      if (entry.entryType === EntryType.Folder &&
-        this.viewableEntryTypes.includes(LfRepoTreeEntryType.Folder)) {
-        treeNode = await this.createFolderNodeAsync(entry, false, fullPath);
-      } else if (
-        entry.entryType === EntryType.Document
-        && this.viewableEntryTypes.includes(LfRepoTreeEntryType.Document)
-      ) {
-        treeNode = this.createLeafDocumentNode(entry, fullPath);
-      } else if (entry.entryType === EntryType.Shortcut) {
-        treeNode = await this.createShortcutNodeAsync(entry, fullPath);
-      } else if (entry.entryType === EntryType.RecordSeries &&
-        this.viewableEntryTypes.includes(LfRepoTreeEntryType.RecordSeries)) {
-        // TODO add record series support (treat like folder)
-        console.warn('RecordSeries is not yet supported');
-      } else if (LfRepoTreeEntryType[entry.entryType] && !this.viewableEntryTypes.includes(LfRepoTreeEntryType[entry.entryType])) {
-        // Skip Entry
-      } else {
-        console.warn(`Unknown entry type ${entry.entryType}`);
+    if (!entry.entryType) {
+      throw new Error('entry type is undefined');
+    }
+    if (entry.entryType === EntryType.Folder) {
+      treeNode = this.createFolderNode(entry, repoName, parent);
+    } else if (entry.entryType === EntryType.Document) {
+      treeNode = this.createLeafNode(entry, parent);
+    } else if (entry.entryType === EntryType.Shortcut) {
+      const shortcut = entry as Shortcut;
+      if (shortcut.targetType === EntryType.Folder) {
+        treeNode = this.createFolderNode(shortcut, repoName, parent);
+      } else if (shortcut.targetType === EntryType.Document) {
+        treeNode = this.createLeafNode(shortcut, parent);
+      }
+      else {
+        throw new Error('Unexpected shortcut targetType');
       }
     } else {
-      console.warn('Unable to determine entry type');
+      throw new Error('Unsupported entry type');
     }
+    this.setNodeAttributes(treeNode, entry);
     return treeNode;
   }
 
-  private async createShortcutNodeAsync(entry: Entry, fullPath?: string) {
-    const shortcut = entry as Shortcut;
-    const targetType: EntryType | undefined = shortcut?.targetType;
-    const targetId = shortcut.targetId;
-    let treeNode: LfRepoTreeNode | undefined;
-    if (targetType === EntryType.Folder &&
-      this.viewableEntryTypes.includes(LfRepoTreeEntryType.ShortcutFolder)) {
-      treeNode = await this.getFolderShortcutNodeAsync(shortcut, fullPath);
-    } else if (targetType === EntryType.Document &&
-      this.viewableEntryTypes.includes(LfRepoTreeEntryType.ShortcutDocument)) {
-      treeNode = this.getLeafShortcutNode(shortcut, fullPath);
-    }
-    if (targetType && treeNode) {
-      treeNode.targetType = targetType;
-    }
-    if (targetId && treeNode) {
-      treeNode.targetId = targetId;
-    }
-    return treeNode;
-  }
-
-  private createLeafDocumentNode(entry: Entry, fullPath?: string): LfRepoTreeNode {
-    const leafNode: LfRepoTreeNode = this.createLeafNode(entry, false, fullPath);
-
-    if (entry.entryType === EntryType.Document) {
-      const document: Document = entry as Document;
-      const extension = document.extension;
-      const elecDocumentSize = document.elecDocumentSize;
-      if (extension) {
-        leafNode.extension = extension;
-        const iconId = IconUtils.getDocumentIconIdFromExtension(extension);
-        leafNode.icon = IconUtils.getDocumentIconUrlFromIconId(iconId);
-      }
-      if (elecDocumentSize) {
-        leafNode.elecDocumentSize = elecDocumentSize;
-      }
-    }
-    return leafNode;
-  }
-
-
-  private createLeafNode(entry: Entry, isShortcut: boolean = false, fullPath?: string) {
+  private createLeafNode(entry: Entry, parent?: LfRepoTreeNode): LfRepoTreeNode {
     let parentId = entry.parentId?.toString();
     if (parentId === '0') {
       parentId = undefined;
     }
 
-    const path = (fullPath) ? fullPath : entry.fullPath;
-
-    const iconUrls = [IconUtils.getDocumentIconUrlFromIconId('document-20')];
-    if (isShortcut) {
-      const shortcutUrl = IconUtils.getDocumentIconUrlFromIconId('shortcut-overlay');
-      iconUrls.push(shortcutUrl);
+    const path = parent? PathUtils.combinePaths(parent.path, entry.name): entry.fullPath;
+    if (!path) {
+      throw new Error('entry fullPath is undefined');
     }
+
     const leafNode: LfRepoTreeNode = {
       name: entry.name!,
-      path: path ?? '',
+      path: path,
       id: entry.id!.toString(),
       parentId,
-      icon: iconUrls,
+      entryType: entry.entryType,
+      icon: [],
       isContainer: false,
-      isLeaf: true
+      isLeaf: true,
+      attributes: new Map<string, any>()
     };
     return leafNode;
   }
 
-  private async getFolderShortcutNodeAsync(shortcut: Shortcut, fullPath?: string): Promise<LfRepoTreeNode> {
-    const extension = shortcut.extension;
-    const folderNode: LfRepoTreeNode = await this.createFolderNodeAsync(shortcut, true, fullPath);
-
-    if (extension) {
-      folderNode.extension = extension;
+  private setNodeAttributes(node: LfRepoTreeNode, entry: Entry): void {
+    if (entry.templateName) {
+      node.attributes.set(nodeAttrName_templateName, entry.templateName);
     }
-    return folderNode;
+    if (entry.entryType === EntryType.Document) {
+      const document = entry as Document;
+      if (document.extension) {
+        node.attributes.set(nodeAttrName_extension, document.extension);
+        const iconId = IconUtils.getDocumentIconIdFromExtension(document.extension);
+        node.icon = IconUtils.getDocumentIconUrlFromIconId(iconId);
+      }
+      if (document.elecDocumentSize) {
+        node.attributes.set(nodeAttrName_elecDocumentSize, document.elecDocumentSize);
+      }
+    }
+    else if (entry.entryType === EntryType.Folder) {
+      node.icon = IconUtils.getDocumentIconUrlFromIconId('folder-20');
+    }
+    else if (entry.entryType === EntryType.Shortcut) {
+      const shortcut = entry as Shortcut;
+      node.targetType = shortcut.targetType;
+      node.targetId = shortcut.targetId;
+      if (shortcut.targetType === EntryType.Document) {
+        if (shortcut.extension) {
+          node.attributes.set(nodeAttrName_extension, shortcut.extension);
+        }
+        const iconId = shortcut.extension ? IconUtils.getDocumentIconIdFromExtension(shortcut.extension) : undefined;
+        const iconUrl = IconUtils.getDocumentIconUrlFromIconId(iconId ?? 'document-20');
+        const shortcutUrl = IconUtils.getDocumentIconUrlFromIconId('shortcut-overlay');
+        node.icon = [iconUrl, shortcutUrl];
+      } else {
+        const iconUrl = IconUtils.getDocumentIconUrlFromIconId('folder-20');
+        const shortcutUrl = IconUtils.getDocumentIconUrlFromIconId('shortcut-overlay');
+        node.icon = [iconUrl, shortcutUrl];
+      }
+    }
+    else {
+      throw new Error('unsupported entryType');
+    }
   }
 
-  private getLeafShortcutNode(shortcut: Shortcut, fullPath?: string): LfRepoTreeNode {
-    const extension = shortcut.extension;
-
-    const leafNode: LfRepoTreeNode = this.createLeafNode(shortcut, true, fullPath);
-
-    if (extension) {
-      leafNode.extension = extension;
-      const iconId = IconUtils.getDocumentIconIdFromExtension(extension);
-      const iconUrl = IconUtils.getDocumentIconUrlFromIconId(iconId);
-      const shortcutUrl = IconUtils.getDocumentIconUrlFromIconId('shortcut-overlay');
-      leafNode.icon = [iconUrl, shortcutUrl];
+  private createFolderNode(entry: Entry, repoName: string, parent?: LfRepoTreeNode): LfRepoTreeNode {
+    if (!entry.id) {
+      throw new Error('entryId is undefined');
     }
-    return leafNode;
-  }
-
-  private async createFolderNodeAsync(entry: Entry, shortcut: boolean = false, fullPath?: string): Promise<LfRepoTreeNode> {
-    let entryName = entry.name!;
-
+    if (parent && !parent.path) {
+      throw new Error('path is undefined on parent entry');
+    }
+    let entryName: string | undefined = entry.name;
+    let path: string;
     if (entry.id === 1) {
-      const repoClientRepoName: string = await this.repoClient.getCurrentRepoName();
-      const repoName = repoClientRepoName ?? '\\';
+      // rootNode does not have a name, default into repoName
+      path = '\\';
       if (!entryName || entryName.length === 0) {
         entryName = repoName;
       }
     }
-
-    let parentId = entry.parentId?.toString();
-    if (parentId === '0') {
-      parentId = undefined;
-    }
-
-    const path = fullPath ? fullPath : entry.fullPath;
-
-    const iconUrls = [IconUtils.getDocumentIconUrlFromIconId('folder-20')];
-    if (shortcut) {
-      const shortcutUrl = IconUtils.getDocumentIconUrlFromIconId('shortcut-overlay');
-      iconUrls.push(shortcutUrl);
+    else {
+      if (!entryName || entryName.length === 0) {
+        entryName = entry.id.toString();
+      }
+      path = parent ? PathUtils.combinePaths(parent.path, entryName) : entry.fullPath;
+      if (!path) {
+        throw new Error('fullPath is undefined');
+      }
     }
 
     const folderNode: LfRepoTreeNode = {
       name: entryName,
-      path: path ?? '',
+      path: path,
       id: entry.id!.toString(),
-      parentId,
-      icon: iconUrls,
+      parentId: parent?.id,
+      entryType: EntryType.Folder,
+      icon: [],
       isContainer: true,
       isLeaf: false,
+      attributes: new Map<string, any>()
     };
     return folderNode;
   }
 
-  private updateCacheChildrenNodes(folderId: string, currentPage: string | undefined, dataMap: LfRepoTreeNode[], nextPage: string | undefined) {
-    currentPage = currentPage ?? '0';
-    this.cachedChildNodes[folderId] = this.cachedChildNodes[folderId] ?? {};
-
-    this.cachedChildNodes[folderId][currentPage] = {
-      page: dataMap,
-      nextPage: nextPage
-    };
-  }
-
   private async getFolderChildrenFirstPageAsync(folder: LfRepoTreeNode): Promise<ODataValueContextOfIListOfEntry> {
     let entryId: number;
-    if (folder.targetId) { // TODO: what is targetId?
+    if (folder.targetId) {
       entryId = folder.targetId;
     }
     else {
@@ -328,17 +259,14 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     return listChildrenEntriesResponse;
   }
 
-  private async parseFolderChildrenResponse(folder: LfRepoTreeNode, listChildrenEntriesResponse: ODataValueContextOfIListOfEntry): Promise<LfRepoTreeNode[]> {
+  private parseFolderChildrenResponse(parent: LfRepoTreeNode, repoName: string, listChildrenEntriesResponse: ODataValueContextOfIListOfEntry): LfRepoTreeNode[] {
     const dataMap: LfRepoTreeNode[] = [];
     const childrenEntries: Entry[] | undefined = listChildrenEntriesResponse.value;
     if (childrenEntries) {
       for (const childEntry of childrenEntries) {
-        if (childEntry) {
-          const path = folder.path ? PathUtils.combinePaths(folder.path, childEntry.name!) : undefined;
-          const childNode: LfRepoTreeNode | undefined = await this.createNodeAsync(childEntry, path);
-          if (childNode) {
-            dataMap.push(childNode);
-          }
+        if (this.isViewable(childEntry)) {
+          const childNode: LfRepoTreeNode = this.createNode(childEntry, repoName, parent);
+          dataMap.push(childNode);
         }
       }
     }
