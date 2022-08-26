@@ -8,7 +8,7 @@ export interface LfRepoTreeNode extends LfTreeNode {
   /**
    * parent EntryId
    */
-  parentId?: string;
+  parentId?: string; // to remove
   /**
    * EntryType
    */
@@ -21,6 +21,10 @@ export interface LfRepoTreeNode extends LfTreeNode {
    * shortcut target EntryId (applies only to shortcut)
    */
   targetId?: number;
+  /**
+   * attributes
+   */
+  attributes: Map<string, any>;
 }
 
 export interface LfRepoTreeNodePage extends LfTreeNodePage {
