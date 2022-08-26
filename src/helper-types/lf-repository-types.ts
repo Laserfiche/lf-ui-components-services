@@ -1,9 +1,9 @@
-import { LfRepoTreeNode } from "./lf-repo-browser-types";
+import { LfTreeNode } from "@laserfiche/types-lf-ui-components";
 
 export interface LfFolder {
   path: string;
   entryId: number | undefined;
-  breadcrumbs?: LfRepoTreeNode[];
+  breadcrumbs?: LfTreeNode[];
   displayName?: string;
   displayPath?: string;
 }
