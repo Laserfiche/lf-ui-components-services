@@ -1,4 +1,4 @@
-import { LfRepoTreeNode } from './lf-tree-types.js';
+import { LfRepoTreeNode } from "./lf-repo-browser-types";
 
 export interface LfFolder {
   path: string;
