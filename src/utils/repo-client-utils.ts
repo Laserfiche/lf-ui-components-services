@@ -16,8 +16,8 @@ export async function getFolderChildrenDefaultParametersAsync(repoId: string, fo
   const requestParameters = {
     repoId,
     entryId: folderId,
-    $orderby: 'name asc', // sort by name, ascending
-    $select: 'creationTime,creator,folderPath,fullPath,elecDocumentSize,extension' +
+    orderby: 'name asc', // sort by name, ascending
+    select: 'creationTime,creator,folderPath,fullPath,elecDocumentSize,extension' +
       ',lastModifiedTime,parentId,templateId,targetType,targetId',
     groupByEntryType: true, // puts all folders before all files,
     prefer: 'odata.maxpagesize=20'
