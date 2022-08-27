@@ -234,7 +234,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       path: path,
       id: entry.id!.toString(),
       parentId: parent?.id,
-      entryType: EntryType.Folder,
+      entryType: entry.entryType,
       icon: [],
       isContainer: true,
       isLeaf: false,

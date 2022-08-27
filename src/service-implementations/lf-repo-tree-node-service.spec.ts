@@ -1,6 +1,6 @@
-import { LfRepoTreeNodeService, nodeAttrName_elecDocumentSize, nodeAttrName_extension } from './lf-repo-tree-node-service'
+import { LfRepoTreeNodeService, nodeAttrName_elecDocumentSize, nodeAttrName_extension, nodeAttrName_templateName } from './lf-repo-tree-node-service'
 import { LfRepoTreeEntryType, LfRepoTreeNode } from '../helper-types/lf-repo-browser-types';
-import { Entry, PostEntryChildrenRequest, EntryType, ODataValueContextOfIListOfEntry, Document } from '@laserfiche/lf-repository-api-client';
+import { Entry, PostEntryChildrenRequest, EntryType, ODataValueContextOfIListOfEntry, Document, Shortcut } from '@laserfiche/lf-repository-api-client';
 import { RepositoryApiClientMockBuilder } from './repository-api-client-mock-builder';
 
 const dummyFolderEntry: Entry = new Entry({
@@ -21,7 +21,8 @@ const dummyDocumentEntry: Entry = new Entry({
     id: 11,
     name: 'DummyDocument',
     fullPath: '\\DummyDocument',
-    entryType: EntryType.Document
+    entryType: EntryType.Document,
+    templateName: 'hi'
 });
 const dummyDocumentEntryDocument = dummyDocumentEntry as Document;
 dummyDocumentEntryDocument.elecDocumentSize = 20000;
@@ -32,6 +33,29 @@ const dummyInvalidEntry = {
     name: 'DummyFolder',
     fullPath: '\\DummyFolder',
 };
+
+const dummyShortcutDocument: Entry = new Entry({
+  id: 13,
+  name: 'dummyShortcutDocument',
+  fullPath: '\\dummyShortcutDocument',
+  entryType: EntryType.Shortcut,
+  templateName: 'hi',
+});
+const dummyShortcutDocumentShortcut = dummyShortcutDocument as Shortcut;
+dummyShortcutDocumentShortcut.targetId = 20000;
+dummyShortcutDocumentShortcut.extension = 'docx';
+dummyShortcutDocumentShortcut.targetType = EntryType.Document;
+
+const dummyShortcutFolder: Entry = new Entry({
+  id: 14,
+  name: 'dummyShortcutFolder',
+  fullPath: '\\dummyShortcutFolder',
+  entryType: EntryType.Shortcut
+});
+const dummyShortcutFolderShortcut = dummyShortcutFolder as Shortcut;
+dummyShortcutFolderShortcut.targetId = 20000;
+dummyShortcutFolderShortcut.targetType = EntryType.Folder;
+
 
 let service: LfRepoTreeNodeService;
 
@@ -135,6 +159,54 @@ describe('LfRepoTreeNodeService', () => {
         expect(createdNode).toEqual(expectedNode);
     });
 
+    it('should create shortcut Folder if entryType is Shortcut and targetType is Folder', () => {
+      const expectedNode: LfRepoTreeNode = {
+        name: 'dummyShortcutFolder',
+        path: '\\dummyShortcutFolder',
+        id: '14',
+        parentId: undefined,
+        icon: [
+          "https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20",
+          "https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#shortcut-overlay",
+          ],
+        isContainer: true,
+        isLeaf: false,
+        attributes: new Map<string, string>(),
+        entryType: EntryType.Shortcut,
+        targetId: 20000,
+        targetType: EntryType.Folder
+      };
+
+      // @ts-ignore
+      const createdNode = service.createNode(dummyShortcutFolder);
+      expect(createdNode).toEqual(expectedNode);
+  });
+
+  it('should create shortcut Document if entryType is Shortcut and targetType is Document', () => {
+    const expectedNode: LfRepoTreeNode = {
+      name: 'dummyShortcutDocument',
+      path: '\\dummyShortcutDocument',
+      id: '13',
+      parentId: undefined,
+      icon: [
+        "https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#edoc-wordprocessing-20",
+        "https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#shortcut-overlay",
+        ],
+      isContainer: false,
+      isLeaf: true,
+      attributes: new Map<string, string>(),
+      entryType: EntryType.Shortcut,
+      targetId: 20000,
+      targetType: EntryType.Document
+    };
+    expectedNode.attributes.set(nodeAttrName_extension, 'docx');
+    expectedNode.attributes.set(nodeAttrName_templateName, 'hi');
+
+    // @ts-ignore
+    const createdNode = service.createNode(dummyShortcutDocumentShortcut);
+    expect(createdNode).toEqual(expectedNode);
+});
+
     it('should rewrite root folder name to repo name if name is empty', () => {
         const expectedNode: LfRepoTreeNode = {
           name: 'Test Name',
@@ -166,6 +238,7 @@ describe('LfRepoTreeNodeService', () => {
         };
         expectedNode.attributes.set(nodeAttrName_elecDocumentSize, 20000);
         expectedNode.attributes.set(nodeAttrName_extension, 'docx');
+        expectedNode.attributes.set(nodeAttrName_templateName, 'hi');
 
         // @ts-ignore
         const createdNode = service.createNode(dummyDocumentEntryDocument);
