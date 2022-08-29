@@ -5,7 +5,7 @@ import {
   IconUtils,
   PathUtils
 } from '@laserfiche/lf-js-utils';
-import { getFolderChildrenDefaultParametersAsync } from '../utils/repo-client-utils.js';
+import { getEntryDefaultParametersAsync, getFolderChildrenDefaultParametersAsync } from '../utils/repo-client-utils.js';
 import { Entry, Shortcut, Document, ODataValueContextOfIListOfEntry, EntryType, Folder } from '@laserfiche/lf-repository-api-client';
 import { IRepositoryApiClientEx } from '../helper-types/repository-api-ex.js';
 
@@ -62,7 +62,10 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     const repoId: string = await this.repoClient.getCurrentRepoId();
     const repoName: string = await this.repoClient.getCurrentRepoName();
     try {
-      const entry: Entry = await this.repoClient.entriesClient.getEntry({ repoId, entryId });
+      const requestParameters = getEntryDefaultParametersAsync(repoId, entryId);
+      const entry: Entry = await this.repoClient.entriesClient.getEntry(
+        await requestParameters
+       );
       const node: LfRepoTreeNode = this.createNode(entry, repoName);
       return node;
     }
