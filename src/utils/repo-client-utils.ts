@@ -34,7 +34,8 @@ export async function getEntryDefaultParametersAsync(repoId: string, folderId: n
   const requestParameters = {
     repoId,
     entryId: folderId,
-    select: 'creationTime,creator,folderPath,fullPath,elecDocumentSize,extension' +
+    select: 'id,isContainer,isLeaf,name,entryType,templateName,templateFieldNames'
+     + ',creationTime,creator,folderPath,fullPath,elecDocumentSize,extension' +
       ',lastModifiedTime,parentId,templateId,targetType,targetId'
   };
   return requestParameters;
