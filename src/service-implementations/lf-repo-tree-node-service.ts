@@ -17,7 +17,6 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
 
   viewableEntryTypes: EntryType[] = [];
 
-
   private localizationService = new LfLocalizationService();
 
   constructor(
@@ -171,7 +170,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       if (document.extension) {
         node.attributes.set(nodeAttrName_extension, document.extension);
         const iconId = IconUtils.getDocumentIconIdFromExtension(document.extension);
-        node.icon = IconUtils.getDocumentIconUrlFromIconId(iconId);
+        node.icon = IconUtils.getDocumentIconUrlFromIconId(iconId) ?? 'document-20';
       }
       if (document.elecDocumentSize) {
         node.attributes.set(nodeAttrName_elecDocumentSize, document.elecDocumentSize);
