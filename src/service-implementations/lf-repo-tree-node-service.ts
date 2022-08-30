@@ -29,17 +29,26 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
   }
 
   async getParentTreeNodeAsync(treeNode: LfRepoTreeNode): Promise<LfTreeNode | undefined> {
-    if (!treeNode.parentId) {
-      if (treeNode.id === '1') {
-        // the root node does not have a parent tree node
+    const repoName: string = await this.repoClient.getCurrentRepoName();
+    if (treeNode.id === '1') {
         return undefined;
       }
-      throw new Error('treeNode.parentId is undefined');
-    }
 
     try {
-      const parentNode = await this.getTreeNodeByIdAsync(treeNode.parentId);
-      return parentNode;
+      const parentPath = this.getParentPath(treeNode.path);
+      if (parentPath) {
+        const parentEntry = await this.getFolderEntryAsync(parentPath);
+        if (parentEntry) {
+          return this.createNode(parentEntry, repoName);
+        }
+        else {
+          throw new Error('Parent is not found');
+        }
+      }
+      else {
+        return this.getRootTreeNodeAsync();
+      }
+
     }
     catch (err: any) {
       if (err.errorCode === 9013) {
@@ -278,4 +287,71 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     }
     return dataMap;
   }
+  private async getFolderEntryAsync(path: string): Promise<Entry | undefined> {
+    const folderNames: string[] = PathUtils.getListOfFolderNames(path);
+    const rootId = 1;
+    let parentId: number = rootId;
+    let foundParentFolder: Entry;
+    let needToCreateRestOfFolders: boolean = false; // Stop checking for existing subfolder if we know it won't exist (fewer API calls)
+
+    for (const folderName of folderNames) {
+      if (!needToCreateRestOfFolders) {
+        const foundSubfolder = await this.findSubfolderByNameAsync(parentId, folderName);
+        if (foundSubfolder) {
+          if (foundSubfolder.id) {
+            let entryId: number;
+            if ((foundSubfolder as Shortcut).targetType === EntryType.Shortcut) {
+              // TODO remove this once the API team allows targetID to be on children select
+              const shortcut = foundSubfolder as Shortcut;
+              entryId = shortcut.targetId;
+            } else {
+              entryId = foundSubfolder.id;
+            }
+            parentId = entryId;
+            foundParentFolder = foundSubfolder;
+            continue;
+          } else {
+            throw new Error('Failed to find folder');
+          }
+        }
+      }
+      needToCreateRestOfFolders = true;
+    }
+    return foundParentFolder;
+  }
+
+
+
+  private async findSubfolderByNameAsync(parentEntryId: number, subfolderName: string): Promise<Entry | undefined> {
+    const repoId: string = await this.repoClient.getCurrentRepoId();
+    const requestParameters = await getFolderChildrenDefaultParametersAsync(repoId, parentEntryId);
+    const childrenEntries: Entry[] = [];
+    await this.repoClient.entriesClient.getEntryListingForEach({
+      callback: async (listOfEntries) => {
+        if (listOfEntries.value) {
+          childrenEntries.push(...listOfEntries.value);
+        }
+        return true;
+      },
+      ...requestParameters,
+    });
+    const foundSubfolder: Entry | undefined = childrenEntries?.find(
+      (entry: Entry) =>
+        entry.name === subfolderName &&
+        (entry.entryType === EntryType.Folder ||
+          (entry.entryType === EntryType.Shortcut && (entry as Shortcut).targetType === EntryType.Folder))
+          // TODO: if entryType is Shortcut, targetType is undefined until API client captures Shortcut properties
+    );
+    return foundSubfolder;
+  }
+
+  private getParentPath(path: string) : string {
+    if(path === '\\') {
+      return undefined;
+    }
+    const paths = path.split('\\');
+    paths.pop(); // remove self
+    return paths.join('\\');
+  }
 }
+

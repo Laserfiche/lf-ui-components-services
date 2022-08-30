@@ -128,7 +128,36 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
             const newFolder: Entry = new Entry({ id: 100, name: args.request.name, fullPath: '\\', entryType: EntryType.Folder, parentId: 0 });
             mockChildren.push(newFolder);
             return Promise.resolve(newFolder);
-        })
+        }),
+        getEntryListingForEach: jest.fn(async (args) => {
+          args.callback(
+            new ODataValueContextOfIListOfEntry({
+              value: [
+                new Entry({ id: 10, name: '', fullPath: '\\', entryType: EntryType.Folder }),
+                new Entry({ id: 11, name: 'DocInRoot', fullPath: '\\DocInRoot', entryType: EntryType.Document }),
+                new Entry({ id: 12, name: 'FolderInRoot', fullPath: '\\FolderInRoot', entryType: EntryType.Folder }),
+                new Entry({
+                  id: 13,
+                  name: 'DocInFolderInRoot',
+                  fullPath: '\\FolderInRoot\\DocInFolderInRoot',
+                  entryType: EntryType.Document,
+                }),
+                new Entry({
+                  id: 20,
+                  name: 'ShortcutFolderInRoot',
+                  fullPath: '\\ParentOfShortcut\\ShortcutFolderInRoot',
+                  entryType: EntryType.Shortcut,
+                }),
+                new Entry({
+                  id: 22,
+                  name: 'FolderInAFolder',
+                  fullPath: '\\FolderInRoot\\FolderInAFolder',
+                  entryType: EntryType.Folder,
+                })
+              ],
+            })
+          );
+        }),
     })
     .build();
 
@@ -316,5 +345,76 @@ describe('LfRepoTreeNodeService', () => {
         expect(testNode1?.name).toEqual("FolderInRoot");
         expect(testNode2?.name).toEqual("RsInFolderInRoot");
     });
+
+    it('getParentTreeNodeAsync should return undefined if called on rootNode', async () => {
+      // Act
+      const parent = await service.getParentTreeNodeAsync({id: '1'} as LfRepoTreeNode);
+
+      // Assert
+      expect(parent).toEqual(undefined);
+  });
+
+  it('getParentTreeNodeAsync should return parent', async () => {
+    // Arrange
+    const expectedNode: LfRepoTreeNode = {
+      name: 'root',
+      path: '\\',
+      id: '1',
+      parentId: undefined,
+      icon: 'https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20',
+      isContainer: true,
+      isLeaf: false,
+      entryType: EntryType.Folder,
+      attributes: new Map<string, string>()
+    };
+
+    // Act
+    const parent = await service.getParentTreeNodeAsync({id: '2', path: '\\test', name: 'test'} as LfRepoTreeNode);
+
+    // Assert
+    expect(parent).toEqual(expectedNode);
+});
+
+it('getParentTreeNodeAsync should return parent if parent is folder', async () => {
+  // Arrange
+  const expectedNode: LfRepoTreeNode = {
+    name: 'FolderInRoot',
+    path: '\\FolderInRoot',
+    id: '12',
+    parentId: undefined,
+    icon: 'https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20',
+    isContainer: true,
+    isLeaf: false,
+    entryType: EntryType.Folder,
+    attributes: new Map<string, string>()
+  };
+
+  // Act
+  const parent = await service.getParentTreeNodeAsync({id: '2', path: '\\FolderInRoot\\test1', name: 'test1'} as LfRepoTreeNode);
+
+  // Assert
+  expect(parent).toEqual(expectedNode);
+});
+
+it('getParentTreeNodeAsync should return parent if parent is folder', async () => {
+  // Arrange
+  const expectedNode: LfRepoTreeNode = {
+    name: 'FolderInAFolder',
+    path: '\\FolderInRoot\\FolderInAFolder',
+    id: '22',
+    parentId: undefined,
+    icon: 'https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20',
+    isContainer: true,
+    isLeaf: false,
+    entryType: EntryType.Folder,
+    attributes: new Map<string, string>()
+  };
+
+  // Act
+  const parent = await service.getParentTreeNodeAsync({id: '2', path: '\\FolderInRoot\\FolderInAFolder\\test1', name: 'test1'} as LfRepoTreeNode);
+
+  // Assert
+  expect(parent).toEqual(expectedNode);
+});
 
 })
