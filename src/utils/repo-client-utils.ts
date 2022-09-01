@@ -24,19 +24,3 @@ export async function getFolderChildrenDefaultParametersAsync(repoId: string, fo
   };
   return requestParameters;
 }
-
-/** @internal */
-export async function getEntryDefaultParametersAsync(repoId: string, folderId: number): Promise<{
-  repoId: string;
-  entryId: number;
-  select?: string;
-}> {
-  const requestParameters = {
-    repoId,
-    entryId: folderId,
-    select: 'id,isContainer,isLeaf,name,entryType,templateName,templateFieldNames'
-     + ',creationTime,creator,folderPath,fullPath,elecDocumentSize,extension' +
-      ',lastModifiedTime,parentId,templateId,targetType,targetId'
-  };
-  return requestParameters;
-}

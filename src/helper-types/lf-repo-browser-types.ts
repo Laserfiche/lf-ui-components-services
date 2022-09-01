@@ -6,10 +6,6 @@ import { LfTreeNodePage, LfTreeNode } from "@laserfiche/types-lf-ui-components";
  */
 export interface LfRepoTreeNode extends LfTreeNode {
   /**
-   * parent EntryId
-   */
-  parentId?: string; // to remove
-  /**
    * EntryType
    */
   entryType: EntryType;

@@ -28,11 +28,11 @@ const dummyDocumentEntryDocument = dummyDocumentEntry as Document;
 dummyDocumentEntryDocument.elecDocumentSize = 20000;
 dummyDocumentEntryDocument.extension = 'docx';
 
-const dummyInvalidEntry = {
+const dummyInvalidEntry: Entry = new Entry({
     id: 12,
     name: 'DummyFolder',
     fullPath: '\\DummyFolder',
-};
+});
 
 const dummyShortcutDocument: Entry = new Entry({
   id: 13,
@@ -60,30 +60,30 @@ dummyShortcutFolderShortcut.targetType = EntryType.Folder;
 let service: LfRepoTreeNodeService;
 
 const mockChildren: Entry[] = [
-    new Entry({ id: 1, name: 'root', fullPath: '\\', entryType: EntryType.Folder, parentId: 0 }),
-    new Entry({ id: 11, name: 'DocInRoot', fullPath: '\\DocInRoot', entryType: EntryType.Document, templateName: 'test' }),
-    new Entry({ id: 12, name: 'FolderInRoot', fullPath: '\\FolderInRoot', entryType: EntryType.Folder }),
-    new Entry({ id: 52, name: 'FolderInRoot1', fullPath: '\\FolderInRoot1', entryType: EntryType.Folder }),
-    new Entry({ id: 53, name: 'FolderInRoot2', fullPath: '\\FolderInRoot2', entryType: EntryType.Folder }),
-    new Entry({ id: 54, name: 'FolderInRoot3', fullPath: '\\FolderInRoot3', entryType: EntryType.Folder }),
-    new Entry({ id: 55, name: 'FolderInRoot4', fullPath: '\\FolderInRoot4', entryType: EntryType.Folder }),
-    new Entry({ id: 56, name: 'FolderInRoot5', fullPath: '\\FolderInRoot5', entryType: EntryType.Folder }),
-    new Entry({ id: 57, name: 'FolderInRoot6', fullPath: '\\FolderInRoot6', entryType: EntryType.Folder }),
-    new Entry({ id: 58, name: 'FolderInRoot7', fullPath: '\\FolderInRoot7', entryType: EntryType.Folder }),
-    new Entry({ id: 59, name: 'FolderInRoot8', fullPath: '\\FolderInRoot8', entryType: EntryType.Folder }),
-    new Entry({ id: 60, name: 'FolderInRoot9', fullPath: '\\FolderInRoot9', entryType: EntryType.Folder }),
-    new Entry({ id: 61, name: 'FolderInRoot10', fullPath: '\\FolderInRoot10', entryType: EntryType.Folder }),
-    new Entry({ id: 13, name: 'DocInFolderInRoot', fullPath: '\\FolderInRoot\\DocInFolderInRoot', entryType: EntryType.Document }),
-    new Entry({ id: 20, name: 'RsInFolderInRoot', fullPath: '\\FolderInRoot\\RsInFolderInRoot', entryType: EntryType.Document }),
-    new Entry({ id: 21, name: 'RsInFolderInRoot1', fullPath: '\\FolderInRoot\\RsInFolderInRoot1', entryType: EntryType.Document }),
-    new Entry({ id: 22, name: 'RsInFolderInRoot2', fullPath: '\\FolderInRoot\\RsInFolderInRoot2', entryType: EntryType.Document }),
-    new Entry({ id: 23, name: 'RsInFolderInRoot3', fullPath: '\\FolderInRoot\\RsInFolderInRoot3', entryType: EntryType.Document }),
-    new Entry({ id: 24, name: 'RsInFolderInRoot4', fullPath: '\\FolderInRoot\\RsInFolderInRoot4', entryType: EntryType.Document }),
-    new Entry({ id: 25, name: 'RsInFolderInRoot5', fullPath: '\\FolderInRoot\\RsInFolderInRoot5', entryType: EntryType.Document }),
-    new Entry({ id: 26, name: 'RsInFolderInRoot6', fullPath: '\\FolderInRoot\\RsInFolderInRoot6', entryType: EntryType.Document }),
-    new Entry({ id: 27, name: 'RsInFolderInRoot7', fullPath: '\\FolderInRoot\\RsInFolderInRoot7', entryType: EntryType.Document }),
-    new Entry({ id: 28, name: 'RsInFolderInRoot8', fullPath: '\\FolderInRoot\\RsInFolderInRoot8', entryType: EntryType.Document }),
-    new Entry({ id: 29, name: 'RsInFolderInRoot9', fullPath: '\\FolderInRoot\\RsInFolderInRoot9', entryType: EntryType.Document }),
+  new Entry({ id: 1, name: 'root', fullPath: '\\', entryType: EntryType.Folder, parentId: 0 }),
+  new Entry({ id: 11, name: 'DocInRoot', fullPath: '\\DocInRoot', entryType: EntryType.Document, templateName: 'test' }),
+  new Entry({ id: 12, name: 'FolderInRoot', fullPath: '\\FolderInRoot', entryType: EntryType.Folder }),
+  new Entry({ id: 52, name: 'FolderInRoot1', fullPath: '\\FolderInRoot1', entryType: EntryType.Folder }),
+  new Entry({ id: 53, name: 'FolderInRoot2', fullPath: '\\FolderInRoot2', entryType: EntryType.Folder }),
+  new Entry({ id: 54, name: 'FolderInRoot3', fullPath: '\\FolderInRoot3', entryType: EntryType.Folder }),
+  new Entry({ id: 55, name: 'FolderInRoot4', fullPath: '\\FolderInRoot4', entryType: EntryType.Folder }),
+  new Entry({ id: 56, name: 'FolderInRoot5', fullPath: '\\FolderInRoot5', entryType: EntryType.Folder }),
+  new Entry({ id: 57, name: 'FolderInRoot6', fullPath: '\\FolderInRoot6', entryType: EntryType.Folder }),
+  new Entry({ id: 58, name: 'FolderInRoot7', fullPath: '\\FolderInRoot7', entryType: EntryType.Folder }),
+  new Entry({ id: 59, name: 'FolderInRoot8', fullPath: '\\FolderInRoot8', entryType: EntryType.Folder }),
+  new Entry({ id: 60, name: 'FolderInRoot9', fullPath: '\\FolderInRoot9', entryType: EntryType.Folder }),
+  new Entry({ id: 61, name: 'FolderInRoot10', fullPath: '\\FolderInRoot10', entryType: EntryType.Folder }),
+  new Entry({ id: 13, name: 'DocInFolderInRoot', fullPath: '\\FolderInRoot\\DocInFolderInRoot', entryType: EntryType.Document }),
+  new Entry({ id: 20, name: 'RsInFolderInRoot', fullPath: '\\FolderInRoot\\RsInFolderInRoot', entryType: EntryType.Document }),
+  new Entry({ id: 21, name: 'RsInFolderInRoot1', fullPath: '\\FolderInRoot\\RsInFolderInRoot1', entryType: EntryType.Document }),
+  new Entry({ id: 22, name: 'RsInFolderInRoot2', fullPath: '\\FolderInRoot\\RsInFolderInRoot2', entryType: EntryType.Document }),
+  new Entry({ id: 23, name: 'RsInFolderInRoot3', fullPath: '\\FolderInRoot\\RsInFolderInRoot3', entryType: EntryType.Document }),
+  new Entry({ id: 24, name: 'RsInFolderInRoot4', fullPath: '\\FolderInRoot\\RsInFolderInRoot4', entryType: EntryType.Document }),
+  new Entry({ id: 25, name: 'RsInFolderInRoot5', fullPath: '\\FolderInRoot\\RsInFolderInRoot5', entryType: EntryType.Document }),
+  new Entry({ id: 26, name: 'RsInFolderInRoot6', fullPath: '\\FolderInRoot\\RsInFolderInRoot6', entryType: EntryType.Document }),
+  new Entry({ id: 27, name: 'RsInFolderInRoot7', fullPath: '\\FolderInRoot\\RsInFolderInRoot7', entryType: EntryType.Document }),
+  new Entry({ id: 28, name: 'RsInFolderInRoot8', fullPath: '\\FolderInRoot\\RsInFolderInRoot8', entryType: EntryType.Document }),
+  new Entry({ id: 29, name: 'RsInFolderInRoot9', fullPath: '\\FolderInRoot\\RsInFolderInRoot9', entryType: EntryType.Document }),
 ]
 
 const mockRepoClient = new RepositoryApiClientMockBuilder()
@@ -105,8 +105,8 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
             count?: boolean;
         }) => {
           return Promise.resolve(
-          new ODataValueContextOfIListOfEntry({ value: mockChildren.slice(0, 20), odataNextLink: 'a test link returned by getEntryListing' }))
-        }),
+            new ODataValueContextOfIListOfEntry({ value: mockChildren.slice(0, 20), odataNextLink: 'a test link returned by getEntryListing' }))
+          }),
         getEntryListingNextLink: jest.fn((args: {
           nextLink: string;
           maxPageSize?: number
@@ -125,10 +125,10 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
             return Promise.resolve(matchedChild);
         }),
         createOrCopyEntry: jest.fn((args: { repoId: string, entryId: number, request: PostEntryChildrenRequest }) => {
-            const newFolder: Entry = new Entry({ id: 100, name: args.request.name, fullPath: '\\', entryType: EntryType.Folder, parentId: 0 });
-            mockChildren.push(newFolder);
-            return Promise.resolve(newFolder);
-        }),
+          const newFolder: Entry = new Entry({ id: 100, name: args.request.name, fullPath: '\\', entryType: EntryType.Folder, parentId: 0 });
+          mockChildren.push(newFolder);
+          return Promise.resolve(newFolder);
+      }),
         getEntryListingForEach: jest.fn(async (args) => {
           args.callback(
             new ODataValueContextOfIListOfEntry({
@@ -176,7 +176,6 @@ describe('LfRepoTreeNodeService', () => {
           name: 'DummyFolder',
           path: '\\DummyFolder',
           id: '10',
-          parentId: undefined,
           icon: 'https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20',
           isContainer: true,
           isLeaf: false,
@@ -193,7 +192,6 @@ describe('LfRepoTreeNodeService', () => {
         name: 'dummyShortcutFolder',
         path: '\\dummyShortcutFolder',
         id: '14',
-        parentId: undefined,
         icon: [
           "https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20",
           "https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#shortcut-overlay",
@@ -216,7 +214,6 @@ describe('LfRepoTreeNodeService', () => {
       name: 'dummyShortcutDocument',
       path: '\\dummyShortcutDocument',
       id: '13',
-      parentId: undefined,
       icon: [
         "https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#edoc-wordprocessing-20",
         "https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#shortcut-overlay",
@@ -241,7 +238,6 @@ describe('LfRepoTreeNodeService', () => {
           name: 'Test Name',
           path: '\\',
           id: '1',
-          parentId: undefined,
           icon: 'https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20',
           isContainer: true,
           isLeaf: false,
@@ -258,7 +254,6 @@ describe('LfRepoTreeNodeService', () => {
           name: 'DummyDocument',
           path: '\\DummyDocument',
           id: '11',
-          parentId: undefined,
           icon: 'https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#edoc-wordprocessing-20',
           isContainer: false,
           isLeaf: true,
@@ -302,7 +297,6 @@ describe('LfRepoTreeNodeService', () => {
 
         // Assert
         expect(rootNodes?.id).toEqual('1');
-        expect(rootNodes?.parentId).toBeUndefined();
         expect(rootNodes).toEqual(expectedNode);
     });
 
@@ -336,16 +330,6 @@ describe('LfRepoTreeNodeService', () => {
       })
   });
 
-    it('getNodeByIdAsync should call API getEntryAsync', async () => {
-        // Act
-        const testNode1 = await service.getTreeNodeByIdAsync("12");
-        const testNode2 = await service.getTreeNodeByIdAsync("20");
-
-        // Assert
-        expect(testNode1?.name).toEqual("FolderInRoot");
-        expect(testNode2?.name).toEqual("RsInFolderInRoot");
-    });
-
     it('getParentTreeNodeAsync should return undefined if called on rootNode', async () => {
       // Act
       const parent = await service.getParentTreeNodeAsync({id: '1'} as LfRepoTreeNode);
@@ -360,7 +344,6 @@ describe('LfRepoTreeNodeService', () => {
       name: 'root',
       path: '\\',
       id: '1',
-      parentId: undefined,
       icon: 'https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20',
       isContainer: true,
       isLeaf: false,
@@ -381,7 +364,6 @@ it('getParentTreeNodeAsync should return parent if parent is folder', async () =
     name: 'FolderInRoot',
     path: '\\FolderInRoot',
     id: '12',
-    parentId: undefined,
     icon: 'https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20',
     isContainer: true,
     isLeaf: false,
@@ -396,13 +378,12 @@ it('getParentTreeNodeAsync should return parent if parent is folder', async () =
   expect(parent).toEqual(expectedNode);
 });
 
-it('getParentTreeNodeAsync should return parent if parent is folder', async () => {
+it('getParentTreeNodeAsync should return parent if parent is a folder in root', async () => {
   // Arrange
   const expectedNode: LfRepoTreeNode = {
     name: 'FolderInAFolder',
     path: '\\FolderInRoot\\FolderInAFolder',
     id: '22',
-    parentId: undefined,
     icon: 'https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20',
     isContainer: true,
     isLeaf: false,

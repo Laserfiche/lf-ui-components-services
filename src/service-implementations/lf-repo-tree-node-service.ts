@@ -1,11 +1,11 @@
-import { LfTreeNodeService, LfTreeNodePage, LfTreeNode } from '@laserfiche/types-lf-ui-components';
-import { LfRepoTreeEntryType, LfRepoTreeNode, LfRepoTreeNodePage } from '../helper-types/lf-repo-browser-types';
+import { LfTreeNodeService, LfTreeNodePage } from '@laserfiche/types-lf-ui-components';
+import { LfRepoTreeNode } from '../helper-types/lf-repo-browser-types';
 import {
   LfLocalizationService,
   IconUtils,
   PathUtils
 } from '@laserfiche/lf-js-utils';
-import { getEntryDefaultParametersAsync, getFolderChildrenDefaultParametersAsync } from '../utils/repo-client-utils.js';
+import { getFolderChildrenDefaultParametersAsync } from '../utils/repo-client-utils.js';
 import { Entry, Shortcut, Document, ODataValueContextOfIListOfEntry, EntryType, Folder } from '@laserfiche/lf-repository-api-client';
 import { IRepositoryApiClientEx } from '../helper-types/repository-api-ex.js';
 
@@ -28,11 +28,11 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     }
   }
 
-  async getParentTreeNodeAsync(treeNode: LfRepoTreeNode): Promise<LfTreeNode | undefined> {
+  async getParentTreeNodeAsync(treeNode: LfRepoTreeNode): Promise<LfRepoTreeNode | undefined> {
     const repoName: string = await this.repoClient.getCurrentRepoName();
     if (treeNode.id === '1') {
-        return undefined;
-      }
+      return undefined;
+    }
 
     try {
       const parentPath = this.getParentPath(treeNode.path);
@@ -52,38 +52,11 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     }
     catch (err: any) {
       if (err.errorCode === 9013) {
-        const rootNode = await this.getTreeNodeByIdAsync('1');
-        return rootNode;
+        const rootNode = await this.getRootTreeNodeAsync();
       }
       else {
         throw err;
       }
-    }
-  }
-
-  async getTreeNodeByIdAsync(id: string): Promise<LfTreeNode | undefined> {
-    const entryId = parseInt(id, 10);
-
-    if (isNaN(entryId)) {
-      throw new Error('id cannot be parsed as Laserfiche EntryId');
-    }
-
-    const repoId: string = await this.repoClient.getCurrentRepoId();
-    const repoName: string = await this.repoClient.getCurrentRepoName();
-    try {
-      const requestParameters = getEntryDefaultParametersAsync(repoId, entryId);
-      const entry: Entry = await this.repoClient.entriesClient.getEntry(
-        await requestParameters
-       );
-      const node: LfRepoTreeNode = this.createNode(entry, repoName);
-      return node;
-    }
-    catch (err) {
-      if (err.errorCode === 9001) {
-        // Entry not found
-        return undefined;
-      }
-      throw err;
     }
   }
 
@@ -149,12 +122,8 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
   }
 
   private createLeafNode(entry: Entry, parent?: LfRepoTreeNode): LfRepoTreeNode {
-    let parentId = entry.parentId?.toString();
-    if (parentId === '0') {
-      parentId = undefined;
-    }
 
-    const path = parent? PathUtils.combinePaths(parent.path, entry.name): entry.fullPath;
+    const path = parent ? PathUtils.combinePaths(parent.path, entry.name) : entry.fullPath;
     if (!path) {
       throw new Error('entry fullPath is undefined');
     }
@@ -163,7 +132,6 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       name: entry.name!,
       path: path,
       id: entry.id!.toString(),
-      parentId,
       entryType: entry.entryType,
       icon: [],
       isContainer: false,
@@ -248,7 +216,6 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       name: entryName,
       path: path,
       id: entry.id!.toString(),
-      parentId: parent?.id,
       entryType: entry.entryType,
       icon: [],
       isContainer: true,
@@ -301,7 +268,6 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
           if (foundSubfolder.id) {
             let entryId: number;
             if ((foundSubfolder as Shortcut).targetType === EntryType.Shortcut) {
-              // TODO remove this once the API team allows targetID to be on children select
               const shortcut = foundSubfolder as Shortcut;
               entryId = shortcut.targetId;
             } else {
@@ -316,6 +282,9 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
         }
       }
       needToCreateRestOfFolders = true;
+    }
+    if (foundParentFolder) {
+      foundParentFolder.fullPath = path;
     }
     return foundParentFolder;
   }
@@ -340,13 +309,12 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
         entry.name === subfolderName &&
         (entry.entryType === EntryType.Folder ||
           (entry.entryType === EntryType.Shortcut && (entry as Shortcut).targetType === EntryType.Folder))
-          // TODO: if entryType is Shortcut, targetType is undefined until API client captures Shortcut properties
     );
     return foundSubfolder;
   }
 
-  private getParentPath(path: string) : string {
-    if(path === '\\') {
+  private getParentPath(path: string): string {
+    if (path === '\\') {
       return undefined;
     }
     const paths = path.split('\\');
