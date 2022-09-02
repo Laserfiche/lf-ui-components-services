@@ -27,11 +27,3 @@ export interface LfRepoTreeNodePage extends LfTreeNodePage {
   page: LfRepoTreeNode[];
   nextPage: string | undefined;
 }
-
-export enum LfRepoTreeEntryType {
-  Document = 'Document',
-  RecordSeries = 'RecordSeries',
-  Folder = 'Folder',
-  ShortcutFolder = 'ShortcutFolder',
-  ShortcutDocument = 'ShortcutDocument'
-}

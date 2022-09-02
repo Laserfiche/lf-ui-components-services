@@ -1,5 +1,5 @@
 import { LfRepoTreeNodeService, nodeAttrName_elecDocumentSize, nodeAttrName_extension, nodeAttrName_templateName } from './lf-repo-tree-node-service'
-import { LfRepoTreeEntryType, LfRepoTreeNode } from '../helper-types/lf-repo-browser-types';
+import { LfRepoTreeNode } from '../helper-types/lf-repo-browser-types';
 import { Entry, PostEntryChildrenRequest, EntryType, ODataValueContextOfIListOfEntry, Document, Shortcut, Folder } from '@laserfiche/lf-repository-api-client';
 import { RepositoryApiClientMockBuilder } from './repository-api-client-mock-builder';
 
@@ -336,7 +336,7 @@ describe('LfRepoTreeNodeService', () => {
       expect(parent).toEqual(undefined);
   });
 
-  it('getParentTreeNodeAsync should return parent', async () => {
+  it('getParentTreeNodeAsync should return parent if parent is root', async () => {
     // Arrange
     const expectedNode: LfRepoTreeNode = {
       name: 'root',
