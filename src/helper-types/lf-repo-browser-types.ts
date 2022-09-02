@@ -6,7 +6,7 @@ import { LfTreeNodePage, LfTreeNode } from "@laserfiche/types-lf-ui-components";
  */
 export interface LfRepoTreeNode extends LfTreeNode {
   /**
-   * EntryType
+   * EntryType defined in @laserfiche/lf-repository-api-client
    */
   entryType: EntryType;
   /**
@@ -18,7 +18,7 @@ export interface LfRepoTreeNode extends LfTreeNode {
    */
   targetId?: number;
   /**
-   * attributes
+   * attributes such as "elecDocumentSize", "extension"
    */
   attributes: Map<string, any>;
 }

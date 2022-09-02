@@ -6,7 +6,7 @@ import {
   PathUtils
 } from '@laserfiche/lf-js-utils';
 import { getFolderChildrenDefaultParametersAsync } from '../utils/repo-client-utils.js';
-import { Entry, Shortcut, Document, ODataValueContextOfIListOfEntry, EntryType, Folder } from '@laserfiche/lf-repository-api-client';
+import { Entry, Shortcut, Document, ODataValueContextOfIListOfEntry, EntryType } from '@laserfiche/lf-repository-api-client';
 import { IRepositoryApiClientEx } from '../helper-types/repository-api-ex.js';
 
 export const nodeAttrName_extension = 'extension';
@@ -15,6 +15,14 @@ export const nodeAttrName_templateName = 'templateName';
 
 export class LfRepoTreeNodeService implements LfTreeNodeService {
 
+  /**
+   * An array containing entryTypes (defined in '@laserfiche/lf-repository-api-client') for viewable entries
+   * @example
+   * ```ts
+   * const service = new LfRepoTreeNodeService(repoClient);
+   * service.viewableEntryTypes = [EntryType.Folder]; // entries of other types (document, shortcut) are not viewable
+   * ```
+   */
   viewableEntryTypes: EntryType[] = [];
 
   private localizationService = new LfLocalizationService();
@@ -28,6 +36,27 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     }
   }
 
+  /**
+   * Gets the parent LfTreeNode of the passed in node
+   * @param treeNode: LfTreeNode object to get the parent of
+   * returns - Promise with the parent of the parameter LfTreeNode or undefined if its the root LfTreeNode and does not have a parent
+   * @example
+   * ```ts
+   * // suppose the repository is structured as below
+   * - root
+   *      - DocInRoot
+   *      - FolderInRoot
+   *            - DocInFolderInRoot
+   *            - FolderInFolderInRoot
+   *            - FolderInFolderInRoot1
+   *      - FolderInRoot1
+   *      - FolderInRoot2
+   *      - FolderInRoot3
+   *
+   * const service = new LfRepoTreeNodeService(repoClient);
+   * service.getParentTreeNodeAsync(DocInFolderInRoot) -> FolderInRoot;
+   * ```
+   */
   async getParentTreeNodeAsync(treeNode: LfRepoTreeNode): Promise<LfRepoTreeNode | undefined> {
     const repoName: string = await this.repoClient.getCurrentRepoName();
     if (treeNode.id === '1') {
@@ -63,6 +92,49 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     }
   }
 
+  /**
+   * Requests a page of size 20 containing the children of the parent tree node, sorted by name, ascending.
+   * Only returns the viewable children.
+   * @param folder: LfTreeNode representing the folder to get data from
+   * @param nextPage: string representing the next page requested. If undefined, the first page is returned
+   * @example
+   * ```ts
+   * // suppose the repository is structured as below
+   * - root
+   *      - DocInRoot
+   *      - FolderInRoot
+   *            - DocInFolderInRoot
+   *            - FolderInFolderInRoot
+   *            - FolderInFolderInRoot1
+   *            - FolderInFolderInRoot2
+   *            ...
+   *            - FolderInFolderInRoot17
+   *            - FolderInFolderInRoot18
+   *            - FolderInFolderInRoot19
+   *            - FolderInFolderInRoot20
+   *            - FolderInFolderInRoot21
+   *      - FolderInRoot1
+   *      - FolderInRoot2
+   *      - FolderInRoot3
+   * const service = new LfRepoTreeNodeService(repoClient);
+   * service.viewableEntryTypes = [EntryType.Folder];
+   * service.getFolderChildrenAsync(FolderInRoot) -> { page:
+   *                                                      [FolderInFolderInRoot,
+   *                                                      FolderInFolderInRoot1,
+   *                                                      FolderInFolderInRoot2,
+   *                                                      ...
+   *                                                      FolderInFolderInRoot17,
+   *                                                      FolderInFolderInRoot18],
+   *                                                      nextPage: <API request for next page>
+   *                                                    }  // no DocInFolderInRoot because it is not viewable
+   * service.getFolderChildrenAsync(FolderInRoot, <API request for next page>) -> { page:
+   *                                                      [FolderInFolderInRoot19,
+   *                                                      FolderInFolderInRoot20,
+   *                                                      FolderInFolderInRoot21],
+   *                                                      nextPage: undefined
+   *                                                    }
+   * ```
+   **/
   async getFolderChildrenAsync(folder: LfRepoTreeNode, nextPage?: string | undefined): Promise<LfTreeNodePage> {
     const repoName: string = await this.repoClient.getCurrentRepoName();
     let listChildrenEntriesResponse: ODataValueContextOfIListOfEntry;
@@ -80,6 +152,31 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     });
   }
 
+  /**
+   * Returns the root LfTreeNode
+   * @example
+   * ```ts
+   * // suppose the repository is structured as below
+   * - root
+   *      - DocInRoot
+   *      - FolderInRoot
+   *            - DocInFolderInRoot
+   *            - FolderInFolderInRoot
+   *            - FolderInFolderInRoot1
+   *            - FolderInFolderInRoot2
+   *            ...
+   *            - FolderInFolderInRoot17
+   *            - FolderInFolderInRoot18
+   *            - FolderInFolderInRoot19
+   *            - FolderInFolderInRoot20
+   *            - FolderInFolderInRoot21
+   *      - FolderInRoot1
+   *      - FolderInRoot2
+   *      - FolderInRoot3
+   * const service = new LfRepoTreeNodeService(repoClient);
+   * service.getRootTreeNodeAsync(FolderInRoot) -> root
+   * ```
+   */
   async getRootTreeNodeAsync(): Promise<LfRepoTreeNode> {
     const repoName: string = await this.repoClient.getCurrentRepoName();
     const repoId: string = await this.repoClient.getCurrentRepoId();
