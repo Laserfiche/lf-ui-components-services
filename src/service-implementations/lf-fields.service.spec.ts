@@ -3,21 +3,21 @@ import { LfFieldsService } from './lf-fields.service.js';
 import { ODataValueContextOfIListOfTemplateFieldInfo, TemplateFieldInfo as ApiTemplateFieldInfo, WFieldType } from '@laserfiche/lf-repository-api-client';
 import { RepositoryApiClientMockBuilder } from './repository-api-client-mock-builder.js';
 
-function createObject(data: any, folder: any) {
-  for (var property in data) {
-    if (data.hasOwnProperty(property))
-      folder[property] = data[property];
+function createObject(data: any, object: any) {
+  for (const property in data){
+    object[property] = data[property];
   }
-  return folder;
+
+  return object;
 }
 
 function createApiTemplateFieldInfo(data) {
-  let fieldInfo = new ApiTemplateFieldInfo();
+  const fieldInfo = new ApiTemplateFieldInfo();
   return createObject(data, fieldInfo);
 }
 
 function createODataValueContextOfIListOfTemplateFieldInfo(data) {
-  let templateFieldInfo = new ODataValueContextOfIListOfTemplateFieldInfo();
+  const templateFieldInfo = new ODataValueContextOfIListOfTemplateFieldInfo();
   return createObject(data, templateFieldInfo);
 }
 
@@ -77,7 +77,7 @@ describe('LfFieldsService', () => {
     const templateId = 123;
     let actualFieldValues: { [key: string]: string };
     mockRepoClient.entriesClient.getDynamicFieldValues = jest.fn(async ({ repoId, entryId, request }) => {
-      actualFieldValues = request?.fieldValues!;
+      actualFieldValues = request!.fieldValues!;
       return {}
     });
 

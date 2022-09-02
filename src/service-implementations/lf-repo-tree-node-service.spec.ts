@@ -3,31 +3,30 @@ import { LfRepoTreeNode } from '../helper-types/lf-repo-browser-types';
 import { Entry, PostEntryChildrenRequest, EntryType, ODataValueContextOfIListOfEntry, Document, Shortcut, Folder } from '@laserfiche/lf-repository-api-client';
 import { RepositoryApiClientMockBuilder } from './repository-api-client-mock-builder';
 
-function createObject(data: any, folder: any) {
-  for (var property in data) {
-    if (data.hasOwnProperty(property))
-      folder[property] = data[property];
+function createObject(data: any, object: any) {
+  for (const property in data) {
+      object[property] = data[property];
   }
-  return folder;
+  return object;
 }
 
 function createFolder(data) {
-  let folder = new Folder();
+  const folder = new Folder();
   return createObject(data, folder);
 }
 
 function createDocument(data) {
-  let document = new Document();
+  const document = new Document();
   return createObject(data, document);
 }
 
 function createShortcut(data) {
-  let shortcut = new Shortcut();
+  const shortcut = new Shortcut();
   return createObject(data, shortcut);
 }
 
 function createResultEntryListing(data) {
-  let result = new ODataValueContextOfIListOfEntry();
+  const result = new ODataValueContextOfIListOfEntry();
   return createObject(data, result);
 }
 
