@@ -3,9 +3,27 @@ import { LfFieldsService } from './lf-fields.service.js';
 import { ODataValueContextOfIListOfTemplateFieldInfo, TemplateFieldInfo as ApiTemplateFieldInfo, WFieldType } from '@laserfiche/lf-repository-api-client';
 import { RepositoryApiClientMockBuilder } from './repository-api-client-mock-builder.js';
 
+function createObject(data: any, folder: any) {
+  for (var property in data) {
+    if (data.hasOwnProperty(property))
+      folder[property] = data[property];
+  }
+  return folder;
+}
+
+function createApiTemplateFieldInfo(data) {
+  let fieldInfo = new ApiTemplateFieldInfo();
+  return createObject(data, fieldInfo);
+}
+
+function createODataValueContextOfIListOfTemplateFieldInfo(data) {
+  let templateFieldInfo = new ODataValueContextOfIListOfTemplateFieldInfo();
+  return createObject(data, templateFieldInfo);
+}
+
 const mockTemplateFields: ApiTemplateFieldInfo[] = [
-  new ApiTemplateFieldInfo({ id: 1, name: 'test', fieldType: WFieldType.String }),
-  new ApiTemplateFieldInfo({ id: 2, name: 'test', fieldType: WFieldType.String }),
+  createApiTemplateFieldInfo({ id: 1, name: 'test', fieldType: WFieldType.String }),
+  createApiTemplateFieldInfo({ id: 2, name: 'test', fieldType: WFieldType.String }),
 ];
 
 const mockRepoClient = new RepositoryApiClientMockBuilder()
@@ -25,7 +43,7 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
       top?: number;
       skip?: number;
       count?: boolean;
-    }) => Promise.resolve(new ODataValueContextOfIListOfTemplateFieldInfo({ value: mockTemplateFields }))),
+    }) => Promise.resolve(createODataValueContextOfIListOfTemplateFieldInfo({ value: mockTemplateFields }))),
     getTemplateFieldDefinitions: jest.fn((args: {
       repoId: string;
       templateId: number;
@@ -37,7 +55,7 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
       skip?: number;
       count?: boolean;
     }) => {
-      return Promise.resolve(new ODataValueContextOfIListOfTemplateFieldInfo({ value: mockTemplateFields }));
+      return Promise.resolve(createODataValueContextOfIListOfTemplateFieldInfo({ value: mockTemplateFields }));
     })
   })
   .withGetCurrentRepoId(async () => { return 'r-23456789' })
@@ -59,7 +77,7 @@ describe('LfFieldsService', () => {
     const templateId = 123;
     let actualFieldValues: { [key: string]: string };
     mockRepoClient.entriesClient.getDynamicFieldValues = jest.fn(async ({ repoId, entryId, request }) => {
-      actualFieldValues = request.fieldValues!;
+      actualFieldValues = request?.fieldValues!;
       return {}
     });
 
