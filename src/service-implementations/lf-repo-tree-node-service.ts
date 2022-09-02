@@ -33,6 +33,9 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     if (treeNode.id === '1') {
       return undefined;
     }
+    if (treeNode.path?.endsWith('\\')) {
+      treeNode.path = treeNode.path.slice(0,-1);
+    }
 
     try {
       const parentPath = this.getParentPath(treeNode.path);
@@ -210,6 +213,9 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       if (!path) {
         throw new Error('fullPath is undefined');
       }
+      else if (path.endsWith('\\') && path.length > 1) {
+        path = path.slice(0,-1);
+      }
     }
 
     const folderNode: LfRepoTreeNode = {
@@ -267,9 +273,10 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
         if (foundSubfolder) {
           if (foundSubfolder.id) {
             let entryId: number;
-            if ((foundSubfolder as Shortcut).targetType === EntryType.Shortcut) {
+            if (foundSubfolder.entryType === EntryType.Shortcut) {
               const shortcut = foundSubfolder as Shortcut;
               entryId = shortcut.targetId;
+              foundSubfolder.id = shortcut.targetId;
             } else {
               entryId = foundSubfolder.id;
             }
