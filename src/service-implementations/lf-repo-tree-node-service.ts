@@ -6,7 +6,7 @@ import {
   PathUtils
 } from '@laserfiche/lf-js-utils';
 import { getFolderChildrenDefaultParametersAsync } from '../utils/repo-client-utils.js';
-import { Entry, Shortcut, Document, ODataValueContextOfIListOfEntry, EntryType } from '@laserfiche/lf-repository-api-client';
+import { Entry, Shortcut, Document, ODataValueContextOfIListOfEntry, EntryType, FindEntryResult } from '@laserfiche/lf-repository-api-client';
 import { IRepositoryApiClientEx } from '../helper-types/repository-api-ex.js';
 
 export const nodeAttrName_extension = 'extension';
@@ -59,6 +59,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    */
   async getParentTreeNodeAsync(treeNode: LfRepoTreeNode): Promise<LfRepoTreeNode | undefined> {
     const repoName: string = await this.repoClient.getCurrentRepoName();
+    const repoId: string = await this.repoClient.getCurrentRepoId();
     if (treeNode.id === '1') {
       return undefined;
     }
@@ -69,9 +70,9 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     try {
       const parentPath = this.getParentPath(treeNode.path);
       if (parentPath) {
-        const parentEntry = await this.getFolderEntryAsync(parentPath);
-        if (parentEntry) {
-          return this.createNode(parentEntry, repoName);
+        const parentEntry: FindEntryResult = await this.repoClient.entriesClient.getEntryByPath({repoId, fullPath: parentPath});
+        if (parentEntry.entry) {
+          return this.createNode(parentEntry.entry, repoName);
         }
         else {
           throw new Error('Parent is not found');
@@ -356,65 +357,6 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       }
     }
     return dataMap;
-  }
-  private async getFolderEntryAsync(path: string): Promise<Entry | undefined> {
-    const folderNames: string[] = PathUtils.getListOfFolderNames(path);
-    const rootId = 1;
-    let parentId: number = rootId;
-    let foundParentFolder: Entry;
-    let needToCreateRestOfFolders: boolean = false; // Stop checking for existing subfolder if we know it won't exist (fewer API calls)
-
-    for (const folderName of folderNames) {
-      if (!needToCreateRestOfFolders) {
-        const foundSubfolder = await this.findSubfolderByNameAsync(parentId, folderName);
-        if (foundSubfolder) {
-          if (foundSubfolder.id) {
-            let entryId: number;
-            if (foundSubfolder.entryType === EntryType.Shortcut) {
-              const shortcut = foundSubfolder as Shortcut;
-              entryId = shortcut.targetId;
-              foundSubfolder.id = shortcut.targetId;
-            } else {
-              entryId = foundSubfolder.id;
-            }
-            parentId = entryId;
-            foundParentFolder = foundSubfolder;
-            continue;
-          } else {
-            throw new Error('Failed to find folder');
-          }
-        }
-      }
-      needToCreateRestOfFolders = true;
-    }
-    if (foundParentFolder) {
-      foundParentFolder.fullPath = path;
-    }
-    return foundParentFolder;
-  }
-
-
-
-  private async findSubfolderByNameAsync(parentEntryId: number, subfolderName: string): Promise<Entry | undefined> {
-    const repoId: string = await this.repoClient.getCurrentRepoId();
-    const requestParameters = await getFolderChildrenDefaultParametersAsync(repoId, parentEntryId);
-    const childrenEntries: Entry[] = [];
-    await this.repoClient.entriesClient.getEntryListingForEach({
-      callback: async (listOfEntries) => {
-        if (listOfEntries.value) {
-          childrenEntries.push(...listOfEntries.value);
-        }
-        return true;
-      },
-      ...requestParameters,
-    });
-    const foundSubfolder: Entry | undefined = childrenEntries?.find(
-      (entry: Entry) =>
-        entry.name === subfolderName &&
-        (entry.entryType === EntryType.Folder ||
-          (entry.entryType === EntryType.Shortcut && (entry as Shortcut).targetType === EntryType.Folder))
-    );
-    return foundSubfolder;
   }
 
   private getParentPath(path: string): string {

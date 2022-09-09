@@ -3,22 +3,13 @@ import { LfFieldsService } from './lf-fields.service.js';
 import { ODataValueContextOfIListOfTemplateFieldInfo, TemplateFieldInfo as ApiTemplateFieldInfo, WFieldType } from '@laserfiche/lf-repository-api-client';
 import { RepositoryApiClientMockBuilder } from './repository-api-client-mock-builder.js';
 
-function createObject(data: any, object: any) {
-  for (const property in data){
-    object[property] = data[property];
-  }
-
-  return object;
-}
 
 function createApiTemplateFieldInfo(data) {
-  const fieldInfo = new ApiTemplateFieldInfo();
-  return createObject(data, fieldInfo);
+  return new ApiTemplateFieldInfo(data);
 }
 
 function createODataValueContextOfIListOfTemplateFieldInfo(data) {
-  const templateFieldInfo = new ODataValueContextOfIListOfTemplateFieldInfo();
-  return createObject(data, templateFieldInfo);
+  return new ODataValueContextOfIListOfTemplateFieldInfo(data);
 }
 
 const mockTemplateFields: ApiTemplateFieldInfo[] = [

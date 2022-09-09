@@ -4,16 +4,16 @@ import {
 } from '@laserfiche/types-lf-ui-components';
 import { LfDefaultFieldsService } from '../helper-types/lf-default-fields.service.js';
 import { convertApiToLfFieldInfo, convertApiToLfTemplateFieldInfo } from '../utils/types-utils.js';
+import { IRepositoryApiClientEx } from '../helper-types/repository-api-ex.js';
 import {
   GetDynamicFieldLogicValueRequest,
+  ODataValueOfIListOfTemplateFieldInfo,
   ODataValueOfIListOfWFieldInfo,
   ODataValueOfIListOfWTemplateInfo,
   WFieldInfo,
   WTemplateInfo,
   TemplateFieldInfo as ApiTemplateFieldInfo,
-  ODataValueOfIListOfTemplateFieldInfo,
-} from '@laserfiche/lf-repository-api-client';
-import { IRepositoryApiClientEx } from '../helper-types/repository-api-ex.js';
+  } from '@laserfiche/lf-repository-api-client';
 
 export class LfFieldsService implements LfFieldContainerService {
   private cachedFieldDefinitions: WFieldInfo[] | undefined;

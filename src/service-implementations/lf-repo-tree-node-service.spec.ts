@@ -2,32 +2,26 @@ import { LfRepoTreeNodeService, nodeAttrName_elecDocumentSize, nodeAttrName_exte
 import { LfRepoTreeNode } from '../helper-types/lf-repo-browser-types';
 import { Entry, PostEntryChildrenRequest, EntryType, ODataValueContextOfIListOfEntry, Document, Shortcut, Folder } from '@laserfiche/lf-repository-api-client';
 import { RepositoryApiClientMockBuilder } from './repository-api-client-mock-builder';
-
-function createObject(data: any, object: any) {
-  for (const property in data) {
-      object[property] = data[property];
-  }
-  return object;
-}
+import { FindEntryResult } from '@laserfiche/lf-repository-api-client';
 
 function createFolder(data) {
-  const folder = new Folder();
-  return createObject(data, folder);
+  return new Folder(data);
 }
 
 function createDocument(data) {
-  const document = new Document();
-  return createObject(data, document);
+  return new Document(data);
 }
 
 function createShortcut(data) {
-  const shortcut = new Shortcut();
-  return createObject(data, shortcut);
+  return new Shortcut(data);
 }
 
 function createResultEntryListing(data) {
-  const result = new ODataValueContextOfIListOfEntry();
-  return createObject(data, result);
+  return new ODataValueContextOfIListOfEntry(data);
+}
+
+function createFindEntryResult(data): FindEntryResult {
+  return new FindEntryResult(data);
 }
 
 const dummyFolderEntry: Folder = createFolder({
@@ -151,34 +145,26 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
           mockChildren.push(newFolder);
           return Promise.resolve(newFolder);
       }),
-        getEntryListingForEach: jest.fn(async (args) => {
-          args.callback(
-            createResultEntryListing({
-              value: [
-                createFolder({ id: 10, name: '', fullPath: '\\', entryType: EntryType.Folder }),
-                createDocument({ id: 11, name: 'DocInRoot', fullPath: '\\DocInRoot', entryType: EntryType.Document }),
-                createFolder({ id: 12, name: 'FolderInRoot', fullPath: '\\FolderInRoot', entryType: EntryType.Folder }),
-                createDocument({
-                  id: 13,
-                  name: 'DocInFolderInRoot',
-                  fullPath: '\\FolderInRoot\\DocInFolderInRoot',
-                  entryType: EntryType.Document,
-                }),
-                createShortcut({
-                  id: 20,
-                  name: 'ShortcutFolderInRoot',
-                  fullPath: '\\ParentOfShortcut\\ShortcutFolderInRoot',
-                  entryType: EntryType.Shortcut,
-                }),
-                createFolder({
+        getEntryByPath: jest.fn((args: { repoId: string, fullPath: string, fallbackToClosestAncestor?: boolean }) => {
+          let entry: Entry;
+          switch(args.fullPath){
+            case '\\FolderInRoot':
+              entry = createFolder({ id: 12, name: 'FolderInRoot', fullPath: '\\FolderInRoot', entryType: EntryType.Folder });
+              break;
+            case '\\FolderInRoot\\FolderInAFolder':
+              entry =  createFolder({
                   id: 22,
                   name: 'FolderInAFolder',
                   fullPath: '\\FolderInRoot\\FolderInAFolder',
                   entryType: EntryType.Folder,
-                })
-              ],
-            })
-          );
+                });
+                break;
+            default:
+              entry = createFolder({ id: 10, name: '', fullPath: '\\', entryType: EntryType.Folder });
+          }
+            return Promise.resolve(createFindEntryResult({
+              entry: entry
+            }));
         }),
     })
     .build();
