@@ -136,7 +136,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       listChildrenEntriesResponse = await this.getFolderChildrenFirstPageAsync(folder);
     }
     else {
-      listChildrenEntriesResponse = await this.repoClient.entriesClient.getEntryListingNextLink({ nextLink: nextPage, maxPageSize: 20 })
+      listChildrenEntriesResponse = await this.repoClient.entriesClient.getEntryListingNextLink({ nextLink: nextPage, maxPageSize: 100 })
     }
     const dataMap = this.parseFolderChildrenResponse(folder, repoName, listChildrenEntriesResponse);
     const nextPageLink: string | undefined = listChildrenEntriesResponse.odataNextLink;
@@ -158,7 +158,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    *            - FolderInFolderInRoot
    *      - FolderInRoot2
    * const service = new LfRepoTreeNodeService(repoClient);
-   * service.getRootTreeNodeAsync(FolderInRoot1) // returns the root node, with id of 1
+   * service.getRootTreeNodeAsync() // returns the root node, with id of 1
    * ```
    */
   async getRootTreeNodeAsync(): Promise<LfRepoTreeNode> {
