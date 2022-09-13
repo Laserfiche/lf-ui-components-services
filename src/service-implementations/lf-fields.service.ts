@@ -4,16 +4,16 @@ import {
 } from '@laserfiche/types-lf-ui-components';
 import { LfDefaultFieldsService } from '../helper-types/lf-default-fields.service.js';
 import { convertApiToLfFieldInfo, convertApiToLfTemplateFieldInfo } from '../utils/types-utils.js';
+import { IRepositoryApiClientEx } from '../helper-types/repository-api-ex.js';
 import {
   GetDynamicFieldLogicValueRequest,
+  ODataValueOfIListOfTemplateFieldInfo,
   ODataValueOfIListOfWFieldInfo,
   ODataValueOfIListOfWTemplateInfo,
   WFieldInfo,
   WTemplateInfo,
   TemplateFieldInfo as ApiTemplateFieldInfo,
-  ODataValueOfIListOfTemplateFieldInfo,
-} from '@laserfiche/lf-repository-api-client';
-import { IRepositoryApiClientEx } from '../helper-types/repository-api-ex.js';
+  } from '@laserfiche/lf-repository-api-client';
 
 export class LfFieldsService implements LfFieldContainerService {
   private cachedFieldDefinitions: WFieldInfo[] | undefined;
@@ -113,10 +113,9 @@ export class LfFieldsService implements LfFieldContainerService {
     }
 
     const currentDynamicValues: { [key: string]: string } = this.getDynamicFieldValues(currentValues);
-    const dynamicRequest: GetDynamicFieldLogicValueRequest = new GetDynamicFieldLogicValueRequest({
-      templateId,
-      fieldValues: currentDynamicValues
-    });
+    const dynamicRequest: GetDynamicFieldLogicValueRequest = new GetDynamicFieldLogicValueRequest();
+    dynamicRequest.templateId = templateId;
+    dynamicRequest.fieldValues = currentDynamicValues
 
     // Have to call get_dynamic_field_values on an entry but we don't have an entry yet
     const hardcodedRootEntryId: number = 1;
