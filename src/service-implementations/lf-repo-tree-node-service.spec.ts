@@ -127,7 +127,7 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
           maxPageSize?: number
         }) => {
           return Promise.resolve(
-            createResultEntryListing({ value: mockChildren.slice(0, args.maxPageSize), odataNextLink: 'a test link returned by getEntryListingNextLink'})
+            createResultEntryListing({ value: mockChildren.slice(0, 20), odataNextLink: 'a test link returned by getEntryListingNextLink'})
           )
         }),
         getEntry: jest.fn((args: { repoId, entryId }) => {
