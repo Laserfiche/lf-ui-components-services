@@ -20,7 +20,7 @@ export async function getFolderChildrenDefaultParametersAsync(repoId: string, fo
     select: 'creationTime,creator,folderPath,fullPath,elecDocumentSize,extension' +
       ',lastModifiedTime,parentId,templateId,targetType,targetId',
     groupByEntryType: true, // puts all folders before all files,
-    prefer: 'odata.maxpagesize=20'
+    prefer: 'odata.maxpagesize=100'
   };
   return requestParameters;
 }

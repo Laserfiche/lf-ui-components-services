@@ -72,7 +72,9 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       if (parentPath) {
         const parentEntry: FindEntryResult = await this.repoClient.entriesClient.getEntryByPath({repoId, fullPath: parentPath});
         if (parentEntry.entry) {
-          return this.createNode(parentEntry.entry, repoName);
+          const foundParentEntry = parentEntry.entry;
+          foundParentEntry.fullPath = parentPath;
+          return this.createNode(foundParentEntry, repoName);
         }
         else {
           throw new Error('Parent is not found');
@@ -94,7 +96,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
   }
 
   /**
-   * Requests a page of size 20 containing the children of the parent tree node, sorted by name, ascending.
+   * Requests a page of size 100 containing the children of the parent tree node, sorted by name, ascending.
    * Only returns the viewable children.
    * @param folder: LfTreeNode representing the folder to get data from
    * @param nextPage: string representing the next page requested. If undefined, the first page is returned
@@ -105,33 +107,24 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    *      - DocInRoot
    *      - FolderInRoot
    *            - DocInFolderInRoot
-   *            - FolderInFolderInRoot
-   *            - FolderInFolderInRoot1
-   *            - FolderInFolderInRoot2
+   *            - FolderInFolderInRoot001
+   *            - FolderInFolderInRoot002
    *            ...
-   *            - FolderInFolderInRoot17
-   *            - FolderInFolderInRoot18
-   *            - FolderInFolderInRoot19
-   *            - FolderInFolderInRoot20
-   *            - FolderInFolderInRoot21
-   *      - FolderInRoot1
-   *      - FolderInRoot2
-   *      - FolderInRoot3
+   *            - FolderInFolderInRoot101
+   *            - FolderInFolderInRoot102
    * const service = new LfRepoTreeNodeService(repoClient);
    * service.viewableEntryTypes = [EntryType.Folder];
    * service.getFolderChildrenAsync(FolderInRoot) -> { page:
-   *                                                      [FolderInFolderInRoot,
-   *                                                      FolderInFolderInRoot1,
-   *                                                      FolderInFolderInRoot2,
+   *                                                      FolderInFolderInRoot001,
+   *                                                      FolderInFolderInRoot002,
    *                                                      ...
-   *                                                      FolderInFolderInRoot17,
-   *                                                      FolderInFolderInRoot18],
+   *                                                      FolderInFolderInRoot99,
+   *                                                      FolderInFolderInRoot100],
    *                                                      nextPage: <API request for next page>
    *                                                    }  // no DocInFolderInRoot because it is not viewable
    * service.getFolderChildrenAsync(FolderInRoot, <API request for next page>) -> { page:
-   *                                                      [FolderInFolderInRoot19,
-   *                                                      FolderInFolderInRoot20,
-   *                                                      FolderInFolderInRoot21],
+   *                                                      [FolderInFolderInRoot101,
+   *                                                      FolderInFolderInRoot102],
    *                                                      nextPage: undefined
    *                                                    }
    * ```
@@ -160,22 +153,12 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    * // suppose the repository is structured as below
    * - root
    *      - DocInRoot
-   *      - FolderInRoot
+   *      - FolderInRoot1
    *            - DocInFolderInRoot
    *            - FolderInFolderInRoot
-   *            - FolderInFolderInRoot1
-   *            - FolderInFolderInRoot2
-   *            ...
-   *            - FolderInFolderInRoot17
-   *            - FolderInFolderInRoot18
-   *            - FolderInFolderInRoot19
-   *            - FolderInFolderInRoot20
-   *            - FolderInFolderInRoot21
-   *      - FolderInRoot1
    *      - FolderInRoot2
-   *      - FolderInRoot3
    * const service = new LfRepoTreeNodeService(repoClient);
-   * service.getRootTreeNodeAsync(FolderInRoot) -> root
+   * service.getRootTreeNodeAsync(FolderInRoot1) // returns the root node, with id of 1
    * ```
    */
   async getRootTreeNodeAsync(): Promise<LfRepoTreeNode> {
@@ -218,12 +201,11 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     } else {
       throw new Error('Unsupported entry type');
     }
-    this.setNodeAttributes(treeNode, entry);
+    this.setNodeProperties(treeNode, entry);
     return treeNode;
   }
 
   private createLeafNode(entry: Entry, parent?: LfRepoTreeNode): LfRepoTreeNode {
-
     const path = parent ? PathUtils.combinePaths(parent.path, entry.name) : entry.fullPath;
     if (!path) {
       throw new Error('entry fullPath is undefined');
@@ -242,10 +224,11 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     return leafNode;
   }
 
-  private setNodeAttributes(node: LfRepoTreeNode, entry: Entry): void {
+  private setNodeProperties(node: LfRepoTreeNode, entry: Entry): void {
     if (entry.templateName) {
       node.attributes.set(nodeAttrName_templateName, entry.templateName);
     }
+
     if (entry.entryType === EntryType.Document) {
       const document = entry as Document;
       if (document.extension) {
@@ -255,7 +238,6 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       }
       else {
         node.icon = IconUtils.getDocumentIconUrlFromIconId('document-20');
-
       }
       if (document.elecDocumentSize) {
         node.attributes.set(nodeAttrName_elecDocumentSize, document.elecDocumentSize);
