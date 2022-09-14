@@ -2,7 +2,7 @@
 
 ### Features
 - Add `LfRepoTreeNodeService`.
-- **[BREAKING]** Deprecate `LfRepoTreeService` and corresponding types.
+- **[BREAKING]** Remove `LfRepoTreeService` and corresponding types.
 
 ### Fixes
 
