@@ -1,9 +1,11 @@
 ## 13.0.0
 
 ### Features
-- Added `LfRepoTreeNodeService`.
+- Add `LfRepoTreeNodeService`.
+- **[BREAKING]** Deprecate `LfRepoTreeService` and corresponding types.
+
 ### Fixes
-- Remove `LfRepoTreeService` and corresponding types.
+
 ### Chore & Maintenance
 - Update `@laserfiche/types-lf-ui-components` version to 13.1.1.
 - Update `@laserfiche/lf-repository-api-client` version to 1.0.12.
