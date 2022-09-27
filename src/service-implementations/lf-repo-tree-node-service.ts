@@ -74,7 +74,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
         if (parentEntry.entry) {
           const foundParentEntry = parentEntry.entry;
           foundParentEntry.fullPath = parentPath;
-          return this.createNode(foundParentEntry, repoName);
+          return this.createLfRepoTreeNode(foundParentEntry, repoName);
         }
         else {
           throw new Error('Parent is not found');
@@ -88,6 +88,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     catch (err: any) {
       if (err.errorCode === 9013) {
         const rootNode = await this.getRootTreeNodeAsync();
+        return rootNode;
       }
       else {
         throw err;
@@ -171,15 +172,45 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
         entryId: rootFolderId
       }
     );
-    return this.createNode(rootEntry, repoName);
+    return this.createLfRepoTreeNode(rootEntry, repoName);
   }
 
-  private isViewable(entry: Entry): boolean {
-    return entry.entryType !== EntryType.RecordSeries && (this.viewableEntryTypes.includes(entry.entryType)
-      || (entry.entryType === EntryType.Shortcut && this.viewableEntryTypes.includes((entry as Shortcut).targetType)));
-  }
-
-  private createNode(entry: Entry, repoName: string, parent?: LfRepoTreeNode): LfRepoTreeNode {
+  /**
+   * Converts an Entry to the corresponding LfRepoTreeNode and returns it
+   * @param entry entry
+   * @param repoName Laserfiche repository name
+   * @param parent option parent LfRepoTreeNode
+   * @returns the corresponding LfRepoTreeNode
+   * @example
+   * ```ts
+   * const entry: Shortcut = createShortcut({
+   *  id: 14,
+   *  name: 'shortcutFolder',
+   *  fullPath: '\\shortcutFolder',
+   *  entryType: EntryType.Shortcut,
+   *  targetId: 20000,
+   *  targetType: EntryType.Folder
+   * });
+   * const service = new LfRepoTreeNodeService(repoClient);
+   * service.createLfRepoTreeNode(entry, 'repoName');
+   * // returns {
+   *  name: 'dummyShortcutFolder',
+   *  path: '\\dummyShortcutFolder',
+   *  id: '14',
+   *  icon: [
+   *   "https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20",
+   *   "https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#shortcut-overlay",
+   *  ],
+   *  isContainer: true,
+   *  isLeaf: false,
+   *  attributes: new Map<string, string>(),
+   *  entryType: EntryType.Shortcut,
+   *  targetId: 20000,
+   *  targetType: EntryType.Folder
+   * };
+   *  ```
+   */
+  createLfRepoTreeNode(entry: Entry, repoName: string, parent?: LfRepoTreeNode): LfRepoTreeNode {
     let treeNode: LfRepoTreeNode | undefined;
     if (!entry.entryType) {
       throw new Error('entry type is undefined');
@@ -203,6 +234,11 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     }
     this.setNodeProperties(treeNode, entry);
     return treeNode;
+  }
+
+  private isViewable(entry: Entry): boolean {
+    return entry.entryType !== EntryType.RecordSeries && (this.viewableEntryTypes.includes(entry.entryType)
+      || (entry.entryType === EntryType.Shortcut && this.viewableEntryTypes.includes((entry as Shortcut).targetType)));
   }
 
   private createLeafNode(entry: Entry, parent?: LfRepoTreeNode): LfRepoTreeNode {
@@ -333,7 +369,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     if (childrenEntries) {
       for (const childEntry of childrenEntries) {
         if (this.isViewable(childEntry)) {
-          const childNode: LfRepoTreeNode = this.createNode(childEntry, repoName, parent);
+          const childNode: LfRepoTreeNode = this.createLfRepoTreeNode(childEntry, repoName, parent);
           dataMap.push(childNode);
         }
       }

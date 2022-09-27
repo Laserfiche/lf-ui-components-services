@@ -190,8 +190,7 @@ describe('LfRepoTreeNodeService', () => {
           attributes: new Map<string, string>(),
           entryType: EntryType.Folder
         };
-        // @ts-ignore
-        const createdNode = service.createNode(dummyFolderEntry);
+        const createdNode = service.createLfRepoTreeNode(dummyFolderEntry, 'Test Name');
         expect(createdNode).toEqual(expectedNode);
     });
 
@@ -212,8 +211,7 @@ describe('LfRepoTreeNodeService', () => {
         targetType: EntryType.Folder
       };
 
-      // @ts-ignore
-      const createdNode = service.createNode(dummyShortcutFolderShortcut);
+      const createdNode = service.createLfRepoTreeNode(dummyShortcutFolderShortcut, 'Test Name');
       expect(createdNode).toEqual(expectedNode);
   });
 
@@ -236,8 +234,7 @@ describe('LfRepoTreeNodeService', () => {
     expectedNode.attributes.set(nodeAttrName_extension, 'docx');
     expectedNode.attributes.set(nodeAttrName_templateName, 'hi');
 
-    // @ts-ignore
-    const createdNode = service.createNode(dummyShortcutDocumentShortcut);
+    const createdNode = service.createLfRepoTreeNode(dummyShortcutDocumentShortcut, 'Test Name');
     expect(createdNode).toEqual(expectedNode);
 });
 
@@ -252,8 +249,8 @@ describe('LfRepoTreeNodeService', () => {
           entryType: EntryType.Folder,
           attributes: new Map<string, string>()
         };
-        // @ts-ignore
-        const createdNode = service.createNode(dummyFolderRootEntry, 'Test Name');
+
+        const createdNode = service.createLfRepoTreeNode(dummyFolderRootEntry, 'Test Name');
         expect(createdNode).toEqual(expectedNode);
     });
 
@@ -272,14 +269,12 @@ describe('LfRepoTreeNodeService', () => {
         expectedNode.attributes.set(nodeAttrName_extension, 'docx');
         expectedNode.attributes.set(nodeAttrName_templateName, 'hi');
 
-        // @ts-ignore
-        const createdNode = service.createNode(dummyDocumentEntryDocument);
+        const createdNode = service.createLfRepoTreeNode(dummyDocumentEntryDocument, 'Test Name');
         expect(createdNode).toEqual(expectedNode);
     });
 
     it('should throw exception if entryType not set', () => {
-        // @ts-ignore
-        expect(() => service.createNode(dummyInvalidEntry)).toThrow('entry type is undefined');
+        expect(() => service.createLfRepoTreeNode(dummyInvalidEntry, 'Test Name')).toThrow('entry type is undefined');
     });
 
     it('can choose to view only folders, not documents or record series', async () => {
@@ -300,8 +295,7 @@ describe('LfRepoTreeNodeService', () => {
     it('getRootNodesAsync should call API getEntryAsync and coerce parentId = 0 into parentId = undefined', async () => {
         // Act
         const rootNodes = await service.getRootTreeNodeAsync();
-        // @ts-ignore
-        const expectedNode = service.createNode(mockChildren[0]);
+        const expectedNode = service.createLfRepoTreeNode(mockChildren[0], 'Test Name');
 
         // Assert
         expect(rootNodes?.id).toEqual('1');
@@ -405,5 +399,7 @@ it('getParentTreeNodeAsync should return parent if parent is a folder in root', 
   // Assert
   expect(parent).toEqual(expectedNode);
 });
+
+
 
 })
