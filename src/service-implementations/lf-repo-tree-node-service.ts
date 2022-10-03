@@ -229,10 +229,13 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       else {
         throw new Error('Unexpected shortcut targetType');
       }
-    } else {
+    } else if (entry.entryType === EntryType.RecordSeries) {
+      treeNode = this.createFolderNode(entry, repoName, parent);
+    }
+    else {
       throw new Error('Unsupported entry type');
     }
-    this.setNodeProperties(treeNode, entry);
+    this.setNodeProperties(treeNode, entry, parent);
     return treeNode;
   }
 
@@ -260,7 +263,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     return leafNode;
   }
 
-  private setNodeProperties(node: LfRepoTreeNode, entry: Entry): void {
+  private setNodeProperties(node: LfRepoTreeNode, entry: Entry, parent?: LfRepoTreeNode ): void {
     if (entry.templateName) {
       node.attributes.set(nodeAttrName_templateName, entry.templateName);
     }
@@ -280,7 +283,13 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       }
     }
     else if (entry.entryType === EntryType.Folder) {
+      if (parent.entryType == EntryType.RecordSeries) {
+        node.icon = IconUtils.getDocumentIconUrlFromIconId('recordfolder-20');
+      }
       node.icon = IconUtils.getDocumentIconUrlFromIconId('folder-20');
+    }
+    else if (entry.entryType === EntryType.RecordSeries) {
+      node.icon = IconUtils.getDocumentIconUrlFromIconId('recordseries-20');
     }
     else if (entry.entryType === EntryType.Shortcut) {
       const shortcut = entry as Shortcut;
