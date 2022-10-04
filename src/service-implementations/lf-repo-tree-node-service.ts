@@ -198,8 +198,8 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    *  path: '\\dummyShortcutFolder',
    *  id: '14',
    *  icon: [
-   *   "https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20",
-   *   "https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#shortcut-overlay",
+   *   "https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4.0.1--preview-3178157605/resources/icons/document-icons.svg#folder-20",
+   *   "https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4.0.1--preview-3178157605/resources/icons/document-icons.svg#shortcut-overlay",
    *  ],
    *  isContainer: true,
    *  isLeaf: false,
@@ -283,7 +283,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       }
     }
     else if (entry.entryType === EntryType.Folder) {
-      if (parent.entryType == EntryType.RecordSeries) {
+      if (parent?.entryType == EntryType.RecordSeries) {
         node.icon = IconUtils.getDocumentIconUrlFromIconId('recordfolder-20');
       }
       node.icon = IconUtils.getDocumentIconUrlFromIconId('folder-20');
