@@ -226,6 +226,9 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       } else if (shortcut.targetType === EntryType.Document) {
         treeNode = this.createLeafNode(shortcut, parent);
       }
+      else if (shortcut.targetType === EntryType.RecordSeries) {
+        treeNode = this.createFolderNode(shortcut, repoName, parent);
+      }
       else {
         throw new Error('Unexpected shortcut targetType');
       }
@@ -304,10 +307,16 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
         const iconUrl = IconUtils.getDocumentIconUrlFromIconId(iconId ?? 'document-20');
         const shortcutUrl = IconUtils.getDocumentIconUrlFromIconId('shortcut-overlay');
         node.icon = [iconUrl, shortcutUrl];
-      } else {
+      } else if (shortcut.targetType === EntryType.Folder) {
         const iconUrl = IconUtils.getDocumentIconUrlFromIconId('folder-20');
         const shortcutUrl = IconUtils.getDocumentIconUrlFromIconId('shortcut-overlay');
         node.icon = [iconUrl, shortcutUrl];
+      } else if (shortcut.targetType === EntryType.RecordSeries) {
+        const iconUrl = IconUtils.getDocumentIconUrlFromIconId('recordseries-20');
+        const shortcutUrl = IconUtils.getDocumentIconUrlFromIconId('shortcut-overlay');
+        node.icon = [iconUrl, shortcutUrl];
+      } else {
+        throw new Error('unsupported shortcut targetType');
       }
     }
     else {
