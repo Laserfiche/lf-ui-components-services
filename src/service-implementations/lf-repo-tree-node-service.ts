@@ -286,9 +286,11 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       }
     }
     else if (entry.entryType === EntryType.Folder) {
-      if (parent?.entryType === EntryType.RecordSeries) {
+      if (parent?.entryType === EntryType.RecordSeries ||
+        (parent?.entryType === EntryType.Shortcut && parent?.targetType === EntryType.RecordSeries)) {
         node.icon = IconUtils.getDocumentIconUrlFromIconId('recordfolder-20');
-      } else {
+      }
+      else {
         node.icon = IconUtils.getDocumentIconUrlFromIconId('folder-20');
       }
     }
