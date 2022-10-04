@@ -198,8 +198,8 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    *  path: '\\dummyShortcutFolder',
    *  id: '14',
    *  icon: [
-   *   "https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4.0.1--preview-3178157605/resources/icons/document-icons.svg#folder-20",
-   *   "https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4.0.1--preview-3178157605/resources/icons/document-icons.svg#shortcut-overlay",
+   *   "https://lfxstatic.com/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20",
+   *   "https://lfxstatic.com/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#shortcut-overlay",
    *  ],
    *  isContainer: true,
    *  isLeaf: false,
