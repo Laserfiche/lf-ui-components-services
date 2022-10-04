@@ -240,7 +240,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
   }
 
   private isViewable(entry: Entry): boolean {
-    return entry.entryType !== EntryType.RecordSeries && (this.viewableEntryTypes.includes(entry.entryType)
+    return (this.viewableEntryTypes.includes(entry.entryType)
       || (entry.entryType === EntryType.Shortcut && this.viewableEntryTypes.includes((entry as Shortcut).targetType)));
   }
 
