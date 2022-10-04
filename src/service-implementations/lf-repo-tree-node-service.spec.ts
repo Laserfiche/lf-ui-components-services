@@ -37,7 +37,7 @@ const dummyFolderRootEntry: Folder = createFolder({
   fullPath: '\\',
   entryType: EntryType.Folder
 });
-const dummyDocumentEntryDocument: Document = createFolder({
+const dummyDocumentEntryDocument: Document = createDocument({
   id: 11,
   name: 'DummyDocument',
   fullPath: '\\DummyDocument',
