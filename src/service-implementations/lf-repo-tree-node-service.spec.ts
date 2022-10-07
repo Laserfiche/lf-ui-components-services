@@ -236,8 +236,9 @@ describe('LfRepoTreeNodeService', () => {
 
     const createdNode = service.createLfRepoTreeNode(dummyShortcutDocumentShortcut, 'Test Name');
     expect(createdNode).toEqual(expectedNode);
-});
+  });
 
+    // TODO: add test for creating RecordSeries
     it('should rewrite root folder name to repo name if name is empty', () => {
         const expectedNode: LfRepoTreeNode = {
           name: 'Test Name',
