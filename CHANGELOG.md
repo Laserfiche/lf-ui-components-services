@@ -1,3 +1,12 @@
+
+## 13.0.2
+
+### Features
+- `LfRepoTreeNodeService`: support RecordSeries
+### Fixes
+
+### Chore & Maintenance
+
 ## 13.0.1
 
 ### Features

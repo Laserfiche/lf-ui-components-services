@@ -37,7 +37,7 @@ const dummyFolderRootEntry: Folder = createFolder({
   fullPath: '\\',
   entryType: EntryType.Folder
 });
-const dummyDocumentEntryDocument: Document = createFolder({
+const dummyDocumentEntryDocument: Document = createDocument({
   id: 11,
   name: 'DummyDocument',
   fullPath: '\\DummyDocument',
@@ -102,117 +102,117 @@ const mockChildren: Entry[] = [
 ]
 
 const mockRepoClient = new RepositoryApiClientMockBuilder()
-    .withGetCurrentRepoId(async () => { return 'r-23456789' })
-    .withGetCurrentRepoName(async () => { return 'Test Name' })
-    .withEntriesClient({
-        getEntryListing: jest.fn((args: {
-            repoId: string;
-            entryId: number;
-            groupByEntryType?: boolean;
-            fields?: string[];
-            formatFields?: boolean;
-            prefer?: string;
-            culture?: string;
-            select?: string;
-            orderby?: string;
-            top?: number;
-            skip?: number;
-            count?: boolean;
-        }) => {
-          return Promise.resolve(
-            createResultEntryListing({ value: mockChildren.slice(0, 20), odataNextLink: 'a test link returned by getEntryListing' }))
-          }),
-        getEntryListingNextLink: jest.fn((args: {
-          nextLink: string;
-          maxPageSize?: number
-        }) => {
-          return Promise.resolve(
-            createResultEntryListing({ value: mockChildren.slice(0, 20), odataNextLink: 'a test link returned by getEntryListingNextLink'})
-          )
-        }),
-        getEntry: jest.fn((args: { repoId, entryId }) => {
-            let matchedChild: Entry;
-            mockChildren.forEach(child => {
-                if (child.id === args.entryId) {
-                    matchedChild = child;
-                    return Promise.resolve(matchedChild);
-                }
-            })
-            return Promise.resolve(mockChildren[0]);
-        }),
-        createOrCopyEntry: jest.fn((args: { repoId: string, entryId: number, request: PostEntryChildrenRequest }) => {
-          const newFolder: Entry = new Folder({ id: 100, name: args.request.name, fullPath: '\\', entryType: EntryType.Folder, parentId: 0 });
-          mockChildren.push(newFolder);
-          return Promise.resolve(newFolder);
-      }),
-        getEntryByPath: jest.fn((args: { repoId: string, fullPath: string, fallbackToClosestAncestor?: boolean }) => {
-          let entry: Entry;
-          switch(args.fullPath){
-            case '\\FolderInRoot':
-              entry = createFolder({ id: 12, name: 'FolderInRoot', fullPath: '\\FolderInRoot', entryType: EntryType.Folder });
-              break;
-            case '\\FolderInRoot\\FolderInAFolder':
-              entry =  createFolder({
-                  id: 22,
-                  name: 'FolderInAFolder',
-                  fullPath: '\\FolderInRoot\\FolderInAFolder',
-                  entryType: EntryType.Folder,
-                });
-                break;
-            default:
-              entry = createFolder({ id: 10, name: '', fullPath: '\\', entryType: EntryType.Folder });
-          }
-            return Promise.resolve(createFindEntryResult({
-              entry: entry
-            }));
-        }),
-    })
-    .build();
+  .withGetCurrentRepoId(async () => { return 'r-23456789' })
+  .withGetCurrentRepoName(async () => { return 'Test Name' })
+  .withEntriesClient({
+    getEntryListing: jest.fn((args: {
+      repoId: string;
+      entryId: number;
+      groupByEntryType?: boolean;
+      fields?: string[];
+      formatFields?: boolean;
+      prefer?: string;
+      culture?: string;
+      select?: string;
+      orderby?: string;
+      top?: number;
+      skip?: number;
+      count?: boolean;
+    }) => {
+      return Promise.resolve(
+        createResultEntryListing({ value: mockChildren.slice(0, 20), odataNextLink: 'a test link returned by getEntryListing' }))
+    }),
+    getEntryListingNextLink: jest.fn((args: {
+      nextLink: string;
+      maxPageSize?: number
+    }) => {
+      return Promise.resolve(
+        createResultEntryListing({ value: mockChildren.slice(0, 20), odataNextLink: 'a test link returned by getEntryListingNextLink' })
+      )
+    }),
+    getEntry: jest.fn((args: { repoId, entryId }) => {
+      let matchedChild: Entry;
+      mockChildren.forEach(child => {
+        if (child.id === args.entryId) {
+          matchedChild = child;
+          return Promise.resolve(matchedChild);
+        }
+      })
+      return Promise.resolve(mockChildren[0]);
+    }),
+    createOrCopyEntry: jest.fn((args: { repoId: string, entryId: number, request: PostEntryChildrenRequest }) => {
+      const newFolder: Entry = new Folder({ id: 100, name: args.request.name, fullPath: '\\', entryType: EntryType.Folder, parentId: 0 });
+      mockChildren.push(newFolder);
+      return Promise.resolve(newFolder);
+    }),
+    getEntryByPath: jest.fn((args: { repoId: string, fullPath: string, fallbackToClosestAncestor?: boolean }) => {
+      let entry: Entry;
+      switch (args.fullPath) {
+        case '\\FolderInRoot':
+          entry = createFolder({ id: 12, name: 'FolderInRoot', fullPath: '\\FolderInRoot', entryType: EntryType.Folder });
+          break;
+        case '\\FolderInRoot\\FolderInAFolder':
+          entry = createFolder({
+            id: 22,
+            name: 'FolderInAFolder',
+            fullPath: '\\FolderInRoot\\FolderInAFolder',
+            entryType: EntryType.Folder,
+          });
+          break;
+        default:
+          entry = createFolder({ id: 10, name: '', fullPath: '\\', entryType: EntryType.Folder });
+      }
+      return Promise.resolve(createFindEntryResult({
+        entry: entry
+      }));
+    }),
+  })
+  .build();
 
 describe('LfRepoTreeNodeService', () => {
 
-    beforeEach(() => {
-        service = new LfRepoTreeNodeService(mockRepoClient);
-    });
+  beforeEach(() => {
+    service = new LfRepoTreeNodeService(mockRepoClient);
+  });
 
-    it('should be created', () => {
-        expect(service).toBeTruthy();
-    });
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
 
-    it('should create folder if entryType is Folder', () => {
-        const expectedNode: LfRepoTreeNode = {
-          name: 'DummyFolder',
-          path: '\\DummyFolder',
-          id: '10',
-          icon: 'https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20',
-          isContainer: true,
-          isLeaf: false,
-          attributes: new Map<string, string>(),
-          entryType: EntryType.Folder
-        };
-        const createdNode = service.createLfRepoTreeNode(dummyFolderEntry, 'Test Name');
-        expect(createdNode).toEqual(expectedNode);
-    });
+  it('should create folder if entryType is Folder', () => {
+    const expectedNode: LfRepoTreeNode = {
+      name: 'DummyFolder',
+      path: '\\DummyFolder',
+      id: '10',
+      icon: 'https://lfxstatic.com/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20',
+      isContainer: true,
+      isLeaf: false,
+      attributes: new Map<string, string>(),
+      entryType: EntryType.Folder
+    };
+    const createdNode = service.createLfRepoTreeNode(dummyFolderEntry, 'Test Name');
+    expect(createdNode).toEqual(expectedNode);
+  });
 
-    it('should create shortcut Folder if entryType is Shortcut and targetType is Folder', () => {
-      const expectedNode: LfRepoTreeNode = {
-        name: 'dummyShortcutFolder',
-        path: '\\dummyShortcutFolder',
-        id: '14',
-        icon: [
-          "https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20",
-          "https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#shortcut-overlay",
-          ],
-        isContainer: true,
-        isLeaf: false,
-        attributes: new Map<string, string>(),
-        entryType: EntryType.Shortcut,
-        targetId: 20000,
-        targetType: EntryType.Folder
-      };
+  it('should create shortcut Folder if entryType is Shortcut and targetType is Folder', () => {
+    const expectedNode: LfRepoTreeNode = {
+      name: 'dummyShortcutFolder',
+      path: '\\dummyShortcutFolder',
+      id: '14',
+      icon: [
+        "https://lfxstatic.com/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20",
+        "https://lfxstatic.com/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#shortcut-overlay",
+      ],
+      isContainer: true,
+      isLeaf: false,
+      attributes: new Map<string, string>(),
+      entryType: EntryType.Shortcut,
+      targetId: 20000,
+      targetType: EntryType.Folder
+    };
 
-      const createdNode = service.createLfRepoTreeNode(dummyShortcutFolderShortcut, 'Test Name');
-      expect(createdNode).toEqual(expectedNode);
+    const createdNode = service.createLfRepoTreeNode(dummyShortcutFolderShortcut, 'Test Name');
+    expect(createdNode).toEqual(expectedNode);
   });
 
   it('should create shortcut Document if entryType is Shortcut and targetType is Document', () => {
@@ -221,9 +221,9 @@ describe('LfRepoTreeNodeService', () => {
       path: '\\dummyShortcutDocument',
       id: '13',
       icon: [
-        "https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#edoc-wordprocessing-20",
-        "https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#shortcut-overlay",
-        ],
+        "https://lfxstatic.com/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#edoc-wordprocessing-20",
+        "https://lfxstatic.com/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#shortcut-overlay",
+      ],
       isContainer: false,
       isLeaf: true,
       attributes: new Map<string, string>(),
@@ -236,108 +236,109 @@ describe('LfRepoTreeNodeService', () => {
 
     const createdNode = service.createLfRepoTreeNode(dummyShortcutDocumentShortcut, 'Test Name');
     expect(createdNode).toEqual(expectedNode);
-});
-
-    it('should rewrite root folder name to repo name if name is empty', () => {
-        const expectedNode: LfRepoTreeNode = {
-          name: 'Test Name',
-          path: '\\',
-          id: '1',
-          icon: 'https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20',
-          isContainer: true,
-          isLeaf: false,
-          entryType: EntryType.Folder,
-          attributes: new Map<string, string>()
-        };
-
-        const createdNode = service.createLfRepoTreeNode(dummyFolderRootEntry, 'Test Name');
-        expect(createdNode).toEqual(expectedNode);
-    });
-
-    it('should create leaf node if entryType is Document', () => {
-        const expectedNode: LfRepoTreeNode = {
-          name: 'DummyDocument',
-          path: '\\DummyDocument',
-          id: '11',
-          icon: 'https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#edoc-wordprocessing-20',
-          isContainer: false,
-          isLeaf: true,
-          entryType: EntryType.Document,
-          attributes: new Map<string, string>()
-        };
-        expectedNode.attributes.set(nodeAttrName_elecDocumentSize, 20000);
-        expectedNode.attributes.set(nodeAttrName_extension, 'docx');
-        expectedNode.attributes.set(nodeAttrName_templateName, 'hi');
-
-        const createdNode = service.createLfRepoTreeNode(dummyDocumentEntryDocument, 'Test Name');
-        expect(createdNode).toEqual(expectedNode);
-    });
-
-    it('should throw exception if entryType not set', () => {
-        expect(() => service.createLfRepoTreeNode(dummyInvalidEntry, 'Test Name')).toThrow('entry type is undefined');
-    });
-
-    it('can choose to view only folders, not documents or record series', async () => {
-        // Act
-        service.viewableEntryTypes = [EntryType.Folder];
-
-        const childrenNodes = await service.getFolderChildrenAsync({ id: '1', path: '//' } as LfRepoTreeNode);
-
-        // Assert
-        const expectedIds = ['1', '12', '52', '53', '54',
-                            '55', '56', '57', '58', '59',
-                            '60', '61'];
-        const actualIds = childrenNodes.page.map((entry) => entry.id).sort();
-        expect(actualIds).toEqual(expectedIds);
-        expect(childrenNodes.page.length).toEqual(12);
-    });
-
-    it('getRootNodesAsync should call API getEntryAsync and coerce parentId = 0 into parentId = undefined', async () => {
-        // Act
-        const rootNodes = await service.getRootTreeNodeAsync();
-        const expectedNode = service.createLfRepoTreeNode(mockChildren[0], 'Test Name');
-
-        // Assert
-        expect(rootNodes?.id).toEqual('1');
-        expect(rootNodes).toEqual(expectedNode);
-    });
-
-    it('getFolderChildrenAsync with undefined nextPage should call API getEntryListing ', async () => {
-        // Arrange
-        service.viewableEntryTypes = [EntryType.Folder, EntryType.Document];
-
-        // Act
-        const childrenNodes = await service.getFolderChildrenAsync({id: '1', path: '//'} as LfRepoTreeNode);
-
-        // Assert
-        expect(childrenNodes.page.length).toEqual(20);
-        expect(childrenNodes.nextPage).toEqual("a test link returned by getEntryListing");
-        childrenNodes.page.forEach((childNode, i) => {
-            expect(childNode.name).toEqual(mockChildren[i].name);
-        })
-    });
-
-    it('getFolderChildrenAsync with nextPage should call API getEntryListingNextLink ', async () => {
-      // Arrange
-      service.viewableEntryTypes = [EntryType.Folder, EntryType.Document];
-
-      // Act
-      const childrenNodes = await service.getFolderChildrenAsync({id: '1', path: '//'} as LfRepoTreeNode, '3');
-
-      // Assert
-      expect(childrenNodes.page.length).toEqual(20);
-      expect(childrenNodes.nextPage).toEqual('a test link returned by getEntryListingNextLink');
-      childrenNodes.page.forEach((childNode, i) => {
-          expect(childNode.name).toEqual(mockChildren[i].name);
-      })
   });
 
-    it('getParentTreeNodeAsync should return undefined if called on rootNode', async () => {
-      // Act
-      const parent = await service.getParentTreeNodeAsync({id: '1'} as LfRepoTreeNode);
+  // TODO: add test for creating RecordSeries when record series class is added in API client libraries
+  it('should rewrite root folder name to repo name if name is empty', () => {
+    const expectedNode: LfRepoTreeNode = {
+      name: 'Test Name',
+      path: '\\',
+      id: '1',
+      icon: 'https://lfxstatic.com/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20',
+      isContainer: true,
+      isLeaf: false,
+      entryType: EntryType.Folder,
+      attributes: new Map<string, string>()
+    };
 
-      // Assert
-      expect(parent).toEqual(undefined);
+    const createdNode = service.createLfRepoTreeNode(dummyFolderRootEntry, 'Test Name');
+    expect(createdNode).toEqual(expectedNode);
+  });
+
+  it('should create leaf node if entryType is Document', () => {
+    const expectedNode: LfRepoTreeNode = {
+      name: 'DummyDocument',
+      path: '\\DummyDocument',
+      id: '11',
+      icon: 'https://lfxstatic.com/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#edoc-wordprocessing-20',
+      isContainer: false,
+      isLeaf: true,
+      entryType: EntryType.Document,
+      attributes: new Map<string, string>()
+    };
+    expectedNode.attributes.set(nodeAttrName_elecDocumentSize, 20000);
+    expectedNode.attributes.set(nodeAttrName_extension, 'docx');
+    expectedNode.attributes.set(nodeAttrName_templateName, 'hi');
+
+    const createdNode = service.createLfRepoTreeNode(dummyDocumentEntryDocument, 'Test Name');
+    expect(createdNode).toEqual(expectedNode);
+  });
+
+  it('should throw exception if entryType not set', () => {
+    expect(() => service.createLfRepoTreeNode(dummyInvalidEntry, 'Test Name')).toThrow('entry type is undefined');
+  });
+
+  it('can choose to view only folders, not documents or record series', async () => {
+    // Act
+    service.viewableEntryTypes = [EntryType.Folder];
+
+    const childrenNodes = await service.getFolderChildrenAsync({ id: '1', path: '//' } as LfRepoTreeNode);
+
+    // Assert
+    const expectedIds = ['1', '12', '52', '53', '54',
+      '55', '56', '57', '58', '59',
+      '60', '61'];
+    const actualIds = childrenNodes.page.map((entry) => entry.id).sort();
+    expect(actualIds).toEqual(expectedIds);
+    expect(childrenNodes.page.length).toEqual(12);
+  });
+
+  it('getRootNodesAsync should call API getEntryAsync and coerce parentId = 0 into parentId = undefined', async () => {
+    // Act
+    const rootNodes = await service.getRootTreeNodeAsync();
+    const expectedNode = service.createLfRepoTreeNode(mockChildren[0], 'Test Name');
+
+    // Assert
+    expect(rootNodes?.id).toEqual('1');
+    expect(rootNodes).toEqual(expectedNode);
+  });
+
+  it('getFolderChildrenAsync with undefined nextPage should call API getEntryListing ', async () => {
+    // Arrange
+    service.viewableEntryTypes = [EntryType.Folder, EntryType.Document];
+
+    // Act
+    const childrenNodes = await service.getFolderChildrenAsync({ id: '1', path: '//' } as LfRepoTreeNode);
+
+    // Assert
+    expect(childrenNodes.page.length).toEqual(20);
+    expect(childrenNodes.nextPage).toEqual("a test link returned by getEntryListing");
+    childrenNodes.page.forEach((childNode, i) => {
+      expect(childNode.name).toEqual(mockChildren[i].name);
+    })
+  });
+
+  it('getFolderChildrenAsync with nextPage should call API getEntryListingNextLink ', async () => {
+    // Arrange
+    service.viewableEntryTypes = [EntryType.Folder, EntryType.Document];
+
+    // Act
+    const childrenNodes = await service.getFolderChildrenAsync({ id: '1', path: '//' } as LfRepoTreeNode, '3');
+
+    // Assert
+    expect(childrenNodes.page.length).toEqual(20);
+    expect(childrenNodes.nextPage).toEqual('a test link returned by getEntryListingNextLink');
+    childrenNodes.page.forEach((childNode, i) => {
+      expect(childNode.name).toEqual(mockChildren[i].name);
+    })
+  });
+
+  it('getParentTreeNodeAsync should return undefined if called on rootNode', async () => {
+    // Act
+    const parent = await service.getParentTreeNodeAsync({ id: '1' } as LfRepoTreeNode);
+
+    // Assert
+    expect(parent).toEqual(undefined);
   });
 
   it('getParentTreeNodeAsync should return parent if parent is root', async () => {
@@ -346,7 +347,7 @@ describe('LfRepoTreeNodeService', () => {
       name: 'root',
       path: '\\',
       id: '1',
-      icon: 'https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20',
+      icon: 'https://lfxstatic.com/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20',
       isContainer: true,
       isLeaf: false,
       entryType: EntryType.Folder,
@@ -354,51 +355,51 @@ describe('LfRepoTreeNodeService', () => {
     };
 
     // Act
-    const parent = await service.getParentTreeNodeAsync({id: '2', path: '\\test', name: 'test'} as LfRepoTreeNode);
+    const parent = await service.getParentTreeNodeAsync({ id: '2', path: '\\test', name: 'test' } as LfRepoTreeNode);
 
     // Assert
     expect(parent).toEqual(expectedNode);
-});
+  });
 
-it('getParentTreeNodeAsync should return parent if parent is folder', async () => {
-  // Arrange
-  const expectedNode: LfRepoTreeNode = {
-    name: 'FolderInRoot',
-    path: '\\FolderInRoot',
-    id: '12',
-    icon: 'https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20',
-    isContainer: true,
-    isLeaf: false,
-    entryType: EntryType.Folder,
-    attributes: new Map<string, string>()
-  };
+  it('getParentTreeNodeAsync should return parent if parent is folder', async () => {
+    // Arrange
+    const expectedNode: LfRepoTreeNode = {
+      name: 'FolderInRoot',
+      path: '\\FolderInRoot',
+      id: '12',
+      icon: 'https://lfxstatic.com/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20',
+      isContainer: true,
+      isLeaf: false,
+      entryType: EntryType.Folder,
+      attributes: new Map<string, string>()
+    };
 
-  // Act
-  const parent = await service.getParentTreeNodeAsync({id: '2', path: '\\FolderInRoot\\test1', name: 'test1'} as LfRepoTreeNode);
+    // Act
+    const parent = await service.getParentTreeNodeAsync({ id: '2', path: '\\FolderInRoot\\test1', name: 'test1' } as LfRepoTreeNode);
 
-  // Assert
-  expect(parent).toEqual(expectedNode);
-});
+    // Assert
+    expect(parent).toEqual(expectedNode);
+  });
 
-it('getParentTreeNodeAsync should return parent if parent is a folder in root', async () => {
-  // Arrange
-  const expectedNode: LfRepoTreeNode = {
-    name: 'FolderInAFolder',
-    path: '\\FolderInRoot\\FolderInAFolder',
-    id: '22',
-    icon: 'https://cdn.jsdelivr.net/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20',
-    isContainer: true,
-    isLeaf: false,
-    entryType: EntryType.Folder,
-    attributes: new Map<string, string>()
-  };
+  it('getParentTreeNodeAsync should return parent if parent is a folder in root', async () => {
+    // Arrange
+    const expectedNode: LfRepoTreeNode = {
+      name: 'FolderInAFolder',
+      path: '\\FolderInRoot\\FolderInAFolder',
+      id: '22',
+      icon: 'https://lfxstatic.com/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20',
+      isContainer: true,
+      isLeaf: false,
+      entryType: EntryType.Folder,
+      attributes: new Map<string, string>()
+    };
 
-  // Act
-  const parent = await service.getParentTreeNodeAsync({id: '2', path: '\\FolderInRoot\\FolderInAFolder\\test1', name: 'test1'} as LfRepoTreeNode);
+    // Act
+    const parent = await service.getParentTreeNodeAsync({ id: '2', path: '\\FolderInRoot\\FolderInAFolder\\test1', name: 'test1' } as LfRepoTreeNode);
 
-  // Assert
-  expect(parent).toEqual(expectedNode);
-});
+    // Assert
+    expect(parent).toEqual(expectedNode);
+  });
 
 
 
