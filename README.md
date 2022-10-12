@@ -36,11 +36,11 @@ For detailed information about how to utilize these services see the sample proj
 
 ## Change Log
 
-See CHANGELOG [here](./CHANGELOG.md).
+See CHANGELOG [here](https://github.com/Laserfiche/lf-ui-components-services/blob/HEAD/CHANGELOG.md).
 
 ## Contribution
 
-We welcome contributions and feedback. Please follow our [contributing guidelines](./CONTRIBUTING.md).
+We welcome contributions and feedback. Please follow our [contributing guidelines](https://github.com/Laserfiche/lf-ui-components-services/blob/HEAD/CONTRIBUTING.md).
 
 ### Development prerequisite
 
