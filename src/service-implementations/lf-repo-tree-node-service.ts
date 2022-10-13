@@ -243,8 +243,8 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
   }
 
   private isViewable(entry: Entry): boolean {
-    return (this.viewableEntryTypes.includes(entry.entryType)
-      || (entry.entryType === EntryType.Shortcut && this.viewableEntryTypes.includes((entry as Shortcut).targetType)));
+    return (this.viewableEntryTypes.includes(entry.entryType) && entry.entryType !== EntryType.Shortcut)
+      || (this.viewableEntryTypes.includes(EntryType.Shortcut) && entry.entryType === EntryType.Shortcut && this.viewableEntryTypes.includes((entry as Shortcut).targetType));
   }
 
   private createLeafNode(entry: Entry, parent?: LfRepoTreeNode): LfRepoTreeNode {
