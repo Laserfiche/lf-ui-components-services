@@ -1,4 +1,11 @@
 
+## 13.x
+
+### Features
+### Fixes
+- `LfRepoTreeNodeService`: fix isViewable showing not viewable shortcuts
+### Chore & Maintenance
+
 ## 13.0.2
 
 ### Features
