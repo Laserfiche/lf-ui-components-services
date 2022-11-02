@@ -1,3 +1,11 @@
+## 13.0.4
+
+### Features
+### Fixes
+
+### Chore & Maintenance
+- Dependency `@laserfiche/types-lf-ui-components` version is `^13.1.4`
+
 ## 13.0.3
 
 ### Features
