@@ -82,7 +82,7 @@ export class LfFieldsService implements LfFieldContainerService {
         await this.repoClient.templateDefinitionsClient.getTemplateDefinitions({ repoId });
       const templates = templateInfo.value as WTemplateInfo[];
       templates.forEach((template) => {
-        if (template.displayName) {
+        if (!template.displayName) {
           template.displayName = template.name;
         }
       });
