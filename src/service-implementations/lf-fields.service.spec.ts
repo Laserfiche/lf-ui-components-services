@@ -13,8 +13,8 @@ function createODataValueContextOfIListOfTemplateFieldInfo(data) {
 }
 
 const mockTemplateFields: ApiTemplateFieldInfo[] = [
-  createApiTemplateFieldInfo({ id: 1, name: 'test', fieldType: WFieldType.String }),
-  createApiTemplateFieldInfo({ id: 2, name: 'test', fieldType: WFieldType.String }),
+  createApiTemplateFieldInfo({ id: 1, name: 'test', fieldType: WFieldType.String, displayName: 'test' }),
+  createApiTemplateFieldInfo({ id: 2, name: 'test', fieldType: WFieldType.String, displayName: 'test' }),
 ];
 
 const mockRepoClient = new RepositoryApiClientMockBuilder()
@@ -73,9 +73,9 @@ describe('LfFieldsService', () => {
     });
 
     service.getTemplateFieldsAsync = jest.fn().mockResolvedValue([
-      { id: 11, name: 'State', fieldType: FieldType.String },
-      { id: 12, name: 'County', fieldType: FieldType.String },
-      { id: 13, name: 'City', fieldType: FieldType.String },
+      { id: 11, name: 'State', fieldType: FieldType.String, displayName: 'State' },
+      { id: 12, name: 'County', fieldType: FieldType.String, displayName: 'County' },
+      { id: 13, name: 'City', fieldType: FieldType.String, displayName: 'City' },
     ]);
 
     const fieldValues: FieldValues = {
@@ -100,9 +100,9 @@ describe('LfFieldsService', () => {
     mockRepoClient!.entriesClient.getDynamicFieldValues = jest.fn(() => Promise.resolve(optionsByName));
 
     const testReturn: TemplateFieldInfo[] = [
-      { id: 11, name: 'State', fieldType: FieldType.String },
-      { id: 12, name: 'County', fieldType: FieldType.String },
-      { id: 13, name: 'City', fieldType: FieldType.String },
+      { id: 11, name: 'State', fieldType: FieldType.String, displayName: 'State' },
+      { id: 12, name: 'County', fieldType: FieldType.String, displayName: 'County' },
+      { id: 13, name: 'City', fieldType: FieldType.String, displayName: 'City' },
     ];
     service.getTemplateFieldsAsync = jest.fn().mockResolvedValue(testReturn);
 
