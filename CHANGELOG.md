@@ -1,3 +1,14 @@
+## 13.0.5
+
+### Features
+- support displayName property in `LfFieldInfo` and `TemplateInfo`
+    - fallback to `name` property in API if `displayName` does not exist
+
+### Fixes
+
+### Chore & Maintenance
+- Dependency `@laserfiche/types-lf-ui-components` version is `^13.1.6`
+
 ## 13.0.4
 
 ### Features
