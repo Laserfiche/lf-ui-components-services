@@ -6,7 +6,7 @@ import { CoreUtils } from '@laserfiche/lf-js-utils';
 export function convertApiToLfFieldInfo(val: WFieldInfo): LfFieldInfo {
   const id = CoreUtils.validateDefined(val.id, 'id');
   const name = CoreUtils.validateDefined(val.name, 'name')!;
-  const displayName: string = val.displayName ?? name;
+  const displayName: string = CoreUtils.validateDefined(val.displayName, 'displayName', name);
   const fieldType = convertApiToLfFieldType(CoreUtils.validateDefined(val.fieldType, 'fieldType'));
   const format = val.format !== undefined ? convertApiToLfFieldFormat(val.format) : undefined;
   const result: LfFieldInfo = {
