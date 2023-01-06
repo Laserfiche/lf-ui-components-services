@@ -43,6 +43,6 @@
     "@laserfiche/types-lf-ui-components": "^14.0.0--preview-3851033117"
   },
   "dependencies": {
-    "@laserfiche/lf-ui-components": "^14.0.0--preview-3856295382"
+    "@laserfiche/lf-ui-components": "^14.0.0--preview-3858611573"
   }
 }
