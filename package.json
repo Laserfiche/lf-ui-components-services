@@ -1,6 +1,6 @@
 {
   "name": "@laserfiche/lf-ui-components-services",
-  "version": "13.0.0",
+  "version": "14.0.0",
   "description": "A library for services that interact with the Laserfiche API and can be used by lf-ui-components",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -40,6 +40,6 @@
   "peerDependencies": {
     "@laserfiche/lf-js-utils": "^4.0.4",
     "@laserfiche/lf-repository-api-client": "^1.0.12",
-    "@laserfiche/types-lf-ui-components": "^13.1.6"
+    "@laserfiche/types-lf-ui-components": "^14.0.0"
   }
 }
