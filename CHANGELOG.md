@@ -1,4 +1,4 @@
-## 14.x
+## 14.0.0
 
 ### Features
 
@@ -6,6 +6,7 @@
 
 ### Chore & Maintenance
 - Update build pipeline to use Node 16
+- Update `@laserfiche/types-lf-ui-components` to version `14.0.0`
 
 ## 13.0.5
 
