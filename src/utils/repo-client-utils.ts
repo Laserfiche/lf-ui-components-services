@@ -1,7 +1,13 @@
-import { ColumnOrderBy } from "@laserfiche/types-lf-ui-components";
+import { stringToBase64 } from '@laserfiche/lf-js-utils/dist/utils/string-utils';
+import { ColumnDef, ColumnOrderBy } from '@laserfiche/types-lf-ui-components';
 
 /** @internal */
-export async function getFolderChildrenDefaultParametersAsync(repoId: string, folderId: number, orderBy?: ColumnOrderBy): Promise<{
+export function getFolderChildrenDefaultParameters(
+  repoId: string,
+  folderId: number,
+  columnIDs?: string[],
+  orderBy?: ColumnOrderBy
+): {
   repoId: string;
   entryId: number;
   groupByEntryType?: boolean;
@@ -14,22 +20,31 @@ export async function getFolderChildrenDefaultParametersAsync(repoId: string, fo
   top?: number;
   skip?: number;
   count?: boolean;
-}> {
-  let orderbyValue : string;
-  if ( orderBy ) {
-    orderbyValue = `${orderBy.columnId} ${ orderBy.isDesc ? 'desc' : 'asc'}`;
+} {
+  let orderbyValue: string;
+
+  let selectList = ['targetType', 'targetId', 'extension', 'parentId'];
+  if (columnIDs && columnIDs.length > 0) {
+    selectList.push(...columnIDs);
   }
-  else {
+  if (orderBy) {
+    orderbyValue = `${orderBy.columnId} ${orderBy.isDesc ? 'desc' : 'asc'}`;
+
+    if (!selectList.includes(orderBy.columnId)) {
+      selectList.push(orderBy.columnId)
+    }
+  } else {
     orderbyValue = 'name asc';
   }
+  const select = selectList.join(',');
+
   const requestParameters = {
     repoId,
     entryId: folderId,
     orderby: orderbyValue, // sort by name, ascending
-    select: 'creationTime,creator,folderPath,fullPath,elecDocumentSize,extension' +
-      ',lastModifiedTime,parentId,templateId,targetType,targetId',
+    select,
     groupByEntryType: true, // puts all folders before all files,
-    prefer: 'odata.maxpagesize=100'
+    prefer: 'odata.maxpagesize=100',
   };
   return requestParameters;
 }
