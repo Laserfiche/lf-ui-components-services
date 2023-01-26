@@ -73,7 +73,6 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
         const parentEntry: FindEntryResult = await this.repoClient.entriesClient.getEntryByPath({repoId, fullPath: parentPath});
         if (parentEntry.entry) {
           const foundParentEntry = parentEntry.entry;
-          foundParentEntry.fullPath = parentPath;
           return this.createLfRepoTreeNode(foundParentEntry, repoName);
         }
         else {
@@ -248,10 +247,10 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
   }
 
   private createLeafNode(entry: Entry, parent?: LfRepoTreeNode): LfRepoTreeNode {
-    const path = parent ? PathUtils.combinePaths(parent.path, entry.name) : entry.fullPath;
-    if (!path) {
-      throw new Error('entry fullPath is undefined');
+    if (!parent) {
+      throw new Error('non-root entry has undefined parent.');
     }
+    const path = PathUtils.combinePaths(parent.path, entry.name);
 
     const leafNode: LfRepoTreeNode = {
       name: entry.name!,
@@ -343,14 +342,14 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       }
     }
     else {
+      if (!parent) {
+        throw new Error('non-root entry has undefined parent');
+      }
       if (!entryName || entryName.length === 0) {
         entryName = entry.id.toString();
       }
-      path = parent ? PathUtils.combinePaths(parent.path, entryName) : entry.fullPath;
-      if (!path) {
-        throw new Error('fullPath is undefined');
-      }
-      else if (path.endsWith('\\') && path.length > 1) {
+      path = PathUtils.combinePaths(parent.path, entryName);
+      if (path.endsWith('\\') && path.length > 1) {
         path = path.slice(0,-1);
       }
     }
