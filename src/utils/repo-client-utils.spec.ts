@@ -2,7 +2,7 @@
 import { ColumnOrderBy } from '@laserfiche/types-lf-ui-components';
 import {getFolderChildrenDefaultParameters}  from './repo-client-utils';
 
-fdescribe('LfRepoClientUtil', () => {
+describe('LfRepoClientUtil', () => {
   const repoId = 'testRepoId';
   const folderId = 1;
   const orderBy: ColumnOrderBy = {

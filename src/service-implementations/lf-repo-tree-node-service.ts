@@ -23,7 +23,8 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    * service.viewableEntryTypes = [EntryType.Folder]; // entries of other types (document, shortcut) are not viewable
    * ```
    */
-  viewableEntryTypes: EntryType[] = [];
+  viewableEntryTypes?: EntryType[];
+  columnIds?: string[];
 
   private localizationService = new LfLocalizationService();
 
@@ -243,8 +244,8 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
   }
 
   private isViewable(entry: Entry): boolean {
-    return (this.viewableEntryTypes.includes(entry.entryType) && entry.entryType !== EntryType.Shortcut)
-      || (this.viewableEntryTypes.includes(EntryType.Shortcut) && entry.entryType === EntryType.Shortcut && this.viewableEntryTypes.includes((entry as Shortcut).targetType));
+    return (this.viewableEntryTypes?.includes(entry.entryType) && entry.entryType !== EntryType.Shortcut)
+      || (this.viewableEntryTypes?.includes(EntryType.Shortcut) && entry.entryType === EntryType.Shortcut && this.viewableEntryTypes?.includes((entry as Shortcut).targetType));
   }
 
   private createLeafNode(entry: Entry, parent?: LfRepoTreeNode): LfRepoTreeNode {
@@ -377,7 +378,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       entryId = parseInt(folder.id, 10);
     }
     const repoId: string = await this.repoClient.getCurrentRepoId();
-    const requestParameters = await getFolderChildrenDefaultParameters(repoId, entryId, undefined, orderBy);
+    const requestParameters = getFolderChildrenDefaultParameters(repoId, entryId, this.columnIds, orderBy);
     const listChildrenEntriesResponse: ODataValueContextOfIListOfEntry = await this.repoClient.entriesClient.getEntryListing(
       requestParameters
     );

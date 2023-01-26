@@ -3,6 +3,9 @@ import { LfRepoTreeNode } from '../helper-types/lf-repo-browser-types';
 import { Entry, PostEntryChildrenRequest, EntryType, ODataValueContextOfIListOfEntry, Document, Shortcut, Folder } from '@laserfiche/lf-repository-api-client';
 import { RepositoryApiClientMockBuilder } from './repository-api-client-mock-builder';
 import { FindEntryResult } from '@laserfiche/lf-repository-api-client';
+import * as RepoClientUtils from '../utils/repo-client-utils';
+
+const getFolderChildrenDefaultParametersSpy = jest.spyOn(RepoClientUtils, 'getFolderChildrenDefaultParameters');
 
 function createFolder(data) {
   return new Folder(data);
@@ -331,6 +334,19 @@ describe('LfRepoTreeNodeService', () => {
     childrenNodes.page.forEach((childNode, i) => {
       expect(childNode.name).toEqual(mockChildren[i].name);
     })
+  });
+
+  it('getFolderChildrenAsync will call getFolderChildrenDefaultParameters with columnIds', async () => {
+    // Arrange
+    service.viewableEntryTypes = [EntryType.Folder, EntryType.Document];
+    const columnIds = ['testid0', 'testid1'];
+    service.columnIds = columnIds;
+    const repoId = await mockRepoClient.getCurrentRepoId();
+    // Act
+    await service.getFolderChildrenAsync({ id: '1', path: '//' } as LfRepoTreeNode);
+
+    // Assert
+    expect(getFolderChildrenDefaultParametersSpy).toHaveBeenCalledWith(repoId, 1, columnIds, undefined);
   });
 
   it('getParentTreeNodeAsync should return undefined if called on rootNode', async () => {

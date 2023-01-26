@@ -1,5 +1,4 @@
-import { stringToBase64 } from '@laserfiche/lf-js-utils/dist/utils/string-utils';
-import { ColumnDef, ColumnOrderBy } from '@laserfiche/types-lf-ui-components';
+import { ColumnOrderBy } from '@laserfiche/types-lf-ui-components';
 
 /** @internal */
 export function getFolderChildrenDefaultParameters(
