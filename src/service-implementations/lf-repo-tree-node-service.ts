@@ -1,4 +1,4 @@
-import { LfTreeNodeService, LfTreeNodePage } from '@laserfiche/types-lf-ui-components';
+import { LfTreeNodeService, LfTreeNodePage, ColumnOrderBy } from '@laserfiche/types-lf-ui-components';
 import { LfRepoTreeNode } from '../helper-types/lf-repo-browser-types';
 import {
   LfLocalizationService,
@@ -130,11 +130,11 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    *                                                    }
    * ```
    **/
-  async getFolderChildrenAsync(folder: LfRepoTreeNode, nextPage?: string | undefined): Promise<LfTreeNodePage> {
+  async getFolderChildrenAsync(folder: LfRepoTreeNode, nextPage?: string, orderBy?: ColumnOrderBy): Promise<LfTreeNodePage> {
     const repoName: string = await this.repoClient.getCurrentRepoName();
     let listChildrenEntriesResponse: ODataValueContextOfIListOfEntry;
     if (!nextPage) {
-      listChildrenEntriesResponse = await this.getFolderChildrenFirstPageAsync(folder);
+      listChildrenEntriesResponse = await this.getFolderChildrenFirstPageAsync(folder, orderBy);
     }
     else {
       listChildrenEntriesResponse = await this.repoClient.entriesClient.getEntryListingNextLink({ nextLink: nextPage, maxPageSize: 100 })
@@ -368,7 +368,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     return folderNode;
   }
 
-  private async getFolderChildrenFirstPageAsync(folder: LfRepoTreeNode): Promise<ODataValueContextOfIListOfEntry> {
+  private async getFolderChildrenFirstPageAsync(folder: LfRepoTreeNode,  orderBy?: ColumnOrderBy): Promise<ODataValueContextOfIListOfEntry> {
     let entryId: number;
     if (folder.targetId) {
       entryId = folder.targetId;
@@ -377,7 +377,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       entryId = parseInt(folder.id, 10);
     }
     const repoId: string = await this.repoClient.getCurrentRepoId();
-    const requestParameters = await getFolderChildrenDefaultParametersAsync(repoId, entryId);
+    const requestParameters = await getFolderChildrenDefaultParametersAsync(repoId, entryId, orderBy);
     const listChildrenEntriesResponse: ODataValueContextOfIListOfEntry = await this.repoClient.entriesClient.getEntryListing(
       requestParameters
     );

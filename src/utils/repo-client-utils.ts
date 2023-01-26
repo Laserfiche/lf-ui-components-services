@@ -1,5 +1,7 @@
+import { ColumnOrderBy } from "@laserfiche/types-lf-ui-components";
+
 /** @internal */
-export async function getFolderChildrenDefaultParametersAsync(repoId: string, folderId: number): Promise<{
+export async function getFolderChildrenDefaultParametersAsync(repoId: string, folderId: number, orderBy?: ColumnOrderBy): Promise<{
   repoId: string;
   entryId: number;
   groupByEntryType?: boolean;
@@ -13,10 +15,17 @@ export async function getFolderChildrenDefaultParametersAsync(repoId: string, fo
   skip?: number;
   count?: boolean;
 }> {
+  let orderbyValue : string;
+  if ( orderBy ) {
+    orderbyValue = `${orderBy.columnId} ${ orderBy.isDesc ? 'desc' : 'asc'}`;
+  }
+  else {
+    orderbyValue = 'name asc';
+  }
   const requestParameters = {
     repoId,
     entryId: folderId,
-    orderby: 'name asc', // sort by name, ascending
+    orderby: orderbyValue, // sort by name, ascending
     select: 'creationTime,creator,folderPath,fullPath,elecDocumentSize,extension' +
       ',lastModifiedTime,parentId,templateId,targetType,targetId',
     groupByEntryType: true, // puts all folders before all files,
