@@ -4,6 +4,7 @@ import { Entry, PostEntryChildrenRequest, EntryType, ODataValueContextOfIListOfE
 import { RepositoryApiClientMockBuilder } from './repository-api-client-mock-builder';
 import { FindEntryResult } from '@laserfiche/lf-repository-api-client';
 import * as RepoClientUtils from '../utils/repo-client-utils';
+import { PropertyValue } from '@laserfiche/types-lf-ui-components';
 
 const getFolderChildrenDefaultParametersSpy = jest.spyOn(RepoClientUtils, 'getFolderChildrenDefaultParameters');
 
@@ -47,7 +48,8 @@ const dummyDocumentEntryDocument: Document = createDocument({
   entryType: EntryType.Document,
   templateName: 'hi',
   elecDocumentSize: 20000,
-  extension: 'docx'
+  extension: 'docx',
+  creationTime: '2000-05-11T00:00:00',
 });
 
 const dummyInvalidEntry: Folder = createFolder({
@@ -190,7 +192,7 @@ describe('LfRepoTreeNodeService', () => {
       icon: 'https://lfxstatic.com/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20',
       isContainer: true,
       isLeaf: false,
-      attributes: new Map<string, string>(),
+      attributes: new Map<string, PropertyValue>(),
       entryType: EntryType.Folder
     };
     const createdNode = service.createLfRepoTreeNode(dummyFolderEntry, 'Test Name');
@@ -208,7 +210,7 @@ describe('LfRepoTreeNodeService', () => {
       ],
       isContainer: true,
       isLeaf: false,
-      attributes: new Map<string, string>(),
+      attributes: new Map<string, PropertyValue>(),
       entryType: EntryType.Shortcut,
       targetId: 20000,
       targetType: EntryType.Folder
@@ -229,13 +231,13 @@ describe('LfRepoTreeNodeService', () => {
       ],
       isContainer: false,
       isLeaf: true,
-      attributes: new Map<string, string>(),
+      attributes: new Map<string, PropertyValue>(),
       entryType: EntryType.Shortcut,
       targetId: 20000,
       targetType: EntryType.Document
     };
-    expectedNode.attributes.set(nodeAttrName_extension, 'docx');
-    expectedNode.attributes.set(nodeAttrName_templateName, 'hi');
+    expectedNode.attributes!.set(nodeAttrName_extension, {value:'docx', displayValue:'docx'});
+    expectedNode.attributes!.set(nodeAttrName_templateName, {value:'hi', displayValue: 'hi'});
 
     const createdNode = service.createLfRepoTreeNode(dummyShortcutDocumentShortcut, 'Test Name');
     expect(createdNode).toEqual(expectedNode);
@@ -251,14 +253,14 @@ describe('LfRepoTreeNodeService', () => {
       isContainer: true,
       isLeaf: false,
       entryType: EntryType.Folder,
-      attributes: new Map<string, string>()
+      attributes: new Map<string, PropertyValue>()
     };
 
     const createdNode = service.createLfRepoTreeNode(dummyFolderRootEntry, 'Test Name');
     expect(createdNode).toEqual(expectedNode);
   });
 
-  it('should create leaf node if entryType is Document', () => {
+  fit('should create leaf node if entryType is Document', () => {
     const expectedNode: LfRepoTreeNode = {
       name: 'DummyDocument',
       path: '\\DummyDocument',
@@ -267,14 +269,17 @@ describe('LfRepoTreeNodeService', () => {
       isContainer: false,
       isLeaf: true,
       entryType: EntryType.Document,
-      attributes: new Map<string, string>()
+      attributes: new Map<string, PropertyValue>()
     };
-    expectedNode.attributes.set(nodeAttrName_elecDocumentSize, 20000);
-    expectedNode.attributes.set(nodeAttrName_extension, 'docx');
-    expectedNode.attributes.set(nodeAttrName_templateName, 'hi');
+    expectedNode.attributes!.set(nodeAttrName_elecDocumentSize, {value:20000, displayValue: '20000'});
+    expectedNode.attributes!.set(nodeAttrName_extension, {value:'docx', displayValue: 'docx'});
+    expectedNode.attributes!.set(nodeAttrName_templateName, {value: 'hi', displayValue: 'hi'});
+    expectedNode.attributes!.set('creationTime', {value: '2000-05-11T00:00:00', displayValue: '5/11/2000, 12:00:00 AM'})
+    service.columnIds = [nodeAttrName_elecDocumentSize,nodeAttrName_extension,nodeAttrName_templateName,'creationTime'];
 
     const createdNode = service.createLfRepoTreeNode(dummyDocumentEntryDocument, 'Test Name');
     expect(createdNode).toEqual(expectedNode);
+
   });
 
   it('should throw exception if entryType not set', () => {
@@ -367,7 +372,7 @@ describe('LfRepoTreeNodeService', () => {
       isContainer: true,
       isLeaf: false,
       entryType: EntryType.Folder,
-      attributes: new Map<string, string>()
+      attributes: new Map<string, PropertyValue>()
     };
 
     // Act
@@ -387,7 +392,7 @@ describe('LfRepoTreeNodeService', () => {
       isContainer: true,
       isLeaf: false,
       entryType: EntryType.Folder,
-      attributes: new Map<string, string>()
+      attributes: new Map<string, PropertyValue>()
     };
 
     // Act
@@ -407,7 +412,7 @@ describe('LfRepoTreeNodeService', () => {
       isContainer: true,
       isLeaf: false,
       entryType: EntryType.Folder,
-      attributes: new Map<string, string>()
+      attributes: new Map<string, PropertyValue>()
     };
 
     // Act

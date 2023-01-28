@@ -1,4 +1,4 @@
-import { LfTreeNodeService, LfTreeNodePage, ColumnOrderBy } from '@laserfiche/types-lf-ui-components';
+import { LfTreeNodeService, LfTreeNodePage, ColumnOrderBy, PropertyValue } from '@laserfiche/types-lf-ui-components';
 import { LfRepoTreeNode } from '../helper-types/lf-repo-browser-types';
 import {
   LfLocalizationService,
@@ -6,9 +6,9 @@ import {
   PathUtils
 } from '@laserfiche/lf-js-utils';
 import { getFolderChildrenDefaultParameters } from '../utils/repo-client-utils.js';
-import { Entry, Shortcut, Document, ODataValueContextOfIListOfEntry, EntryType, FindEntryResult } from '@laserfiche/lf-repository-api-client';
+import { Entry, Document, Folder, Shortcut, RecordSeries, ODataValueContextOfIListOfEntry, EntryType, FindEntryResult } from '@laserfiche/lf-repository-api-client';
 import { IRepositoryApiClientEx } from '../helper-types/repository-api-ex.js';
-
+import { supportedColumnIds } from '../helper-types/lf-repo-browser-types';
 export const nodeAttrName_extension = 'extension';
 export const nodeAttrName_elecDocumentSize = 'elecDocumentSize';
 export const nodeAttrName_templateName = 'templateName';
@@ -24,6 +24,11 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    * ```
    */
   viewableEntryTypes?: EntryType[];
+  /**
+   * An array containing the ids of the columns that the
+   * LfRepoTreeNodeService will select on and add to the attributes
+   * of the LfRepoTreeNode.
+   */
   columnIds?: string[];
 
   private localizationService = new LfLocalizationService();
@@ -35,6 +40,11 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       console.error('getParentNodeAsync() _selectedRepositoryClient was undefined');
       throw new Error(this.localizationService.getString('ERRORS.ENTRY_NOT_FOUND'));
     }
+  }
+
+  async getSupportedColumnsAsync(): Promise<string[]> {
+    // TODO: add support for custom repository-specific columns
+    return supportedColumnIds;
   }
 
   /**
@@ -262,31 +272,60 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       icon: [],
       isContainer: false,
       isLeaf: true,
-      attributes: new Map<string, any>()
+      attributes: new Map<string, PropertyValue>()
     };
     return leafNode;
   }
+  valueToPropertyValue(value: string | Date | number, columnId: string): PropertyValue{
+    let displayValue: string = value.toString();
+    // let supportedColumnIds: string[] = [
+    //   'name',
+    //   'entryId',
+    //   'elecDocumentSize',
+    //   'extension',
+    //   'isElectronicDocument',
+    //   'isRecord',
+    //   'mimeType',
+    //   'pageCount',
+    //   'isCheckedOut',
+    //   'isUnderVersionControl',
+    //   'creator',
+    //   'creationTime',
+    //   'lastModifiedTime',
+    //   'templateName',
+    // ]
 
-  private setNodeProperties(node: LfRepoTreeNode, entry: Entry, parent?: LfRepoTreeNode ): void {
-    if (entry.templateName) {
-      node.attributes.set(nodeAttrName_templateName, entry.templateName);
+    switch(columnId){
+      case 'creationTime':
+      case 'lastModifiedTime':
+        const date = new Date(value);
+        displayValue = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'numeric', day: 'numeric', hour:'numeric', minute:'numeric', second:'numeric'}).format(date);
+        break;
+      case 'elecDocumentSize':
+        // TODO: determine the number of bytes in a KB, MB, GB, TB, etc.
+        // TODO: implement the function
+        break;
+      default:
+        // pass
     }
+    return {value: value, displayValue:displayValue} as PropertyValue;
+  }
+  private setNodeProperties(node: LfRepoTreeNode, entry: Entry, parent?: LfRepoTreeNode ): void {
 
     if (entry.entryType === EntryType.Document) {
       const document = entry as Document;
+      this.setAttributesForEntry(document, node);
       if (document.extension) {
-        node.attributes.set(nodeAttrName_extension, document.extension);
         const iconId = IconUtils.getDocumentIconIdFromExtension(document.extension);
         node.icon = IconUtils.getDocumentIconUrlFromIconId(iconId);
       }
       else {
         node.icon = IconUtils.getDocumentIconUrlFromIconId('document-20');
       }
-      if (document.elecDocumentSize) {
-        node.attributes.set(nodeAttrName_elecDocumentSize, document.elecDocumentSize);
-      }
     }
     else if (entry.entryType === EntryType.Folder) {
+      const folder = entry as Folder;
+      this.setAttributesForEntry(folder, node);
       if (parent?.entryType === EntryType.RecordSeries ||
         (parent?.entryType === EntryType.Shortcut && parent?.targetType === EntryType.RecordSeries)) {
         node.icon = IconUtils.getDocumentIconUrlFromIconId('recordfolder-20');
@@ -296,16 +335,17 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       }
     }
     else if (entry.entryType === EntryType.RecordSeries) {
+      const recordSeries = entry as RecordSeries;
+      this.setAttributesForEntry(recordSeries, node);
       node.icon = IconUtils.getDocumentIconUrlFromIconId('recordseries-20');
     }
     else if (entry.entryType === EntryType.Shortcut) {
       const shortcut = entry as Shortcut;
+      this.setAttributesForEntry(shortcut, node);
+      // TODO: provide column support for shortcut
       node.targetType = shortcut.targetType;
       node.targetId = shortcut.targetId;
       if (shortcut.targetType === EntryType.Document) {
-        if (shortcut.extension) {
-          node.attributes.set(nodeAttrName_extension, shortcut.extension);
-        }
         const iconId = shortcut.extension ? IconUtils.getDocumentIconIdFromExtension(shortcut.extension) : undefined;
         const iconUrl = IconUtils.getDocumentIconUrlFromIconId(iconId ?? 'document-20');
         const shortcutUrl = IconUtils.getDocumentIconUrlFromIconId('shortcut-overlay');
@@ -324,6 +364,14 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     }
     else {
       throw new Error('unsupported entryType');
+    }
+  }
+
+  private setAttributesForEntry(entry: Document | Folder | Shortcut | RecordSeries, node: LfRepoTreeNode) {
+    for (let columnId of this.columnIds) {
+      if (entry[columnId]) {
+        node.attributes.set(columnId, this.valueToPropertyValue(entry[columnId], columnId));
+      }
     }
   }
 
@@ -364,7 +412,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       icon: [],
       isContainer: true,
       isLeaf: false,
-      attributes: new Map<string, any>()
+      attributes: new Map<string, PropertyValue>()
     };
     return folderNode;
   }
@@ -378,6 +426,11 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       entryId = parseInt(folder.id, 10);
     }
     const repoId: string = await this.repoClient.getCurrentRepoId();
+    if (orderBy && !supportedColumnIds.includes(orderBy.columnId)) {
+      orderBy = undefined;
+      console.error(`Cannot order by unsupported column: ${orderBy.columnId}`);
+    }
+
     const requestParameters = getFolderChildrenDefaultParameters(repoId, entryId, this.columnIds, orderBy);
     const listChildrenEntriesResponse: ODataValueContextOfIListOfEntry = await this.repoClient.entriesClient.getEntryListing(
       requestParameters
