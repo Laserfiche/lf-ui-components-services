@@ -304,6 +304,14 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       case 'elecDocumentSize':
         // TODO: determine the number of bytes in a KB, MB, GB, TB, etc.
         // TODO: implement the function
+        value = value as number;
+        const base = 1024;
+        const rank = Math.floor(Math.log(value)/Math.log(1024));
+        const suffix = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+        let displayNumber =  (value/Math.pow(base, rank));
+        const precision = 0.01
+        displayNumber = displayNumber - displayNumber%precision;
+        displayValue= displayNumber.toString() + ' ' + suffix[rank];
         break;
       default:
         // pass
@@ -368,11 +376,13 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
   }
 
   private setAttributesForEntry(entry: Document | Folder | Shortcut | RecordSeries, node: LfRepoTreeNode) {
-    for (let columnId of this.columnIds) {
-      if (entry[columnId]) {
-        node.attributes.set(columnId, this.valueToPropertyValue(entry[columnId], columnId));
-      }
-    }
+    if(this.columnIds && this.columnIds.length > 0) {
+	    for (let columnId of this.columnIds) {
+	      if (entry[columnId]) {
+	        node.attributes.set(columnId, this.valueToPropertyValue(entry[columnId], columnId));
+	      }
+	    }
+}
   }
 
   private createFolderNode(entry: Entry, repoName: string, parent?: LfRepoTreeNode): LfRepoTreeNode {

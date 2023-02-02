@@ -238,7 +238,7 @@ describe('LfRepoTreeNodeService', () => {
     };
     expectedNode.attributes!.set(nodeAttrName_extension, {value:'docx', displayValue:'docx'});
     expectedNode.attributes!.set(nodeAttrName_templateName, {value:'hi', displayValue: 'hi'});
-
+    service.columnIds = [nodeAttrName_extension, nodeAttrName_templateName]; // outdated
     const createdNode = service.createLfRepoTreeNode(dummyShortcutDocumentShortcut, 'Test Name');
     expect(createdNode).toEqual(expectedNode);
   });
@@ -260,7 +260,7 @@ describe('LfRepoTreeNodeService', () => {
     expect(createdNode).toEqual(expectedNode);
   });
 
-  fit('should create leaf node if entryType is Document', () => {
+  it('should create leaf node if entryType is Document', () => {
     const expectedNode: LfRepoTreeNode = {
       name: 'DummyDocument',
       path: '\\DummyDocument',
@@ -271,7 +271,7 @@ describe('LfRepoTreeNodeService', () => {
       entryType: EntryType.Document,
       attributes: new Map<string, PropertyValue>()
     };
-    expectedNode.attributes!.set(nodeAttrName_elecDocumentSize, {value:20000, displayValue: '20000'});
+    expectedNode.attributes!.set(nodeAttrName_elecDocumentSize, {value:20000, displayValue: '19.53 KB'});
     expectedNode.attributes!.set(nodeAttrName_extension, {value:'docx', displayValue: 'docx'});
     expectedNode.attributes!.set(nodeAttrName_templateName, {value: 'hi', displayValue: 'hi'});
     expectedNode.attributes!.set('creationTime', {value: '2000-05-11T00:00:00', displayValue: '5/11/2000, 12:00:00 AM'})
