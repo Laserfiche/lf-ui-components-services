@@ -269,18 +269,48 @@ describe('LfRepoTreeNodeService', () => {
       isContainer: false,
       isLeaf: true,
       entryType: EntryType.Document,
-      attributes: new Map<string, PropertyValue>()
     };
-    expectedNode.attributes!.set(nodeAttrName_elecDocumentSize, {value:20000, displayValue: '19.53 KB'});
-    expectedNode.attributes!.set(nodeAttrName_extension, {value:'docx', displayValue: 'docx'});
-    expectedNode.attributes!.set(nodeAttrName_templateName, {value: 'hi', displayValue: 'hi'});
-    expectedNode.attributes!.set('creationTime', {value: '2000-05-11T00:00:00', displayValue: '5/11/2000, 12:00:00 AM'})
+    expectedNode.attributes = new Map<string, PropertyValue>();
+    expectedNode.attributes.set(nodeAttrName_elecDocumentSize, {value:20000, displayValue: '19.53 KB'});
+    expectedNode.attributes.set(nodeAttrName_extension, {value:'docx', displayValue: 'docx'});
+    expectedNode.attributes.set(nodeAttrName_templateName, {value: 'hi', displayValue: 'hi'});
+    expectedNode.attributes.set('creationTime', {value: '2000-05-11T00:00:00', displayValue: '5/11/2000, 12:00:00 AM'})
     service.columnIds = [nodeAttrName_elecDocumentSize,nodeAttrName_extension,nodeAttrName_templateName,'creationTime'];
 
     const createdNode = service.createLfRepoTreeNode(dummyDocumentEntryDocument, 'Test Name');
     expect(createdNode).toEqual(expectedNode);
 
   });
+  it('should correctly format elecDocumentSize in b, KB, MB, GB, TB', () => {
+    const expectedNode: LfRepoTreeNode = {
+      name: 'DummyDocument',
+      path: '\\DummyDocument',
+      id: '11',
+      icon: 'https://lfxstatic.com/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#edoc-wordprocessing-20',
+      isContainer: false,
+      isLeaf: true,
+      entryType: EntryType.Document,
+    };
+    expectedNode.attributes = new Map<string, PropertyValue>();
+    expectedNode.attributes.set(nodeAttrName_extension, {value:'docx', displayValue: 'docx'});
+    expectedNode.attributes.set(nodeAttrName_templateName, {value: 'hi', displayValue: 'hi'});
+    expectedNode.attributes.set('creationTime', {value: '2000-05-11T00:00:00', displayValue: '5/11/2000, 12:00:00 AM'})
+    service.columnIds = [nodeAttrName_elecDocumentSize,nodeAttrName_extension,nodeAttrName_templateName,'creationTime'];
+    dummyDocumentEntryDocument.elecDocumentSize = 42;
+    let createdNode = service.createLfRepoTreeNode(dummyDocumentEntryDocument, 'Test Name');
+
+    const inputBytes = [42, 42000, 42000000, 42000000000, 42000000000000];
+    const displayBytes = ['42.00 b', '41.02 KB', '40.05 MB', '39.12 GB', '38.20 TB'];
+
+    for (let i = 0; i < inputBytes.length; i++){
+      expectedNode.attributes.set(nodeAttrName_elecDocumentSize, {value: inputBytes[i], displayValue: displayBytes[i]});
+      dummyDocumentEntryDocument.elecDocumentSize = inputBytes[i];
+      createdNode = service.createLfRepoTreeNode(dummyDocumentEntryDocument, 'Test Name');
+      expect(createdNode).toEqual(expectedNode);
+    }
+
+  });
+
 
   it('should throw exception if entryType not set', () => {
     expect(() => service.createLfRepoTreeNode(dummyInvalidEntry, 'Test Name')).toThrow('entry type is undefined');

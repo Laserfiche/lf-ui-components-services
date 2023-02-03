@@ -1,5 +1,6 @@
 import { LfTreeNodeService, LfTreeNodePage, ColumnOrderBy, PropertyValue } from '@laserfiche/types-lf-ui-components';
 import { LfRepoTreeNode } from '../helper-types/lf-repo-browser-types';
+import { convertBytesToString } from '../utils/formatting-utils';
 import {
   LfLocalizationService,
   IconUtils,
@@ -302,16 +303,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
         displayValue = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'numeric', day: 'numeric', hour:'numeric', minute:'numeric', second:'numeric'}).format(date);
         break;
       case 'elecDocumentSize':
-        // TODO: determine the number of bytes in a KB, MB, GB, TB, etc.
-        // TODO: implement the function
-        value = value as number;
-        const base = 1024;
-        const rank = Math.floor(Math.log(value)/Math.log(1024));
-        const suffix = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
-        let displayNumber =  (value/Math.pow(base, rank));
-        const precision = 0.01
-        displayNumber = displayNumber - displayNumber%precision;
-        displayValue= displayNumber.toString() + ' ' + suffix[rank];
+        displayValue = convertBytesToString(value as number, 2);
         break;
       default:
         // pass
