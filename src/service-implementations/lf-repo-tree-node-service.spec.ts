@@ -281,7 +281,7 @@ describe('LfRepoTreeNodeService', () => {
     expect(createdNode).toEqual(expectedNode);
 
   });
-  it('should correctly format elecDocumentSize in b, KB, MB, GB, TB', () => {
+  it('should correctly format elecDocumentSize in B, KB, MB, GB, TB', () => {
     const expectedNode: LfRepoTreeNode = {
       name: 'DummyDocument',
       path: '\\DummyDocument',
