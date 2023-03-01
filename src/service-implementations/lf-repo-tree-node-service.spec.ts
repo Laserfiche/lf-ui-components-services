@@ -281,7 +281,7 @@ describe('LfRepoTreeNodeService', () => {
     expect(createdNode).toEqual(expectedNode);
 
   });
-  it('should correctly format elecDocumentSize in b, KB, MB, GB, TB', () => {
+  it('should correctly format elecDocumentSize in B, KB, MB, GB, TB', () => {
     const expectedNode: LfRepoTreeNode = {
       name: 'DummyDocument',
       path: '\\DummyDocument',
@@ -300,7 +300,7 @@ describe('LfRepoTreeNodeService', () => {
     let createdNode = service.createLfRepoTreeNode(dummyDocumentEntryDocument, 'Test Name');
 
     const inputBytes = [42, 42000, 42000000, 42000000000, 42000000000000];
-    const displayBytes = ['42.00 b', '41.02 KB', '40.05 MB', '39.12 GB', '38.20 TB'];
+    const displayBytes = ['42 B', '41.02 KB', '40.05 MB', '39.12 GB', '38.20 TB'];
 
     for (let i = 0; i < inputBytes.length; i++){
       expectedNode.attributes.set(nodeAttrName_elecDocumentSize, {value: inputBytes[i], displayValue: displayBytes[i]});

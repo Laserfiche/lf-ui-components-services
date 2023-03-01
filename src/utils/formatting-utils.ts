@@ -2,22 +2,26 @@ export function convertBytesToString(bytes: number, numOfFractionalDigits: numbe
   if (bytes < 0.0) {
     return '';
   }
-  let text = 'b';
+  let suffix = 'B';
   if (bytes >= 1024.0) {
     bytes /= 1024.0;
-    text = 'KB';
+    suffix = 'KB';
   }
   if (bytes >= 1024.0) {
     bytes /= 1024.0;
-    text = 'MB';
+    suffix = 'MB';
   }
   if (bytes >= 1024.0) {
     bytes /= 1024.0;
-    text = 'GB';
+    suffix = 'GB';
   }
   if (bytes >= 1024.0) {
     bytes /= 1024.0;
-    text = 'TB';
+    suffix = 'TB';
   }
-  return `${bytes.toFixed(numOfFractionalDigits)} ${text}`;
+
+  if (suffix === 'B'){
+    return`${bytes} ${suffix}`;
+  }
+  return `${bytes.toFixed(numOfFractionalDigits)} ${suffix}`;
 }
