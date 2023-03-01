@@ -22,7 +22,7 @@ export function getFolderChildrenDefaultParameters(
 } {
   let orderbyValue: string;
 
-  let selectList = ['targetType', 'targetId', 'extension', 'parentId'];
+  const selectList = ['targetType', 'targetId', 'extension', 'parentId'];
   if (columnIDs && columnIDs.length > 0) {
     selectList.push(...columnIDs);
   }

@@ -11,11 +11,11 @@ describe('LfRepoClientUtil', () => {
   };
   const defaultParams = 'targetType,targetId,extension,parentId';
   it('should add orderBy parameters if provided', () => {
-    const orderBy: ColumnOrderBy = {
+    const _orderBy: ColumnOrderBy = {
       columnId: 'test',
       isDesc: false,
     };
-    const expectedParams = getFolderChildrenDefaultParameters(repoId, folderId, undefined, orderBy);
+    const expectedParams = getFolderChildrenDefaultParameters(repoId, folderId, undefined, _orderBy);
     expect(expectedParams.orderby).toEqual(
      'test asc'
     );

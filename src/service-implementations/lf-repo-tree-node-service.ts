@@ -298,13 +298,15 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
 
     switch(columnId){
       case 'creationTime':
-      case 'lastModifiedTime':
+      case 'lastModifiedTime': {
         const date = new Date(value);
         displayValue = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'numeric', day: 'numeric', hour:'numeric', minute:'numeric', second:'numeric'}).format(date);
         break;
-      case 'elecDocumentSize':
+      }
+      case 'elecDocumentSize': {
         displayValue = convertBytesToString(value as number, 2);
         break;
+      }
       default:
         // pass
     }
@@ -368,8 +370,8 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
   }
 
   private setAttributesForEntry(entry: Document | Folder | Shortcut | RecordSeries, node: LfRepoTreeNode) {
-    if(this.columnIds && this.columnIds.length > 0) {
-	    for (let columnId of this.columnIds) {
+    if (this.columnIds && this.columnIds.length > 0) {
+	    for (const columnId of this.columnIds) {
 	      if (entry[columnId]) {
 	        node.attributes.set(columnId, this.valueToPropertyValue(entry[columnId], columnId));
 	      }

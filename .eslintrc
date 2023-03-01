@@ -39,6 +39,7 @@
         "no-constant-condition": "off",
         "no-useless-escape": "off",
         "prefer-arrow/prefer-arrow-functions": "off",
+        "no-mixed-spaces-and-tabs": ["error", "smart-tabs"],
         "prefer-const": "error"
     }
   }
