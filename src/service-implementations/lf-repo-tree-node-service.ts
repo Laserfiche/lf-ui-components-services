@@ -25,10 +25,21 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    * ```
    */
   viewableEntryTypes?: EntryType[];
+
   /**
    * An array containing the ids of the columns that the
    * LfRepoTreeNodeService will select on and add to the attributes
-   * of the LfRepoTreeNode.
+   * of the LfRepoTreeNode. <br>
+   * This array should only contain column ids that are supported by the service. <br>
+   * If an unsupported column id is passed in, it will be ignored and the LfRepoTreeNode returned
+   * will not contain the unsupported column. <br>
+   * Use the getSupportedColumnsAsync() method to get the supported columns.
+   * @example
+   * ```ts
+   * const service = new LfRepoTreeNodeService(repoClient);
+   * service.columnIds = ['creationDate', 'serialNumber']; // the LfRepoTreeNodes returned by the service will have a creationDate attribute,
+   * // but not a serialNumber attribute because serialNumber is not a supported column
+   * ```
    */
   columnIds?: string[];
 
@@ -43,6 +54,31 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     }
   }
 
+  /**
+   * Get the columns that are supported by the LfRepoTreeNodeService
+   * There are a limited number of columns that can be selected on the Laserfiche repository
+   * API.
+   * @returns - Promise with an array of the supported column ids
+   * @example
+   * ```ts
+   * const service = new LfRepoTreeNodeService(repoClient);
+   * service.getSupportedColumnsAsync() ->
+   * ['name',
+   * 'entryId',
+   * 'elecDocumentSize',
+   * 'extension',
+   * 'isElectronicDocument',
+   * 'isRecord',
+   * 'mimeType',
+   * 'pageCount',
+   * 'isCheckedOut',
+   * 'isUnderVersionControl',
+   * 'creator',
+   * 'creationTime',
+   * 'lastModifiedTime',
+   * 'templateName']
+   * ```
+   */
   async getSupportedColumnsAsync(): Promise<string[]> {
     // TODO: add support for custom repository-specific columns
     return supportedColumnIds;
@@ -113,6 +149,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    * Only returns the viewable children.
    * @param folder: LfTreeNode representing the folder to get data from
    * @param nextPage: string representing the next page requested. If undefined, the first page is returned
+   * @param orderBy: ColumnOrderBy object representing the column to sort by and the direction to sort
    * @example
    * ```ts
    * // suppose the repository is structured as below
@@ -127,6 +164,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    *            - FolderInFolderInRoot102
    * const service = new LfRepoTreeNodeService(repoClient);
    * service.viewableEntryTypes = [EntryType.Folder];
+   * service.columnIds = ['creationDate'];
    * service.getFolderChildrenAsync(FolderInRoot) -> { page:
    *                                                      FolderInFolderInRoot001,
    *                                                      FolderInFolderInRoot002,
@@ -140,6 +178,12 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    *                                                      FolderInFolderInRoot102],
    *                                                      nextPage: undefined
    *                                                    }
+   * const orderBy: ColumnOrderBy = { columnId: 'creationDate', direction: 'desc' };
+   * service.getFolderChildrenAsync(FolderInRoot, <API request for next page>, orderBy) -> { page:
+   *                                                      [FolderInFolderInRoot102,
+   *                                                      FolderInFolderInRoot101],
+   *                                                      nextPage: undefined
+   *                                                    } // sorted by creationDate descending
    * ```
    **/
   async getFolderChildrenAsync(folder: LfRepoTreeNode, nextPage?: string, orderBy?: ColumnOrderBy): Promise<LfTreeNodePage> {
@@ -277,7 +321,8 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     };
     return leafNode;
   }
-  valueToPropertyValue(value: string | Date | number, columnId: string): PropertyValue{
+
+  private valueToPropertyValue(value: string | Date | number, columnId: string): PropertyValue{
     let displayValue: string = value.toString();
     // let supportedColumnIds: string[] = [
     //   'name',
