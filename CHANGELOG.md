@@ -1,3 +1,12 @@
+## 14.x
+
+### Features
+
+### Fixes
+
+### Chore & Maintenance
+- Remove `jest-codemods` as dev dependency
+
 ## 14.0.0
 
 ### Features
