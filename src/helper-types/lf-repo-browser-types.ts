@@ -1,5 +1,5 @@
 import { EntryType } from "@laserfiche/lf-repository-api-client";
-import { LfTreeNodePage, LfTreeNode, PropertyValue } from "@laserfiche/types-lf-ui-components";
+import { LfTreeNode, LfTreeNodePage } from "@laserfiche/types-lf-ui-components";
 
 /**
  * Represents a Laserfiche Repository Entry
