@@ -1,14 +1,15 @@
-import { LfTreeNodeService, LfTreeNodePage } from '@laserfiche/types-lf-ui-components';
 import { LfRepoTreeNode } from '../helper-types/lf-repo-browser-types';
 import {
   LfLocalizationService,
   IconUtils,
   PathUtils
 } from '@laserfiche/lf-js-utils';
-import { getFolderChildrenDefaultParametersAsync } from '../utils/repo-client-utils.js';
-import { Entry, Shortcut, Document, ODataValueContextOfIListOfEntry, EntryType, FindEntryResult } from '@laserfiche/lf-repository-api-client';
+import { getFolderChildrenDefaultParameters } from '../utils/repo-client-utils.js';
+import { Entry, Document, Folder, Shortcut, RecordSeries, ODataValueContextOfIListOfEntry, EntryType, FindEntryResult } from '@laserfiche/lf-repository-api-client';
 import { IRepositoryApiClientEx } from '../helper-types/repository-api-ex.js';
-
+import { supportedColumnIds } from '../helper-types/lf-repo-browser-types';
+import { ColumnOrderBy, LfTreeNodePage, LfTreeNodeService, PropertyValue } from '@laserfiche/types-lf-ui-components';
+import { StringUtils } from '@laserfiche/lf-js-utils';
 export const nodeAttrName_extension = 'extension';
 export const nodeAttrName_elecDocumentSize = 'elecDocumentSize';
 export const nodeAttrName_templateName = 'templateName';
@@ -23,7 +24,24 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    * service.viewableEntryTypes = [EntryType.Folder]; // entries of other types (document, shortcut) are not viewable
    * ```
    */
-  viewableEntryTypes: EntryType[] = [];
+  viewableEntryTypes?: EntryType[];
+
+  /**
+   * An array containing the ids of the columns that the
+   * LfRepoTreeNodeService will select on and add to the attributes
+   * of the LfRepoTreeNode. <br>
+   * This array should only contain column ids that are supported by the service. <br>
+   * If an unsupported column id is passed in, it will be ignored and the LfRepoTreeNode returned
+   * will not contain the unsupported column. <br>
+   * Use the getSupportedColumnsAsync() method to get the supported columns.
+   * @example
+   * ```ts
+   * const service = new LfRepoTreeNodeService(repoClient);
+   * service.columnIds = ['creationDate', 'serialNumber']; // the LfRepoTreeNodes returned by the service will have a creationDate attribute,
+   * // but not a serialNumber attribute because serialNumber is not a supported column
+   * ```
+   */
+  columnIds?: string[];
 
   private localizationService = new LfLocalizationService();
 
@@ -34,6 +52,36 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       console.error('getParentNodeAsync() _selectedRepositoryClient was undefined');
       throw new Error(this.localizationService.getString('ERRORS.ENTRY_NOT_FOUND'));
     }
+  }
+
+  /**
+   * Get the columns that are supported by the LfRepoTreeNodeService
+   * There are a limited number of columns that can be selected on the Laserfiche repository
+   * API.
+   * @returns - Promise with an array of the supported column ids
+   * @example
+   * ```ts
+   * const service = new LfRepoTreeNodeService(repoClient);
+   * service.getSupportedColumnsAsync() ->
+   * ['name',
+   * 'entryId',
+   * 'elecDocumentSize',
+   * 'extension',
+   * 'isElectronicDocument',
+   * 'isRecord',
+   * 'mimeType',
+   * 'pageCount',
+   * 'isCheckedOut',
+   * 'isUnderVersionControl',
+   * 'creator',
+   * 'creationTime',
+   * 'lastModifiedTime',
+   * 'templateName']
+   * ```
+   */
+  async getSupportedColumnsAsync(): Promise<string[]> {
+    // TODO: add support for custom repository-specific columns
+    return supportedColumnIds;
   }
 
   /**
@@ -64,13 +112,13 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       return undefined;
     }
     if (treeNode.path?.endsWith('\\')) {
-      treeNode.path = treeNode.path.slice(0,-1);
+      treeNode.path = treeNode.path.slice(0, -1);
     }
 
     try {
       const parentPath = this.getParentPath(treeNode.path);
       if (parentPath) {
-        const parentEntry: FindEntryResult = await this.repoClient.entriesClient.getEntryByPath({repoId, fullPath: parentPath});
+        const parentEntry: FindEntryResult = await this.repoClient.entriesClient.getEntryByPath({ repoId, fullPath: parentPath });
         if (parentEntry.entry) {
           const foundParentEntry = parentEntry.entry;
           foundParentEntry.fullPath = parentPath;
@@ -101,6 +149,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    * Only returns the viewable children.
    * @param folder: LfTreeNode representing the folder to get data from
    * @param nextPage: string representing the next page requested. If undefined, the first page is returned
+   * @param orderBy: ColumnOrderBy object representing the column to sort by and the direction to sort
    * @example
    * ```ts
    * // suppose the repository is structured as below
@@ -115,6 +164,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    *            - FolderInFolderInRoot102
    * const service = new LfRepoTreeNodeService(repoClient);
    * service.viewableEntryTypes = [EntryType.Folder];
+   * service.columnIds = ['creationDate'];
    * service.getFolderChildrenAsync(FolderInRoot) -> { page:
    *                                                      FolderInFolderInRoot001,
    *                                                      FolderInFolderInRoot002,
@@ -128,13 +178,19 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    *                                                      FolderInFolderInRoot102],
    *                                                      nextPage: undefined
    *                                                    }
+   * const orderBy: ColumnOrderBy = { columnId: 'creationDate', direction: 'desc' };
+   * service.getFolderChildrenAsync(FolderInRoot, <API request for next page>, orderBy) -> { page:
+   *                                                      [FolderInFolderInRoot102,
+   *                                                      FolderInFolderInRoot101],
+   *                                                      nextPage: undefined
+   *                                                    } // sorted by creationDate descending
    * ```
    **/
-  async getFolderChildrenAsync(folder: LfRepoTreeNode, nextPage?: string | undefined): Promise<LfTreeNodePage> {
+  async getFolderChildrenAsync(folder: LfRepoTreeNode, nextPage?: string, orderBy?: ColumnOrderBy): Promise<LfTreeNodePage> {
     const repoName: string = await this.repoClient.getCurrentRepoName();
     let listChildrenEntriesResponse: ODataValueContextOfIListOfEntry;
     if (!nextPage) {
-      listChildrenEntriesResponse = await this.getFolderChildrenFirstPageAsync(folder);
+      listChildrenEntriesResponse = await this.getFolderChildrenFirstPageAsync(folder, orderBy);
     }
     else {
       listChildrenEntriesResponse = await this.repoClient.entriesClient.getEntryListingNextLink({ nextLink: nextPage, maxPageSize: 100 })
@@ -243,8 +299,8 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
   }
 
   private isViewable(entry: Entry): boolean {
-    return (this.viewableEntryTypes.includes(entry.entryType) && entry.entryType !== EntryType.Shortcut)
-      || (this.viewableEntryTypes.includes(EntryType.Shortcut) && entry.entryType === EntryType.Shortcut && this.viewableEntryTypes.includes((entry as Shortcut).targetType));
+    return (this.viewableEntryTypes?.includes(entry.entryType) && entry.entryType !== EntryType.Shortcut)
+      || (this.viewableEntryTypes?.includes(EntryType.Shortcut) && entry.entryType === EntryType.Shortcut && this.viewableEntryTypes?.includes((entry as Shortcut).targetType));
   }
 
   private createLeafNode(entry: Entry, parent?: LfRepoTreeNode): LfRepoTreeNode {
@@ -261,31 +317,46 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       icon: [],
       isContainer: false,
       isLeaf: true,
-      attributes: new Map<string, any>()
+      attributes: new Map<string, PropertyValue>()
     };
     return leafNode;
   }
 
-  private setNodeProperties(node: LfRepoTreeNode, entry: Entry, parent?: LfRepoTreeNode ): void {
-    if (entry.templateName) {
-      node.attributes.set(nodeAttrName_templateName, entry.templateName);
+  private valueToPropertyValue(value: string | Date | number | undefined, columnId: string | undefined): PropertyValue {
+    let displayValue: string = value ? value.toString() : undefined;
+
+    switch (columnId) {
+      case 'creationTime':
+      case 'lastModifiedTime': {
+        const date = new Date(value);
+        displayValue = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' }).format(date);
+        break;
+      }
+      case 'elecDocumentSize': {
+        displayValue = StringUtils.convertBytesToString(value as number, 2);
+        break;
+      }
+      default:
+      // pass
     }
+    return { value: value, displayValue: displayValue } as PropertyValue;
+  }
+  private setNodeProperties(node: LfRepoTreeNode, entry: Entry, parent?: LfRepoTreeNode): void {
 
     if (entry.entryType === EntryType.Document) {
       const document = entry as Document;
+      this.setAttributesForEntry(document, node);
       if (document.extension) {
-        node.attributes.set(nodeAttrName_extension, document.extension);
         const iconId = IconUtils.getDocumentIconIdFromExtension(document.extension);
         node.icon = IconUtils.getDocumentIconUrlFromIconId(iconId);
       }
       else {
         node.icon = IconUtils.getDocumentIconUrlFromIconId('document-20');
       }
-      if (document.elecDocumentSize) {
-        node.attributes.set(nodeAttrName_elecDocumentSize, document.elecDocumentSize);
-      }
     }
     else if (entry.entryType === EntryType.Folder) {
+      const folder = entry as Folder;
+      this.setAttributesForEntry(folder, node);
       if (parent?.entryType === EntryType.RecordSeries ||
         (parent?.entryType === EntryType.Shortcut && parent?.targetType === EntryType.RecordSeries)) {
         node.icon = IconUtils.getDocumentIconUrlFromIconId('recordfolder-20');
@@ -295,16 +366,17 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       }
     }
     else if (entry.entryType === EntryType.RecordSeries) {
+      const recordSeries = entry as RecordSeries;
+      this.setAttributesForEntry(recordSeries, node);
       node.icon = IconUtils.getDocumentIconUrlFromIconId('recordseries-20');
     }
     else if (entry.entryType === EntryType.Shortcut) {
       const shortcut = entry as Shortcut;
+      this.setAttributesForEntry(shortcut, node);
+      // TODO: provide column support for shortcut
       node.targetType = shortcut.targetType;
       node.targetId = shortcut.targetId;
       if (shortcut.targetType === EntryType.Document) {
-        if (shortcut.extension) {
-          node.attributes.set(nodeAttrName_extension, shortcut.extension);
-        }
         const iconId = shortcut.extension ? IconUtils.getDocumentIconIdFromExtension(shortcut.extension) : undefined;
         const iconUrl = IconUtils.getDocumentIconUrlFromIconId(iconId ?? 'document-20');
         const shortcutUrl = IconUtils.getDocumentIconUrlFromIconId('shortcut-overlay');
@@ -323,6 +395,14 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     }
     else {
       throw new Error('unsupported entryType');
+    }
+  }
+
+  private setAttributesForEntry(entry: Document | Folder | Shortcut | RecordSeries, node: LfRepoTreeNode) {
+    if (this.columnIds && this.columnIds.length > 0) {
+      for (const columnId of this.columnIds) {
+        node.attributes.set(columnId, this.valueToPropertyValue(entry[columnId], columnId));
+      }
     }
   }
 
@@ -351,7 +431,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
         throw new Error('fullPath is undefined');
       }
       else if (path.endsWith('\\') && path.length > 1) {
-        path = path.slice(0,-1);
+        path = path.slice(0, -1);
       }
     }
 
@@ -363,12 +443,12 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       icon: [],
       isContainer: true,
       isLeaf: false,
-      attributes: new Map<string, any>()
+      attributes: new Map<string, PropertyValue>()
     };
     return folderNode;
   }
 
-  private async getFolderChildrenFirstPageAsync(folder: LfRepoTreeNode): Promise<ODataValueContextOfIListOfEntry> {
+  private async getFolderChildrenFirstPageAsync(folder: LfRepoTreeNode, orderBy?: ColumnOrderBy): Promise<ODataValueContextOfIListOfEntry> {
     let entryId: number;
     if (folder.targetId) {
       entryId = folder.targetId;
@@ -377,7 +457,12 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       entryId = parseInt(folder.id, 10);
     }
     const repoId: string = await this.repoClient.getCurrentRepoId();
-    const requestParameters = await getFolderChildrenDefaultParametersAsync(repoId, entryId);
+    if (orderBy && !supportedColumnIds.includes(orderBy.columnId)) {
+      orderBy = undefined;
+      console.error(`Cannot order by unsupported column: ${orderBy.columnId}`);
+    }
+
+    const requestParameters = getFolderChildrenDefaultParameters(repoId, entryId, this.columnIds, orderBy);
     const listChildrenEntriesResponse: ODataValueContextOfIListOfEntry = await this.repoClient.entriesClient.getEntryListing(
       requestParameters
     );
