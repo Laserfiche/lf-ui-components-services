@@ -342,10 +342,9 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     return { value: value, displayValue: displayValue } as PropertyValue;
   }
   private setNodeProperties(node: LfRepoTreeNode, entry: Entry, parent?: LfRepoTreeNode): void {
-
+    this.setAttributesForEntry(entry, node);
     if (entry.entryType === EntryType.Document) {
       const document = entry as Document;
-      this.setAttributesForEntry(document, node);
       if (document.extension) {
         const iconId = IconUtils.getDocumentIconIdFromExtension(document.extension);
         node.icon = IconUtils.getDocumentIconUrlFromIconId(iconId);
@@ -356,7 +355,6 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     }
     else if (entry.entryType === EntryType.Folder) {
       const folder = entry as Folder;
-      this.setAttributesForEntry(folder, node);
       if (parent?.entryType === EntryType.RecordSeries ||
         (parent?.entryType === EntryType.Shortcut && parent?.targetType === EntryType.RecordSeries)) {
         node.icon = IconUtils.getDocumentIconUrlFromIconId('recordfolder-20');
@@ -367,12 +365,10 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     }
     else if (entry.entryType === EntryType.RecordSeries) {
       const recordSeries = entry as RecordSeries;
-      this.setAttributesForEntry(recordSeries, node);
       node.icon = IconUtils.getDocumentIconUrlFromIconId('recordseries-20');
     }
     else if (entry.entryType === EntryType.Shortcut) {
       const shortcut = entry as Shortcut;
-      this.setAttributesForEntry(shortcut, node);
       // TODO: provide column support for shortcut
       node.targetType = shortcut.targetType;
       node.targetId = shortcut.targetId;
