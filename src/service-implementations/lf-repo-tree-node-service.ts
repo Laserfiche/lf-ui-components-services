@@ -7,12 +7,13 @@ import {
 import { getFolderChildrenDefaultParameters } from '../utils/repo-client-utils.js';
 import { Entry, Document, Folder, Shortcut, RecordSeries, ODataValueContextOfIListOfEntry, EntryType, FindEntryResult } from '@laserfiche/lf-repository-api-client';
 import { IRepositoryApiClientEx } from '../helper-types/repository-api-ex.js';
-import { supportedColumnIds } from '../helper-types/lf-repo-browser-types';
+import { defaultSupportedColumnIds } from '../helper-types/lf-repo-browser-types';
 import { ColumnOrderBy, LfTreeNodePage, LfTreeNodeService, PropertyValue } from '@laserfiche/types-lf-ui-components';
 import { StringUtils } from '@laserfiche/lf-js-utils';
 export const nodeAttrName_extension = 'extension';
 export const nodeAttrName_elecDocumentSize = 'elecDocumentSize';
 export const nodeAttrName_templateName = 'templateName';
+export const nodeAttrName_creationTime = 'creationTime';
 
 export class LfRepoTreeNodeService implements LfTreeNodeService {
 
@@ -33,12 +34,17 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    * This array should only contain column ids that are supported by the service. <br>
    * If an unsupported column id is passed in, it will be ignored and the LfRepoTreeNode returned
    * will not contain the unsupported column. <br>
-   * Use the getSupportedColumnsAsync() method to get the supported columns.
+   * Use the getSupportedColumnIdsAsync() method to get the supported columns.
    * @example
    * ```ts
    * const service = new LfRepoTreeNodeService(repoClient);
-   * service.columnIds = ['creationDate', 'serialNumber']; // the LfRepoTreeNodes returned by the service will have a creationDate attribute,
-   * // but not a serialNumber attribute because serialNumber is not a supported column
+   * service.columnIds = ['creationDate', 'serialNumber'];
+   * const folderChildren = await service.getFolderChildrenAsync(folder);
+   * const entryArray = folderChildren.page;
+   * for (entry in entryArray) {
+   *    assert(entry.attributes.get('creationDate')).toBeDefined(); // entries should (in general) have every supported property specified in columnIds.
+   *    assert(entry.attributes.get('serialNumber')).toBeUndefined(); // unsupported columns will not be part of the returned entry.
+   * }
    * ```
    */
   columnIds?: string[];
@@ -62,7 +68,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    * @example
    * ```ts
    * const service = new LfRepoTreeNodeService(repoClient);
-   * service.getSupportedColumnsAsync() ->
+   * service.getSupportedColumnIdsAsync() ->
    * ['name',
    * 'entryId',
    * 'elecDocumentSize',
@@ -79,9 +85,9 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    * 'templateName']
    * ```
    */
-  async getSupportedColumnsAsync(): Promise<string[]> {
+  async getSupportedColumnIdsAsync(): Promise<string[]> {
     // TODO: add support for custom repository-specific columns
-    return supportedColumnIds;
+    return defaultSupportedColumnIds;
   }
 
   /**
@@ -178,7 +184,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    *                                                      FolderInFolderInRoot102],
    *                                                      nextPage: undefined
    *                                                    }
-   * const orderBy: ColumnOrderBy = { columnId: 'creationDate', direction: 'desc' };
+   * const orderBy: ColumnOrderBy = { columnId: 'creationDate', isDesc: true };
    * service.getFolderChildrenAsync(FolderInRoot, <API request for next page>, orderBy) -> { page:
    *                                                      [FolderInFolderInRoot102,
    *                                                      FolderInFolderInRoot101],
@@ -341,6 +347,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     }
     return { value: value, displayValue: displayValue } as PropertyValue;
   }
+
   private setNodeProperties(node: LfRepoTreeNode, entry: Entry, parent?: LfRepoTreeNode): void {
     this.setAttributesForEntry(entry, node);
     if (entry.entryType === EntryType.Document) {
@@ -354,7 +361,6 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       }
     }
     else if (entry.entryType === EntryType.Folder) {
-      const folder = entry as Folder;
       if (parent?.entryType === EntryType.RecordSeries ||
         (parent?.entryType === EntryType.Shortcut && parent?.targetType === EntryType.RecordSeries)) {
         node.icon = IconUtils.getDocumentIconUrlFromIconId('recordfolder-20');
@@ -364,7 +370,6 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       }
     }
     else if (entry.entryType === EntryType.RecordSeries) {
-      const recordSeries = entry as RecordSeries;
       node.icon = IconUtils.getDocumentIconUrlFromIconId('recordseries-20');
     }
     else if (entry.entryType === EntryType.Shortcut) {
@@ -395,7 +400,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
   }
 
   private setAttributesForEntry(entry: Document | Folder | Shortcut | RecordSeries, node: LfRepoTreeNode) {
-    if (this.columnIds && this.columnIds.length > 0) {
+    if (this.columnIds) {
       for (const columnId of this.columnIds) {
         node.attributes.set(columnId, this.valueToPropertyValue(entry[columnId], columnId));
       }
@@ -453,7 +458,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       entryId = parseInt(folder.id, 10);
     }
     const repoId: string = await this.repoClient.getCurrentRepoId();
-    if (orderBy && !supportedColumnIds.includes(orderBy.columnId)) {
+    if (orderBy && !defaultSupportedColumnIds.includes(orderBy.columnId)) {
       orderBy = undefined;
       console.error(`Cannot order by unsupported column: ${orderBy.columnId}`);
     }
