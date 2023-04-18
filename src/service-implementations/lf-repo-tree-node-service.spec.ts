@@ -243,6 +243,26 @@ describe('LfRepoTreeNodeService', () => {
     expect(createdNode).toEqual(expectedNode);
   });
 
+  it('if columnIds is not set, should still create leaf node', () => {
+    const expectedNode: LfRepoTreeNode = {
+      name: 'dummyShortcutDocument',
+      path: '\\dummyShortcutDocument',
+      id: '13',
+      icon: [
+        "https://lfxstatic.com/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#edoc-wordprocessing-20",
+        "https://lfxstatic.com/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#shortcut-overlay",
+      ],
+      isContainer: false,
+      isLeaf: true,
+      attributes: new Map<string, PropertyValue>(),
+      entryType: EntryType.Shortcut,
+      targetId: 20000,
+      targetType: EntryType.Document
+    };
+    const createdNode = service.createLfRepoTreeNode(dummyShortcutDocumentShortcut, 'Test Name');
+    expect(createdNode).toEqual(expectedNode);
+  });
+
   // TODO: add test for creating RecordSeries when record series class is added in API client libraries
   it('should rewrite root folder name to repo name if name is empty', () => {
     const expectedNode: LfRepoTreeNode = {
