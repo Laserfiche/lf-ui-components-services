@@ -1,5 +1,5 @@
 import { EntryType } from "@laserfiche/lf-repository-api-client";
-import { LfTreeNodePage, LfTreeNode } from "@laserfiche/types-lf-ui-components";
+import { LfTreeNode, LfTreeNodePage } from "@laserfiche/types-lf-ui-components";
 
 /**
  * Represents a Laserfiche Repository Entry
@@ -17,12 +17,24 @@ export interface LfRepoTreeNode extends LfTreeNode {
    * shortcut target EntryId (applies only to shortcut)
    */
   targetId?: number;
-  /**
-   * attributes such as "elecDocumentSize", "extension"
-   */
-  attributes: Map<string, any>;
 }
 
+export const defaultSupportedColumnIds: string[] = [
+  'name',
+  'id', //TODO: test selecting id
+  'elecDocumentSize',
+  'extension',
+  'isElectronicDocument',
+  'isRecord',
+  'mimeType',
+  'pageCount',
+  'isCheckedOut',
+  'isUnderVersionControl',
+  'creator',
+  'creationTime',
+  'lastModifiedTime',
+  'templateName',
+]
 export interface LfRepoTreeNodePage extends LfTreeNodePage {
   page: LfRepoTreeNode[];
   nextPage: string | undefined;
