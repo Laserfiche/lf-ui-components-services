@@ -376,7 +376,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     }
     else if (entry.entryType === EntryType.Shortcut) {
       const shortcut = entry as Shortcut;
-      // TODO: provide column support for shortcut
+      // TODO: shortcut doesn't have elecDocumentSize
       node.targetType = shortcut.targetType;
       node.targetId = shortcut.targetId;
       if (shortcut.targetType === EntryType.Document) {
