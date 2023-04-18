@@ -339,7 +339,9 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
         break;
       }
       case 'elecDocumentSize': {
-        displayValue = StringUtils.convertBytesToString(value as number, 2);
+        if (value) {
+          displayValue = StringUtils.convertBytesToString(value as number, 2);
+        }
         break;
       }
       default:
