@@ -140,7 +140,7 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
       return Promise.resolve(newFolder);
     }),
     getEntryByPath: jest.fn((args: { repoId: string, fullPath: string, fallbackToClosestAncestor?: boolean }) => {
-      let entry: Entry = createFolder({ id: 10, name: '', entryType: EntryType.Folder });
+      const entry: Entry = createFolder({ id: 10, name: '', entryType: EntryType.Folder });
       return Promise.resolve(createFindEntryResult({
         entry: entry
       }));

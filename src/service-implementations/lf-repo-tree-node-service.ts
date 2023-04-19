@@ -112,7 +112,6 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    * ```
    */
   async getParentTreeNodeAsync(treeNode: LfRepoTreeNode): Promise<LfRepoTreeNode | undefined> {
-    const repoName: string = await this.repoClient.getCurrentRepoName();
     const repoId: string = await this.repoClient.getCurrentRepoId();
     if (treeNode.id === '1') {
       return undefined;
@@ -130,9 +129,9 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
           if (foundParentEntry.id === 1) {
           return this.getRootTreeNodeAsync();
           }
-          const treeNode = this.createFolderNodeWithPath(foundParentEntry.name, parentPath, foundParentEntry.id);
-          this.setNodeProperties(treeNode, foundParentEntry);
-          return treeNode;
+          const parentNode = this.createFolderNodeWithPath(foundParentEntry.name, parentPath, foundParentEntry.id);
+          this.setNodeProperties(parentNode, foundParentEntry);
+          return parentNode;
         }
         else {
           throw new Error('Parent is not found');
@@ -293,16 +292,15 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
         treeNode = this.createLeafNode(entry, parent);
         break
       case EntryType.Shortcut:
-          const shortcut = entry as Shortcut;
-          switch (shortcut.targetType) {
+          switch ((entry as Shortcut).targetType) {
             case EntryType.Folder:
-              treeNode = this.createFolderNodeWithParent(shortcut, parent);
+              treeNode = this.createFolderNodeWithParent(entry as Shortcut, parent);
               break
             case EntryType.RecordSeries:
-              treeNode = this.createFolderNodeWithParent(shortcut, parent);
+              treeNode = this.createFolderNodeWithParent(entry as Shortcut, parent);
               break
             case EntryType.Document:
-              treeNode = this.createLeafNode(shortcut, parent);
+              treeNode = this.createLeafNode(entry as Shortcut, parent);
               break
             default:
               throw new Error('Unexpected shortcut targetType');
@@ -426,11 +424,10 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       throw new Error('entryId is undefined');
     }
     let entryName: string | undefined = entry.name;
-    let path: string;
     if (!entryName || entryName.length === 0) {
       entryName = entry.id.toString();
     }
-    path = this.getFullPath(parent, entryName);
+    const path = this.getFullPath(parent, entryName);
 
     const folderNode: LfRepoTreeNode = {
       name: entryName,
