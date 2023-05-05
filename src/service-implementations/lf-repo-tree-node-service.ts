@@ -124,14 +124,13 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       const parentPath = this.getParentPath(treeNode.path);
       if (parentPath) {
         const parentEntry: FindEntryResult = await this.repoClient.entriesClient.getEntryByPath({ repoId, fullPath: parentPath });
-        if (parentEntry.entry && parentEntry.entry.entryType === EntryType.Folder) {
+        if (parentEntry.entry ) {
           const foundParentEntry = parentEntry.entry;
           if (foundParentEntry.id === 1) {
           return this.getRootTreeNodeAsync();
           }
-          const icon: string = this.getIconForEntry(foundParentEntry.entryType);
+          const icon: string | string[] = this.getIconsForEntry(foundParentEntry);
           const parentNode = this.createFolderNode(foundParentEntry.name, parentPath, foundParentEntry.id, foundParentEntry.entryType, icon);
-          // this.setNodeProperties(parentNode, foundParentEntry);
           this.setColumnAttributesForEntry(foundParentEntry, parentNode);
           this.setTargetIdAndTypeForShortcut(foundParentEntry, treeNode);
           return parentNode;
@@ -234,7 +233,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     const repoName: string = await this.repoClient.getCurrentRepoName();
     const repoId: string = await this.repoClient.getCurrentRepoId();
     const rootFolderId: number = 1;
-    const icon = this.getIconForEntry(EntryType.Folder);
+    const icon = this.getSingleIconForEntryType(EntryType.Folder);
     const treeNode = this.createFolderNode(repoName, '\\', rootFolderId, EntryType.Folder, icon);
     const rootEntry: Entry = await this.repoClient.entriesClient.getEntry(
       {
@@ -242,7 +241,6 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
         entryId: rootFolderId
       }
     );
-    // this.setNodeProperties(treeNode, rootEntry);
     this.setColumnAttributesForEntry(rootEntry, treeNode);
     return treeNode;
   }
@@ -286,31 +284,18 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     if (!entry.entryType) {
       throw new Error('entry type is undefined');
     }
-    switch (entry.entryType) {
+    let targetEntryType : EntryType = entry.entryType;
+    if ((entry as Shortcut).targetType) {
+      targetEntryType = (entry as Shortcut).targetType;
+    }
+    switch (targetEntryType) {
       case EntryType.Folder:
-        treeNode = this.createFolderNodeWithParent(entry, parent);
-        break
       case EntryType.RecordSeries:
         treeNode = this.createFolderNodeWithParent(entry, parent);
-        break
+        break;
       case EntryType.Document:
         treeNode = this.createLeafNode(entry, parent);
-        break
-      case EntryType.Shortcut:
-          switch ((entry as Shortcut).targetType) {
-            case EntryType.Folder:
-              treeNode = this.createFolderNodeWithParent(entry as Shortcut, parent);
-              break
-            case EntryType.RecordSeries:
-              treeNode = this.createFolderNodeWithParent(entry as Shortcut, parent);
-              break
-            case EntryType.Document:
-              treeNode = this.createLeafNode(entry as Shortcut, parent);
-              break
-            default:
-              throw new Error('Unexpected shortcut targetType');
-          }
-          break
+        break;
       default:
         throw new Error('Unsupported entry type');
     }
@@ -319,11 +304,12 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     return treeNode;
   }
 
-  private getIconForEntry(entryType: EntryType, parent?: LfRepoTreeNode, extension?: string): string {
+  private getSingleIconForEntryType(entryType: EntryType, parent?: LfRepoTreeNode, extension?: string): string {
     switch (entryType) {
       case EntryType.Folder: {
-        if (parent?.entryType === EntryType.RecordSeries ||
-          (parent?.entryType === EntryType.Shortcut && parent?.targetType === EntryType.RecordSeries)) {
+        const isParentShortcutRecordSeries = (parent?.entryType === EntryType.Shortcut && parent?.targetType === EntryType.RecordSeries);
+        const isParentRecordSeries = parent?.entryType === EntryType.RecordSeries;
+        if (isParentRecordSeries || isParentShortcutRecordSeries) {
           return IconUtils.getDocumentIconUrlFromIconId('recordfolder-20');
         }
         else {
@@ -335,7 +321,6 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       }
       case EntryType.Document: {
         if (extension) {
-          console.log("extension: " + extension);
           const iconId = IconUtils.getDocumentIconIdFromExtension(extension);
           return IconUtils.getDocumentIconUrlFromIconId(iconId);
         }
@@ -366,10 +351,10 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     let icon : string | string[];
     const entryType = entry.entryType;
     const extension = (entry as Document).extension;
-    icon = this.getIconForEntry(entryType, parent, extension);
+    icon = this.getSingleIconForEntryType(entryType, parent, extension);
     if (entry.entryType === EntryType.Shortcut) {
       const shortcutIcon = icon;
-      const targetIcon = this.getIconForEntry((entry as Shortcut).targetType, parent, extension);
+      const targetIcon = this.getSingleIconForEntryType((entry as Shortcut).targetType, parent, extension);
       icon = [targetIcon, shortcutIcon];
     }
 
@@ -416,7 +401,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     }
   }
 
-  private setTargetIdAndTypeForShortcut(entry: Shortcut | Document | Folder | RecordSeries, node: LfRepoTreeNode) {
+  private setTargetIdAndTypeForShortcut(entry: Entry, node: LfRepoTreeNode) {
     if (entry.entryType === EntryType.Shortcut) {
       const shortcut = entry as Shortcut;
       node.targetId = shortcut.targetId;
@@ -424,7 +409,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     }
   }
 
-  private createFolderNodeWithParent(entry: Shortcut | RecordSeries | Folder, parent: LfRepoTreeNode): LfRepoTreeNode {
+  private createFolderNodeWithParent(entry: Entry, parent: LfRepoTreeNode): LfRepoTreeNode {
     if (!entry.id) {
       throw new Error('entryId is undefined');
     }
@@ -433,16 +418,21 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       entryName = entry.id.toString();
     }
     const path = this.getFullPath(parent, entryName);
-    let icon : string | string[];
-    const entryType = entry.entryType;
-    icon = this.getIconForEntry(entryType, parent);
-    if (entry.entryType === EntryType.Shortcut) {
-      const shortcutIcon = icon;
-      const targetIcon = this.getIconForEntry((entry as Shortcut).targetType, parent);
-      icon = [targetIcon, shortcutIcon];
-    }
+    let icon: string | string[] = this.getIconsForEntry(entry, parent);
 
     return this.createFolderNode(entryName, path, entry.id, entry.entryType, icon);
+  }
+
+  private getIconsForEntry(entry: Entry, parent?: LfRepoTreeNode) {
+    let icon: string | string[];
+    const entryType = entry.entryType;
+    icon = this.getSingleIconForEntryType(entryType, parent);
+    if (entry.entryType === EntryType.Shortcut) {
+      const shortcutIcon = icon;
+      const targetIcon = this.getSingleIconForEntryType((entry as Shortcut).targetType, parent);
+      icon = [targetIcon, shortcutIcon];
+    }
+    return icon;
   }
 
   private getFullPath(parent: LfRepoTreeNode, entryName: string) {
@@ -461,7 +451,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       name: entryName,
       path: path,
       id: id.toString(),
-      entryType: entryType,
+      entryType,
       icon,
       isContainer: true,
       isLeaf: false,
