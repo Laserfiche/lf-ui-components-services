@@ -418,7 +418,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       entryName = entry.id.toString();
     }
     const path = this.getFullPath(parent, entryName);
-    let icon: string | string[] = this.getIconsForEntry(entry, parent);
+    const icon: string | string[] = this.getIconsForEntry(entry, parent);
 
     return this.createFolderNode(entryName, path, entry.id, entry.entryType, icon);
   }
