@@ -348,16 +348,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       entryName = entry.id.toString();
     }
     const path = this.getFullPath(parent, entry.name);
-    let icon : string | string[];
-    const entryType = entry.entryType;
-    const extension = (entry as Document).extension;
-    icon = this.getSingleIconForEntryType(entryType, parent, extension);
-    if (entry.entryType === EntryType.Shortcut) {
-      const shortcutIcon = icon;
-      const targetIcon = this.getSingleIconForEntryType((entry as Shortcut).targetType, parent, extension);
-      icon = [targetIcon, shortcutIcon];
-    }
-
+    const icon = this.getIconsForEntry(entry, parent);
     const leafNode: LfRepoTreeNode = {
       name: entryName,
       path: path,
@@ -424,12 +415,12 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
   }
 
   private getIconsForEntry(entry: Entry, parent?: LfRepoTreeNode) {
-    let icon: string | string[];
     const entryType = entry.entryType;
-    icon = this.getSingleIconForEntryType(entryType, parent);
+    const extension = (entry as Document).extension;
+    let icon: string | string[] = this.getSingleIconForEntryType(entryType, parent, extension);
     if (entry.entryType === EntryType.Shortcut) {
       const shortcutIcon = icon;
-      const targetIcon = this.getSingleIconForEntryType((entry as Shortcut).targetType, parent);
+      const targetIcon = this.getSingleIconForEntryType((entry as Shortcut).targetType, parent, extension);
       icon = [targetIcon, shortcutIcon];
     }
     return icon;
