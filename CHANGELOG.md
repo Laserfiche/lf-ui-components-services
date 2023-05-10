@@ -4,7 +4,7 @@
 - `LfRepoTreeNodeService`: supports column
   - add `columnIds`
   - add `getSupportedColumnIdsAsync()`
-  - method `getFolderChildrenAsync()` takes an additional optional argument `orderBy: ColumnOrderBy)`
+  - method `getFolderChildrenAsync()` takes an additional optional argument `orderBy: ColumnOrderBy`
 ### Fixes
 
 ### Chore & Maintenance

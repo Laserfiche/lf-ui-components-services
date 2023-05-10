@@ -127,7 +127,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
         if (parentEntry.entry ) {
           const foundParentEntry = parentEntry.entry;
           if (foundParentEntry.id === 1) {
-          return this.getRootTreeNodeAsync();
+          return await this.getRootTreeNodeAsync();
           }
           const icon: string | string[] = this.getIconsForEntry(foundParentEntry);
           const parentNode = this.createFolderNode(foundParentEntry.name, parentPath, foundParentEntry.id, foundParentEntry.entryType, icon);
@@ -140,7 +140,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
         }
       }
       else {
-        return this.getRootTreeNodeAsync();
+        return await this.getRootTreeNodeAsync();
       }
 
     }
@@ -226,7 +226,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    *            - FolderInFolderInRoot
    *      - FolderInRoot2
    * const service = new LfRepoTreeNodeService(repoClient);
-   * service.getRootTreeNodeAsync() // returns the root node, with id of 1
+   * await service.getRootTreeNodeAsync() // returns the root node, with id of 1
    * ```
    */
   async getRootTreeNodeAsync(): Promise<LfRepoTreeNode> {
@@ -248,20 +248,26 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
   /**
    * Converts an Entry to the corresponding LfRepoTreeNode and returns it
    * @param entry entry
-   * @param parent parent LfRepoTreeNode
+   * @param repoName the name of the repository. Optional
+   * @param parent parent LfRepoTreeNode. Optional
    * @returns the corresponding LfRepoTreeNode
+   * @remarks This method is used to convert an Entry to the corresponding LfRepoTreeNode. The parent argument is required if the entry is not a root node.   The repoName argument is required if the entry is a root node.
    * @example
    * ```ts
-   * const entry: Shortcut = createShortcut({
+   * const nonRootEntry: Shortcut = createShortcut({
    *  id: 14,
    *  name: 'shortcutFolder',
-   *  fullPath: '\\shortcutFolder',
    *  entryType: EntryType.Shortcut,
    *  targetId: 20000,
    *  targetType: EntryType.Folder
    * });
+   *  const rootEntry: Shortcut = createShortcut({
+   *  id: 1,
+   *  name: 'folder',
+   *  entryType: EntryType.Folder,
+   * });
    * const service = new LfRepoTreeNodeService(repoClient);
-   * service.createLfRepoTreeNodeWithParent(entry, { id: 1, path: '\\parent', name: 'root'});
+   * service.createLfRepoTreeNodeWithParent(nonRootEntry, undefined, { id: 1, path: '\\parent', name: 'root'});
    * // returns {
    *  name: 'dummyShortcutFolder',
    *  path: '\\parent\\dummyShortcutFolder',
@@ -277,9 +283,41 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    *  targetId: 20000,
    *  targetType: EntryType.Folder
    * };
+   * service.createLfRepoTreeNodeWithParent(rootEntry, 'repo-1');
+   * // returns {
+   *  name: 'repo-1',
+   *  path: '\\',
+   *  id: '1',
+   *  icon: [
+   *   "https://lfxstatic.com/npm/@laserfiche/lf-resource-library@4/resources/icons/document-icons.svg#folder-20",
+   *  ],
+   *  isContainer: true,
+   *  isLeaf: false,
+   *  attributes: new Map<string, string>(),
+   *  entryType: EntryType.Folder,
+   * };
    *  ```
    */
-  createLfRepoTreeNodeWithParent(entry: Entry, parent: LfRepoTreeNode): LfRepoTreeNode {
+   createLfRepoTreeNode(entry: Entry, repoName?: string, parent?: LfRepoTreeNode): LfRepoTreeNode {
+    if (parent && entry.id !== 1) {
+      return this.createLfRepoTreeNodeWithParent(entry, parent);
+    }
+    else if(entry.id === 1) {
+      const icon = this.getSingleIconForEntryType(EntryType.Folder);
+      if (!repoName) {
+        throw new Error('repoName is undefined for a root node.');
+      }
+
+      const treeNode = this.createFolderNode(repoName, '\\', 1, EntryType.Folder, icon);
+      this.setColumnAttributesForEntry(entry, treeNode);
+      return treeNode;
+    }
+    else {
+      throw new Error('parent is undefined for a non-root node.');
+    }
+  }
+
+  private createLfRepoTreeNodeWithParent(entry: Entry, parent: LfRepoTreeNode): LfRepoTreeNode {
     let treeNode: LfRepoTreeNode | undefined;
     if (!entry.entryType) {
       throw new Error('entry type is undefined');
