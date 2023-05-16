@@ -182,7 +182,10 @@ describe('LfRepoTreeNodeService', () => {
       attributes: new Map<string, PropertyValue>(),
       entryType: EntryType.Folder
     };
-    const createdNode = service.createLfRepoTreeNode(dummyFolderEntry, undefined, { name: 'Test Name', path: '\\' } as LfRepoTreeNode);
+    
+    // @ts-ignore
+    const createdNode = service.createNonRootLfRepoTreeNode(dummyFolderEntry, { name: 'Test Name', path: '\\' } as LfRepoTreeNode);
+    
     expect(createdNode).toEqual(expectedNode);
   });
 
@@ -203,7 +206,9 @@ describe('LfRepoTreeNodeService', () => {
       targetType: EntryType.Folder
     };
 
-    const createdNode = service.createLfRepoTreeNode(dummyShortcutFolderShortcut,  undefined, { name: 'Test Name', path: '\\' } as LfRepoTreeNode);
+    // @ts-ignore
+    const createdNode = service.createNonRootLfRepoTreeNode(dummyShortcutFolderShortcut, { name: 'Test Name', path: '\\' } as LfRepoTreeNode);
+    
     expect(createdNode).toEqual(expectedNode);
   });
 
@@ -226,7 +231,10 @@ describe('LfRepoTreeNodeService', () => {
     expectedNode.attributes!.set(nodeAttrName_extension, {value:'docx', displayValue:'docx'});
     expectedNode.attributes!.set(nodeAttrName_templateName, {value:'hi', displayValue: 'hi'});
     service.columnIds = [nodeAttrName_extension, nodeAttrName_templateName];
-    const createdNode = service.createLfRepoTreeNode(dummyShortcutDocumentShortcut,  undefined, { name: 'Test Name', path: '\\' } as LfRepoTreeNode);
+    
+    // @ts-ignore
+    const createdNode = service.createNonRootLfRepoTreeNode(dummyShortcutDocumentShortcut, { name: 'Test Name', path: '\\' } as LfRepoTreeNode);
+    
     expect(createdNode).toEqual(expectedNode);
   });
 
@@ -246,7 +254,9 @@ describe('LfRepoTreeNodeService', () => {
       targetId: 20000,
       targetType: EntryType.Document
     };
-    const createdNode = service.createLfRepoTreeNode(dummyShortcutDocumentShortcut, undefined, { name: 'Test Name', path: '\\' } as LfRepoTreeNode);
+
+    // @ts-ignore
+    const createdNode = service.createNonRootLfRepoTreeNode(dummyShortcutDocumentShortcut, { name: 'Test Name', path: '\\' } as LfRepoTreeNode);
     expect(createdNode).toEqual(expectedNode);
   });
 
@@ -269,21 +279,20 @@ describe('LfRepoTreeNodeService', () => {
     expectedNode.attributes.set(nodeAttrName_creationTime, {value: '2000-05-11T00:00:00', displayValue: '5/11/2000, 12:00:00 AM'})
     service.columnIds = [nodeAttrName_elecDocumentSize,nodeAttrName_extension,nodeAttrName_templateName, nodeAttrName_creationTime];
 
-    const createdNode = service.createLfRepoTreeNode(dummyDocumentEntryDocument,  undefined, { name: 'Test Name', path: '\\' } as LfRepoTreeNode);
+    // @ts-ignore
+    const createdNode = service.createNonRootLfRepoTreeNode(dummyDocumentEntryDocument, { name: 'Test Name', path: '\\' } as LfRepoTreeNode);
     expect(createdNode).toEqual(expectedNode);
 
   });
 
   it('should throw exception if entryType not set', () => {
-    expect(() => service.createLfRepoTreeNode(dummyInvalidEntry, undefined, { name: 'Test Name', path: '\\' } as LfRepoTreeNode)).toThrow('entry type is undefined');
-  });
-
-  it('should throw exception if create a root node if repoName is not provided', () => {
-    expect(() => service.createLfRepoTreeNode(dummyRootEntry, undefined, { name: 'Test Name', path: '\\' } as LfRepoTreeNode)).toThrow('repoName is undefined for a root node.');
+    // @ts-ignore
+    expect(() => service.createNonRootLfRepoTreeNode(dummyInvalidEntry, { name: 'Test Name', path: '\\' } as LfRepoTreeNode)).toThrow(`Entry type is undefined for entry: ${dummyInvalidEntry.id}`);
   });
 
   it('should throw exception if create a non-root node if parent is not provided', () => {
-    expect(() => service.createLfRepoTreeNode(dummyShortcutDocumentShortcut, 'repo-1', undefined)).toThrow('parent is undefined for a non-root node.');
+    // @ts-ignore
+    expect(() => service.createNonRootLfRepoTreeNode(dummyShortcutDocumentShortcut)).toThrow(`Unable to determine path of entry: ${dummyShortcutDocumentShortcut.id}`);
   });
 
   it('can choose to view only folders, not documents or record series', async () => {
