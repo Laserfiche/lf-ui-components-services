@@ -138,6 +138,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
         });
         if (parentEntry.entry) {
           const foundParentEntry = parentEntry.entry;
+          foundParentEntry.fullPath = parentPath;
           if (foundParentEntry.id === 1) {
             const repoName = await this.repoClient.getCurrentRepoName();
             return this.createRootFolderNode(repoName, foundParentEntry);
@@ -270,6 +271,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
 
     if (entryFound.entry) {
       const entryWithSpecifiedPath: Entry = entryFound.entry;
+      entryWithSpecifiedPath.fullPath = pathToNode;
       let treeNode: LfTreeNode;
       if (entryWithSpecifiedPath.id === 1) {
         treeNode = this.createRootFolderNode(repoName, entryWithSpecifiedPath);
