@@ -1,7 +1,10 @@
-## 14.x
+## 14.1.0
 
 ### Features
-
+- `LfRepoTreeNodeService`: supports column
+  - add `columnIds`
+  - add `getSupportedColumnIdsAsync()`
+  - method `getFolderChildrenAsync()` takes an additional optional argument `orderBy: ColumnOrderBy`
 ### Fixes
 
 ### Chore & Maintenance
