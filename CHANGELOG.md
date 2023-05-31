@@ -1,6 +1,15 @@
-## 14.x
+## 14.1.0
 
 ### Features
+- `LfRepoTreeNodeService`: supports column
+  - add `columnIds`
+  - add `getSupportedColumnIdsAsync()`
+  - method `getFolderChildrenAsync()` takes an additional optional argument `orderBy: ColumnOrderBy`
+- `LfRepoTreeNodeService`: supports initialization with path
+  - update `@laserfiche\types-lf-ui-components` to version `14.1.3`
+  - add method `getTreeNodeByIdentifierAsync`, which determines the `LfRepoTreeNode` specified by the given path
+  - this enables the user of the service to open the `lf-repository-browser` component to a certain initial node by calling
+      `initAsync` with a path, not knowing other data about the folder.
 
 ### Fixes
 

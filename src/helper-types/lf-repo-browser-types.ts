@@ -19,7 +19,7 @@ export interface LfRepoTreeNode extends LfTreeNode {
   targetId?: number;
 }
 
-export const defaultSupportedColumnIds: string[] = [
+export const allSupportedRepositoryColumnIds: string[] = [
   'name',
   'id',
   'elecDocumentSize',
