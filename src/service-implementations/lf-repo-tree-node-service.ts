@@ -319,10 +319,8 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     }
 
     if (!path) {
-      // TODO should we catch this here and get root, or throw service method to UI?
       throw new Error(`Unable to determine path of entry: ${entry.id}`);
     }
-
 
     const targetEntryType: EntryType = (entry as Shortcut).targetType
       ? (entry as Shortcut).targetType
