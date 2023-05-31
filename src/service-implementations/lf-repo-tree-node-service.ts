@@ -12,7 +12,7 @@ import {
   FindEntryResult,
 } from '@laserfiche/lf-repository-api-client';
 import { IRepositoryApiClientEx } from '../helper-types/repository-api-ex.js';
-import { defaultSupportedColumnIds } from '../helper-types/lf-repo-browser-types';
+import { allSupportedRepositoryColumnIds } from '../helper-types/lf-repo-browser-types';
 import {
   ColumnOrderBy,
   LfTreeNode,
@@ -96,7 +96,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    */
   async getSupportedColumnIdsAsync(): Promise<string[]> {
     // TODO: add support for custom repository-specific columns
-    return defaultSupportedColumnIds;
+    return allSupportedRepositoryColumnIds;
   }
 
   /**
@@ -252,17 +252,32 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     return treeNode;
   }
 
-  private createRootFolderNode(repoName: string, rootEntry: Entry) {
-    const icon = this.getSingleIconForEntryType(EntryType.Folder);
-    const treeNode = this.createFolderNode(repoName, '\\', rootFolderId, EntryType.Folder, icon);
-    this.setColumnAttributesForEntry(rootEntry, treeNode);
-    return treeNode;
-  }
-
-  async getTreeNodeById(id: string): Promise<LfTreeNode> {
+  /**
+   * Returns the LfRepoTreeNode represented by the path
+   * @param identifier Unique identifier for the node, in this implementation the path of the node
+   * @returns The LfRepoTreeNode at the specified path, or throws if it does not exist
+   * @example
+   * ``` ts
+   * // suppose the repository is structured as below
+   * - root
+   *      - DocInRoot
+   *      - FolderInRoot1
+   *            - DocInFolderInRoot
+   *            - FolderInFolderInRoot
+   *      - FolderInRoot2
+   *            - ShortcutToFolderInRoot1
+   *                  - DocInFolderInRoot
+   *                  - FolderInFolderInRoot
+   * const rootNode = getTreeNodeByIdentifierAsync('\'); // returns the root node definition
+   * const nestedNode = getTreeNodeByIdentifierAsync('\FolderInRoot1\FolderInFolderInRoot'); // returns the definition for FolderInFolderInRoot
+   * const nonExistentNode = getTreeNodeByIdentifierAsync('\TestFolder'); // throws, will be caught by repository browser
+   * const nestedUnderShortcut = getTreeNodeByIdentifierAsync('\FolderInRoot2\ShortcutToFolderInRoot1\DocInFolderInRoot') // returns definition for DocInFolderInRoot, with path to shortcut rather than path to true location
+   * ```
+   */
+  async getTreeNodeByIdentifierAsync(identifier: string): Promise<LfTreeNode | undefined> {
     const repoName: string = await this.repoClient.getCurrentRepoName();
     const repoId: string = await this.repoClient.getCurrentRepoId();
-    const pathToNode: string = id;
+    const pathToNode: string = identifier;
 
     const entryFound: FindEntryResult = await this.repoClient.entriesClient.getEntryByPath({
       repoId,
@@ -283,6 +298,13 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     } else {
       throw new Error(`Unable to get entry with path: ${pathToNode}`);
     }
+  }
+
+  private createRootFolderNode(repoName: string, rootEntry: Entry) {
+    const icon = this.getSingleIconForEntryType(EntryType.Folder);
+    const treeNode = this.createFolderNode(repoName, '\\', rootFolderId, EntryType.Folder, icon);
+    this.setColumnAttributesForEntry(rootEntry, treeNode);
+    return treeNode;
   }
 
   private createNonRootLfRepoTreeNode(entry: Entry, parent?: LfRepoTreeNode): LfRepoTreeNode {
@@ -444,7 +466,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
   ): LfRepoTreeNode {
     const folderNode: LfRepoTreeNode = {
       name: entryName,
-      path: path,
+      path,
       id: id.toString(),
       entryType,
       icon,
@@ -486,7 +508,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       entryId = parseInt(folder.id, 10);
     }
     const repoId: string = await this.repoClient.getCurrentRepoId();
-    if (orderBy && !defaultSupportedColumnIds.includes(orderBy.columnId)) {
+    if (orderBy && !allSupportedRepositoryColumnIds.includes(orderBy.columnId)) {
       orderBy = undefined;
       console.error(`Cannot order by unsupported column: ${orderBy.columnId}`);
     }
