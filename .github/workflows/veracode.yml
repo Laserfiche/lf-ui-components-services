@@ -40,7 +40,7 @@ jobs:
       - name: Veracode Upload And Scan
         uses: veracode/veracode-uploadandscan-action@0.2.6
         with:
-          appname: 'SharePoint Integration'
+          appname: 'lf-ui-components-services'
           createprofile: true
           filepath: 'veracode'
           vid: '${{ secrets.VERACODE_API_ID }}'
