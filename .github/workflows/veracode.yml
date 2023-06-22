@@ -1,11 +1,6 @@
 name: Veracode lf-ui-components-services-CI
 
 on:
-  push:
-    branches: [ '\d+.x' ]
-  pull_request:
-    branches: [ '\d+.x' ]
-
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
   schedule:
@@ -31,18 +26,7 @@ jobs:
       - name: 'Compress UI Components Services'
         run: tar -czvf ./veracode/ui-components-services.tar.gz ./src
 
-      - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ui-components-services
-          # A file, directory or wildcard pattern that describes what to upload
-          path: |
-            ./veracode
-
-      - name: echo github run attempt
-        run: echo ${{ github.run_attempt }} ${{  github.event.pull_request.head.repo.owner.login }}
-
-      - name: Veracode Upload And Scan
+      - name: Veracode Upload And Scan (Static Application Security Testing)
         uses: veracode/veracode-uploadandscan-action@0.2.6
         with:
           appname: 'lf-ui-components-services'
@@ -52,7 +36,7 @@ jobs:
           vkey: '${{ secrets.VERACODE_API_KEY }}'
           teams: 'Application Component - Shared'
 
-      - name: Run Veracode SCA
+      - name: Run Veracode Software Composition Analysis (SCA)
         env:
           SRCCLR_API_TOKEN: ${{ secrets.SRCCLR_API_TOKEN }}
         uses: veracode/veracode-sca@v2.1.6
