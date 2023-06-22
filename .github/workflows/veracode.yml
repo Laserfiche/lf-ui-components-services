@@ -1,0 +1,46 @@
+name: Veracode lf-ui-components-services-CI
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+  schedule:
+    - cron: '0 12 * * 6'
+
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  veracode_scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.sha }}
+
+      - name: 'Delete spec files'
+        run: find . -type f -name '*.spec.ts' -delete
+
+      - name: 'create an empty ./veracode folder'
+        run: 'mkdir -p ./veracode'
+        
+      - name: 'Compress UI Components Services'
+        run: tar -czvf ./veracode/ui-components-services.tar.gz ./src
+
+      - name: Veracode Upload And Scan (Static Application Security Testing)
+        uses: veracode/veracode-uploadandscan-action@0.2.6
+        with:
+          appname: 'lf-ui-components-services'
+          createprofile: true
+          filepath: 'veracode'
+          vid: '${{ secrets.VERACODE_API_ID }}'
+          vkey: '${{ secrets.VERACODE_API_KEY }}'
+          teams: 'Application Component - Shared'
+
+      - name: Run Veracode Software Composition Analysis (SCA)
+        env:
+          SRCCLR_API_TOKEN: ${{ secrets.SRCCLR_API_TOKEN }}
+        uses: veracode/veracode-sca@v2.1.6
+        with:
+          create-issues: false
+          allow-dirty: true
+          recursive: true
