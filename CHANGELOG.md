@@ -1,3 +1,12 @@
+## 16.0.0
+
+### Features
+
+### Fixes
+
+### Chore & Maintenance
+ - Updated `types-lf-ui-components` to use the latest version 16.0.0
+
 ## 15.0.0
 
 ### Features
@@ -6,6 +15,7 @@
 
 ### Chore & Maintenance
  - Updated `types-lf-ui-components` to use the latest version 15.0.1
+
 ## 14.1.0
 
 ### Features
