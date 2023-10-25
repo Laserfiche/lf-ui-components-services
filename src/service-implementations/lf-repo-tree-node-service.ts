@@ -1,3 +1,6 @@
+// Copyright (c) Laserfiche.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 import { LfRepoTreeNode } from '../helper-types/lf-repo-browser-types';
 import { LfLocalizationService, IconUtils, PathUtils, StringUtils } from '@laserfiche/lf-js-utils';
 import { getFolderChildrenDefaultParameters } from '../utils/repo-client-utils.js';

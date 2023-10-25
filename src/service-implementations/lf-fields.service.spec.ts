@@ -1,3 +1,6 @@
+// Copyright (c) Laserfiche.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 import { FieldValues, FieldType, TemplateFieldInfo } from '@laserfiche/types-lf-ui-components';
 import { LfFieldsService } from './lf-fields.service.js';
 import { ODataValueContextOfIListOfTemplateFieldInfo, TemplateFieldInfo as ApiTemplateFieldInfo, WFieldType } from '@laserfiche/lf-repository-api-client';
