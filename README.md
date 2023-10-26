@@ -1,3 +1,6 @@
+<!--Copyright (c) Laserfiche.
+Licensed under the MIT License. See LICENSE in the project root for license information.-->
+
 # lf-ui-components-services
 
 This library contains the data sources implementation to connect the [Laserfiche UI Components](https://www.npmjs.com/package/@laserfiche/lf-ui-components) to live data from Laserfiche API services.
