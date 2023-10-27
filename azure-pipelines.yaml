@@ -1,3 +1,6 @@
+# Copyright (c) Laserfiche.
+# Licensed under the MIT License. See LICENSE in the project root for license information.
+
 # Node.js
 # Build a general Node.js project with npm.
 # Add steps that analyze code, save build artifacts, deploy, and more:
