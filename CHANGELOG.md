@@ -1,5 +1,9 @@
 <!--Copyright (c) Laserfiche.
 Licensed under the MIT License. See LICENSE in the project root for license information.-->
+## 16.0.1
+
+### Chore & Maintenance
+- Updated `@laserfiche/lf-repository-api-client` to version `1.1.4` due to `jsasign` transitive dependency vulnerability
 
 ## 16.0.0
 
