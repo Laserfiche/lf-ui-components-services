@@ -3,6 +3,11 @@ Licensed under the MIT License. See LICENSE in the project root for license info
 ## 16.0.1
 
 ### Chore & Maintenance
+- Updated transitive dependencies by minor versions due to vulnerabilities
+
+## 16.0.1
+
+### Chore & Maintenance
 - Updated `@laserfiche/lf-repository-api-client` to version `1.1.4` due to `jsrsasign` transitive dependency vulnerability
 
 ## 16.0.0
