@@ -1,5 +1,10 @@
 <!--Copyright (c) Laserfiche.
 Licensed under the MIT License. See LICENSE in the project root for license information.-->
+## 16.0.2
+
+### Chore & Maintenance
+- Updated transitive dependencies by minor versions due to vulnerabilities
+
 ## 16.0.1
 
 ### Chore & Maintenance
