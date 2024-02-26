@@ -109,7 +109,7 @@ jobs:
         run: npm version ${{ env.NpmPackageVersion }} --no-git-tag-version
 
       - name: Npm publish
-        run: npm publish  --access public  --tag next
+        run: npm publish  --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -145,7 +145,7 @@ jobs:
         run: npm version ${{ env.NPM_VERSION }} --no-git-tag-version --allow-same-version
 
       - name: Npm publish
-        run: npm publish  --access public  --tag latest
+        run: npm publish  --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
