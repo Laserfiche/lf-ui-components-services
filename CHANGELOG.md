@@ -1,5 +1,11 @@
-<!--Copyright (c) Laserfiche.
+<!--Copyright Laserfiche.
 Licensed under the MIT License. See LICENSE in the project root for license information.-->
+## 17.0.0
+
+### Chore & Maintenance
+ - Updated `types-lf-ui-components` to use the latest version 17
+
+
 ## 16.0.3
 
 ### Chore & Maintenance
