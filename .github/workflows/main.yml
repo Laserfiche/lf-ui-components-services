@@ -1,4 +1,4 @@
-# Copyright (c) Laserfiche.
+# Copyright Laserfiche.
 # Licensed under the MIT License. See LICENSE in the project root for license information.
 
 name: lf-ui-components-services-CI
@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
 
 env:
-  NPM_VERSION: "16.0.3"
+  NPM_VERSION: "17.0.0"
 
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
@@ -32,7 +32,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
         with:
-          node-version: '16'
+          node-version: '18'
 
       - name: Npm ci
         run: npm ci
@@ -102,7 +102,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
         with:
-          node-version: '16'
+          node-version: '18'
           registry-url: 'https://registry.npmjs.org'
 
       - name: set NpmPackageVersion environment
@@ -141,7 +141,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
         with:
-          node-version: '16'
+          node-version: '18'
           registry-url: 'https://registry.npmjs.org'
 
       - name: npm version
@@ -158,29 +158,3 @@ jobs:
           tag: ${{ env.NPM_VERSION }}
           commit_sha: ${{ github.sha }}
           message: Workflow run ${{github.server_url}}/${{github.repository}}/actions/runs/${{ github.run_id}}
-
-  publish_documentation_to_s3:
-    runs-on: ubuntu-latest
-    environment: publish_to_S3
-    if: ${{ (github.run_attempt != 1) }}
-    needs: [ build_and_test ]
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.sha }}
-
-      - name: Download a Build Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: doc-publish-artifact
-          path: docs
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-west-2 # Use your bucket region here
-
-      - name: Upload docs to S3 bucket
-        run: aws s3 sync ./docs s3://apiserver-publish-client-library-docs/${GITHUB_REPOSITORY##*/}/docs/${GITHUB_REF##*/} --delete
