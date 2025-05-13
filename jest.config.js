@@ -1,9 +1,9 @@
-// Copyright (c) Laserfiche.
+// Copyright Laserfiche.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 module.exports = {
   preset: 'ts-jest',
-  moduleDirectories: ['node_modules', '/src', ''],
+  moduleDirectories: ['node_modules', '/src', "<rootDir>"],
   moduleFileExtensions: ['ts', 'js'],
   reporters: ['default', 'jest-junit'],
   transform: {
