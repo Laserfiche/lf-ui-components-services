@@ -3,7 +3,7 @@
 
 module.exports = {
   preset: 'ts-jest',
-  moduleDirectories: ['node_modules', '/src', ''],
+  moduleDirectories: ['node_modules', '/src', "<rootDir>"],
   moduleFileExtensions: ['ts', 'js'],
   reporters: ['default', 'jest-junit'],
   transform: {
