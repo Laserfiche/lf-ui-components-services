@@ -74,7 +74,7 @@ jobs:
             ./LICENSE
 
       - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: doc-publish-artifact
           # A file, directory or wildcard pattern that describes what to upload
@@ -95,7 +95,7 @@ jobs:
           ref: ${{ github.sha }}
 
       - name: Download a Build Artifact
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v4
         with:
           name: npm-publish-artifact
 
@@ -134,7 +134,7 @@ jobs:
           ref: ${{ github.sha }}
 
       - name: Download a Build Artifact
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v4
         with:
           name: npm-publish-artifact
 
@@ -170,7 +170,7 @@ jobs:
           ref: ${{ github.sha }}
 
       - name: Download a Build Artifact
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v4
         with:
           name: doc-publish-artifact
           path: docs
@@ -184,3 +184,4 @@ jobs:
 
       - name: Upload docs to S3 bucket
         run: aws s3 sync ./docs s3://apiserver-publish-client-library-docs/${GITHUB_REPOSITORY##*/}/docs/${GITHUB_REF##*/} --delete
+
