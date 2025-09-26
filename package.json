@@ -37,8 +37,8 @@
     "typescript": "^4.9.5"
   },
   "peerDependencies": {
-    "@laserfiche/lf-js-utils": "^4.0.8",
-    "@laserfiche/lf-repository-api-client": "^1.1.4",
+    "@laserfiche/lf-js-utils": "^4.0.12",
+    "@laserfiche/lf-repository-api-client": "^1.1.9",
     "@laserfiche/types-lf-ui-components": "^16.0.0"
   }
 }
