@@ -281,25 +281,33 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     const repoName: string = await this.repoClient.getCurrentRepoName();
     const repoId: string = await this.repoClient.getCurrentRepoId();
     const pathToNode: string = identifier;
+    try {
+      const entryFound: FindEntryResult = await this.repoClient.entriesClient.getEntryByPath({
+        repoId,
+        fullPath: pathToNode,
+      });
 
-    const entryFound: FindEntryResult = await this.repoClient.entriesClient.getEntryByPath({
-      repoId,
-      fullPath: pathToNode,
-    });
+      if (entryFound.entry) {
+        const entryWithSpecifiedPath: Entry = entryFound.entry;
+        entryWithSpecifiedPath.fullPath = pathToNode;
+        let treeNode: LfTreeNode;
+        if (entryWithSpecifiedPath.id === 1) {
+          treeNode = this.createRootFolderNode(repoName, entryWithSpecifiedPath);
+        } else {
+          treeNode = this.createNonRootLfRepoTreeNode(entryWithSpecifiedPath);
+        }
 
-    if (entryFound.entry) {
-      const entryWithSpecifiedPath: Entry = entryFound.entry;
-      entryWithSpecifiedPath.fullPath = pathToNode;
-      let treeNode: LfTreeNode;
-      if (entryWithSpecifiedPath.id === 1) {
-        treeNode = this.createRootFolderNode(repoName, entryWithSpecifiedPath);
+        return treeNode;
       } else {
-        treeNode = this.createNonRootLfRepoTreeNode(entryWithSpecifiedPath);
+        throw new Error(`Unable to get entry with path: ${pathToNode}`);
       }
-
-      return treeNode;
-    } else {
-      throw new Error(`Unable to get entry with path: ${pathToNode}`);
+    } catch (err: any) {
+      if (err.errorCode === 9013) {
+        const rootNode = await this.getRootTreeNodeAsync();
+        return rootNode;
+      } else {
+        throw err;
+      }
     }
   }
 
@@ -334,7 +342,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     }
 
     const icon = this.getIconsForEntry(entry, parent);
-  
+
     switch (targetEntryType) {
       case EntryType.Folder:
       case EntryType.RecordSeries:
