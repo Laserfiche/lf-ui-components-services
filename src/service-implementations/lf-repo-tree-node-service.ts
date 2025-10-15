@@ -302,7 +302,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
         throw new Error(`Unable to get entry with path: ${pathToNode}`);
       }
     } catch (err: any) {
-      if (err.errorCode === 9013) {
+      if (err.errorCode === 9013 || err.status === 403) {
         const rootNode = await this.getRootTreeNodeAsync();
         return rootNode;
       } else {
