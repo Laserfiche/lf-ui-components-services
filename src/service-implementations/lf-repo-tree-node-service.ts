@@ -279,8 +279,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    */
   async getTreeNodeByIdentifierAsync(pathToNode: string): Promise<LfTreeNode | undefined> {
     const repoId: string = await this.repoClient.getCurrentRepoId();
-    var treeNode: LfTreeNode;
-    try {
+    let treeNode: LfTreeNode;
       const findEntryResult: FindEntryResult = await this.repoClient.entriesClient.getEntryByPath({
         fullPath: pathToNode,
         repoId: repoId,
@@ -291,19 +290,10 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       } else {
         throw new Error(`Unable to get entry with identifier: ${pathToNode}`);
       }
-    } catch (err: any) {
-      if (err.errorCode === 9013 || err.status === 403) {
-        treeNode = await this.getRootTreeNodeAsync();
-      } else {
-        throw err;
-      }
-    }
     return treeNode;
   }
 
-  private async createTreeNodeAsync(
-    entryFound: Entry,
-  ): Promise<LfTreeNode> {
+  private async createTreeNodeAsync(entryFound: Entry): Promise<LfTreeNode> {
     let treeNode: LfTreeNode;
     let isRoot: boolean = entryFound.id === 1;
     if (isRoot) {
@@ -326,30 +316,20 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    *      - DocInRoot with entry id 100
    *      - FolderInRoot1 with entry id 101
    *            - DocInFolderInRoot with entry id 1001
-   *            - FolderInFolderInRoot with entry id 1002 (no access)
-   * const rootNode = getTreeNodeByEntryIdAsync(1002); // returns the definition for root
    * const nonExistentNode = getTreeNodeByIdentifierAsync(333); // throws, will be caught by repository browser
    * ```
    */
   async getTreeNodeByEntryIdAsync(entryId: number): Promise<LfTreeNode | undefined> {
     const repoId = await this.repoClient.getCurrentRepoId();
-    var treeNode: LfTreeNode;
-    try {
-      const entryFound: Entry = await this.repoClient.entriesClient.getEntry({
-        entryId: entryId,
-        repoId: repoId
-      });
-      if (entryFound) {
-        treeNode = await this.createTreeNodeAsync(entryFound);
-      } else {
-        throw new Error(`Unable to get entry with EntryId: ${entryId}`);
-      }
-    } catch (err: any) {
-      if (err.errorCode === 9013 || err.status === 403) {
-        treeNode = await this.getRootTreeNodeAsync();
-      } else {
-        throw err;
-      }
+    const entryFound: Entry = await this.repoClient.entriesClient.getEntry({
+      entryId: entryId,
+      repoId: repoId,
+    });
+    let treeNode: LfTreeNode;
+    if (entryFound) {
+      treeNode = await this.createTreeNodeAsync(entryFound);
+    } else {
+      throw new Error(`Unable to get entry with EntryId: ${entryId}`);
     }
     return treeNode;
   }
