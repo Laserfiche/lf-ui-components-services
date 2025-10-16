@@ -156,7 +156,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
         return await this.getRootTreeNodeAsync();
       }
     } catch (err: any) {
-      if (err.errorCode === 9013) {
+      if (err.errorCode === 9013 || err.status === 403) {
         const rootNode = await this.getRootTreeNodeAsync();
         return rootNode;
       } else {
@@ -257,7 +257,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
 
   /**
    * Returns the LfRepoTreeNode represented by the path
-   * @param identifier Unique identifier for the node, in this implementation the path of the node
+   * @param nodePath Unique identifier for the node, in this implementation the path of the node
    * @returns The LfRepoTreeNode at the specified path, or throws if it does not exist
    * @example
    * ``` ts
@@ -277,38 +277,81 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    * const nestedUnderShortcut = getTreeNodeByIdentifierAsync('\FolderInRoot2\ShortcutToFolderInRoot1\DocInFolderInRoot') // returns definition for DocInFolderInRoot, with path to shortcut rather than path to true location
    * ```
    */
-  async getTreeNodeByIdentifierAsync(identifier: string): Promise<LfTreeNode | undefined> {
-    const repoName: string = await this.repoClient.getCurrentRepoName();
+  async getTreeNodeByIdentifierAsync(pathToNode: string): Promise<LfTreeNode | undefined> {
     const repoId: string = await this.repoClient.getCurrentRepoId();
-    const pathToNode: string = identifier;
+    var treeNode: LfTreeNode;
     try {
-      const entryFound: FindEntryResult = await this.repoClient.entriesClient.getEntryByPath({
-        repoId,
+      const findEntryResult: FindEntryResult = await this.repoClient.entriesClient.getEntryByPath({
         fullPath: pathToNode,
+        repoId: repoId,
       });
-
-      if (entryFound.entry) {
-        const entryWithSpecifiedPath: Entry = entryFound.entry;
-        entryWithSpecifiedPath.fullPath = pathToNode;
-        let treeNode: LfTreeNode;
-        if (entryWithSpecifiedPath.id === 1) {
-          treeNode = this.createRootFolderNode(repoName, entryWithSpecifiedPath);
-        } else {
-          treeNode = this.createNonRootLfRepoTreeNode(entryWithSpecifiedPath);
-        }
-
-        return treeNode;
+      if (findEntryResult.entry) {
+        treeNode = await this.createTreeNodeAsync(findEntryResult.entry);
+        treeNode.path = pathToNode; // overwrite the path. pathToNode is different from the returned path when the entry is a folder under a shortcut.
       } else {
-        throw new Error(`Unable to get entry with path: ${pathToNode}`);
+        throw new Error(`Unable to get entry with identifier: ${pathToNode}`);
       }
     } catch (err: any) {
       if (err.errorCode === 9013 || err.status === 403) {
-        const rootNode = await this.getRootTreeNodeAsync();
-        return rootNode;
+        treeNode = await this.getRootTreeNodeAsync();
       } else {
         throw err;
       }
     }
+    return treeNode;
+  }
+
+  private async createTreeNodeAsync(
+    entryFound: Entry,
+  ): Promise<LfTreeNode> {
+    let treeNode: LfTreeNode;
+    let isRoot: boolean = entryFound.id === 1;
+    if (isRoot) {
+      const repoName: string = await this.repoClient.getCurrentRepoName();
+      treeNode = this.createRootFolderNode(repoName, entryFound);
+    } else {
+      treeNode = this.createNonRootLfRepoTreeNode(entryFound);
+    }
+    return treeNode;
+  }
+
+  /**
+   * Returns the LfRepoTreeNode represented by the path
+   * @param entryId Laserfiche Repository Entry Id for the node.
+   * @returns The LfRepoTreeNode with the specific Laserfiche Repository Entry Id, or rootTreeNode if access denied to the LfRepoTreeNode, or throws if it does not exist
+   * @example
+   * ``` ts
+   * // suppose the repository is structured as below
+   * - root 1
+   *      - DocInRoot with entry id 100
+   *      - FolderInRoot1 with entry id 101
+   *            - DocInFolderInRoot with entry id 1001
+   *            - FolderInFolderInRoot with entry id 1002 (no access)
+   * const rootNode = getTreeNodeByEntryIdAsync(1002); // returns the definition for root
+   * const nonExistentNode = getTreeNodeByIdentifierAsync(333); // throws, will be caught by repository browser
+   * ```
+   */
+  async getTreeNodeByEntryIdAsync(entryId: number): Promise<LfTreeNode | undefined> {
+    const repoId = await this.repoClient.getCurrentRepoId();
+    var treeNode: LfTreeNode;
+    try {
+      const entryFound: Entry = await this.repoClient.entriesClient.getEntry({
+        entryId: entryId,
+        repoId: repoId
+      });
+      if (entryFound) {
+        treeNode = await this.createTreeNodeAsync(entryFound);
+      } else {
+        throw new Error(`Unable to get entry with EntryId: ${entryId}`);
+      }
+    } catch (err: any) {
+      if (err.errorCode === 9013 || err.status === 403) {
+        treeNode = await this.getRootTreeNodeAsync();
+      } else {
+        throw err;
+      }
+    }
+    return treeNode;
   }
 
   private createRootFolderNode(repoName: string, rootEntry: Entry) {
