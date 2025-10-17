@@ -23,12 +23,18 @@ import {
   LfTreeNodeService,
   PropertyValue,
 } from '@laserfiche/types-lf-ui-components';
+import path, { parse } from 'path';
 
 export const nodeAttrName_extension = 'extension';
 export const nodeAttrName_elecDocumentSize = 'elecDocumentSize';
 export const nodeAttrName_templateName = 'templateName';
 export const nodeAttrName_creationTime = 'creationTime';
 const rootFolderId: number = 1;
+
+interface LfTreeNodeId {
+  entryId?: number;
+  pathToNode?: string;
+}
 
 export class LfRepoTreeNodeService implements LfTreeNodeService {
   /**
@@ -257,7 +263,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
 
   /**
    * Returns the LfRepoTreeNode represented by the path
-   * @param nodePath Unique identifier for the node, in this implementation the path of the node
+   * @param identifier Unique identifier for the node. Can be either the full path (starting with '\') or the Laserfiche Repository Entry Id.
    * @returns The LfRepoTreeNode at the specified path, or throws if it does not exist
    * @example
    * ``` ts
@@ -277,20 +283,48 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    * const nestedUnderShortcut = getTreeNodeByIdentifierAsync('\FolderInRoot2\ShortcutToFolderInRoot1\DocInFolderInRoot') // returns definition for DocInFolderInRoot, with path to shortcut rather than path to true location
    * ```
    */
-  async getTreeNodeByIdentifierAsync(pathToNode: string): Promise<LfTreeNode | undefined> {
+  async getTreeNodeByIdentifierAsync(identifier: string): Promise<LfTreeNode | undefined> {
     const repoId: string = await this.repoClient.getCurrentRepoId();
-    let treeNode: LfTreeNode;
-      const findEntryResult: FindEntryResult = await this.repoClient.entriesClient.getEntryByPath({
-        fullPath: pathToNode,
+    const entryId: number | undefined = this.getLfEntryId(identifier);
+    let entryFound: Entry;
+    if (entryId) {
+      entryFound = await this.repoClient.entriesClient.getEntry({
+        entryId: entryId,
         repoId: repoId,
       });
-      if (findEntryResult.entry) {
-        treeNode = await this.createTreeNodeAsync(findEntryResult.entry);
-        treeNode.path = pathToNode; // overwrite the path. pathToNode is different from the returned path when the entry is a folder under a shortcut.
-      } else {
-        throw new Error(`Unable to get entry with identifier: ${pathToNode}`);
-      }
+    } else {
+      entryFound = await this.getEntryByPath(identifier, repoId);
+    }
+    const treeNode: LfTreeNode = await this.createTreeNodeAsync(entryFound);
     return treeNode;
+  }
+
+  /** throws if entry not found */
+  private async getEntryByPath(pathToNode: string, repoId: string) : Promise<Entry>{
+    let entryFound: Entry;
+    const findEntryResult: FindEntryResult = await this.repoClient.entriesClient.getEntryByPath({
+      fullPath: pathToNode,
+      repoId: repoId,
+    });
+    if (findEntryResult.entry) {
+      entryFound = findEntryResult.entry;
+      entryFound.fullPath = pathToNode; // overwrite the path. The pathToNode from the identifier is different from the returned path when the entry is a folder under a shortcut.
+    } else {
+      throw new Error(`Unable to get entry with path: ${pathToNode}`);
+    }
+    return entryFound;
+  }
+
+  private getLfEntryId(identifier: string): number | undefined {
+    if (identifier.startsWith('\\')) {
+      return undefined;
+    }
+    let entryId: number = parseInt(identifier, 10);
+    if (Number.isInteger(entryId)) {
+      return entryId;
+    } else {
+      return undefined;
+    }
   }
 
   private async createTreeNodeAsync(entryFound: Entry): Promise<LfTreeNode> {
@@ -301,35 +335,6 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       treeNode = this.createRootFolderNode(repoName, entryFound);
     } else {
       treeNode = this.createNonRootLfRepoTreeNode(entryFound);
-    }
-    return treeNode;
-  }
-
-  /**
-   * Returns the LfRepoTreeNode represented by the path
-   * @param entryId Laserfiche Repository Entry Id for the node.
-   * @returns The LfRepoTreeNode with the specific Laserfiche Repository Entry Id, or rootTreeNode if access denied to the LfRepoTreeNode, or throws if it does not exist
-   * @example
-   * ``` ts
-   * // suppose the repository is structured as below
-   * - root 1
-   *      - DocInRoot with entry id 100
-   *      - FolderInRoot1 with entry id 101
-   *            - DocInFolderInRoot with entry id 1001
-   * const nonExistentNode = getTreeNodeByIdentifierAsync(333); // throws, will be caught by repository browser
-   * ```
-   */
-  async getTreeNodeByEntryIdAsync(entryId: number): Promise<LfTreeNode | undefined> {
-    const repoId = await this.repoClient.getCurrentRepoId();
-    const entryFound: Entry = await this.repoClient.entriesClient.getEntry({
-      entryId: entryId,
-      repoId: repoId,
-    });
-    let treeNode: LfTreeNode;
-    if (entryFound) {
-      treeNode = await this.createTreeNodeAsync(entryFound);
-    } else {
-      throw new Error(`Unable to get entry with EntryId: ${entryId}`);
     }
     return treeNode;
   }
