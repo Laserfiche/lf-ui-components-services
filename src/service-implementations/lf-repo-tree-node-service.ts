@@ -30,12 +30,6 @@ export const nodeAttrName_elecDocumentSize = 'elecDocumentSize';
 export const nodeAttrName_templateName = 'templateName';
 export const nodeAttrName_creationTime = 'creationTime';
 const rootFolderId: number = 1;
-
-interface LfTreeNodeId {
-  entryId?: number;
-  pathToNode?: string;
-}
-
 export class LfRepoTreeNodeService implements LfTreeNodeService {
   /**
    * An array containing entryTypes (defined in '@laserfiche/lf-repository-api-client') for viewable entries
