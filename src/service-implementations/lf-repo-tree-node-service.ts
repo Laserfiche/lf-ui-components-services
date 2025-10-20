@@ -23,13 +23,13 @@ import {
   LfTreeNodeService,
   PropertyValue,
 } from '@laserfiche/types-lf-ui-components';
+import path, { parse } from 'path';
 
 export const nodeAttrName_extension = 'extension';
 export const nodeAttrName_elecDocumentSize = 'elecDocumentSize';
 export const nodeAttrName_templateName = 'templateName';
 export const nodeAttrName_creationTime = 'creationTime';
 const rootFolderId: number = 1;
-
 export class LfRepoTreeNodeService implements LfTreeNodeService {
   /**
    * An array containing entryTypes (defined in '@laserfiche/lf-repository-api-client') for viewable entries
@@ -156,7 +156,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
         return await this.getRootTreeNodeAsync();
       }
     } catch (err: any) {
-      if (err.errorCode === 9013) {
+      if (err.errorCode === 9013 || err.status === 403) {
         const rootNode = await this.getRootTreeNodeAsync();
         return rootNode;
       } else {
@@ -257,7 +257,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
 
   /**
    * Returns the LfRepoTreeNode represented by the path
-   * @param identifier Unique identifier for the node, in this implementation the path of the node
+   * @param identifier Unique identifier for the node. Can be either the full path (starting with '\') or the Laserfiche Repository Entry Id.
    * @returns The LfRepoTreeNode at the specified path, or throws if it does not exist
    * @example
    * ``` ts
@@ -278,29 +278,59 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    * ```
    */
   async getTreeNodeByIdentifierAsync(identifier: string): Promise<LfTreeNode | undefined> {
-    const repoName: string = await this.repoClient.getCurrentRepoName();
     const repoId: string = await this.repoClient.getCurrentRepoId();
-    const pathToNode: string = identifier;
+    const entryId: number | undefined = this.getLfEntryId(identifier);
+    let entryFound: Entry;
+    if (entryId) {
+      entryFound = await this.repoClient.entriesClient.getEntry({
+        entryId: entryId,
+        repoId: repoId,
+      });
+    } else {
+      entryFound = await this.getEntryByPath(identifier, repoId);
+    }
+    const treeNode: LfTreeNode = await this.createTreeNodeAsync(entryFound);
+    return treeNode;
+  }
 
-    const entryFound: FindEntryResult = await this.repoClient.entriesClient.getEntryByPath({
-      repoId,
+  /** throws if entry not found */
+  private async getEntryByPath(pathToNode: string, repoId: string) : Promise<Entry>{
+    let entryFound: Entry;
+    const findEntryResult: FindEntryResult = await this.repoClient.entriesClient.getEntryByPath({
       fullPath: pathToNode,
+      repoId: repoId,
     });
-
-    if (entryFound.entry) {
-      const entryWithSpecifiedPath: Entry = entryFound.entry;
-      entryWithSpecifiedPath.fullPath = pathToNode;
-      let treeNode: LfTreeNode;
-      if (entryWithSpecifiedPath.id === 1) {
-        treeNode = this.createRootFolderNode(repoName, entryWithSpecifiedPath);
-      } else {
-        treeNode = this.createNonRootLfRepoTreeNode(entryWithSpecifiedPath);
-      }
-
-      return treeNode;
+    if (findEntryResult.entry) {
+      entryFound = findEntryResult.entry;
+      entryFound.fullPath = pathToNode; // overwrite the path. The pathToNode from the identifier is different from the returned path when the entry is a folder under a shortcut.
     } else {
       throw new Error(`Unable to get entry with path: ${pathToNode}`);
     }
+    return entryFound;
+  }
+
+  private getLfEntryId(identifier: string): number | undefined {
+    if (identifier.startsWith('\\')) {
+      return undefined;
+    }
+    let entryId: number = parseInt(identifier, 10);
+    if (Number.isInteger(entryId)) {
+      return entryId;
+    } else {
+      return undefined;
+    }
+  }
+
+  private async createTreeNodeAsync(entryFound: Entry): Promise<LfTreeNode> {
+    let treeNode: LfTreeNode;
+    let isRoot: boolean = entryFound.id === 1;
+    if (isRoot) {
+      const repoName: string = await this.repoClient.getCurrentRepoName();
+      treeNode = this.createRootFolderNode(repoName, entryFound);
+    } else {
+      treeNode = this.createNonRootLfRepoTreeNode(entryFound);
+    }
+    return treeNode;
   }
 
   private createRootFolderNode(repoName: string, rootEntry: Entry) {
@@ -334,7 +364,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     }
 
     const icon = this.getIconsForEntry(entry, parent);
-  
+
     switch (targetEntryType) {
       case EntryType.Folder:
       case EntryType.RecordSeries:
