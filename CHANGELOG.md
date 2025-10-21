@@ -1,5 +1,10 @@
 <!--Copyright Laserfiche.
 Licensed under the MIT License. See LICENSE in the project root for license information.-->
+## 18.0.1
+
+### Features
+ - Updated `LfRepoTreeNodeService`: added the implementation of get LfRepoTreeNode by Id in `getTreeNodeByIdentifierAsync`. Now `getTreeNodeByIdentifierAsync` supports getting LfRepoTreeNode by a Laserfiche Entry Id or a given path.
+
 ## 18.0.0
 
 ### Chore & Maintenance
