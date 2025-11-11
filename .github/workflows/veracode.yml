@@ -29,7 +29,7 @@ jobs:
         run: tar -czvf ./veracode/ui-components-services.tar.gz ./src
 
       - name: Veracode Upload And Scan (Static Application Security Testing)
-        uses: veracode/veracode-uploadandscan-action@0.2.6
+        uses: veracode/veracode-uploadandscan-action@0.2.10
         with:
           appname: "lf-ui-components-services"
           createprofile: true
