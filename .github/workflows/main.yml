@@ -34,9 +34,6 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Update npm
-        run: npm install -g npm@latest
-
       - name: Npm ci
         run: npm ci
 
@@ -108,6 +105,9 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Update npm
+        run: npm install -g npm@latest
+
       - name: set NpmPackageVersion environment
         run: echo "NpmPackageVersion=${{ env.NPM_VERSION }}--preview-${{ github.run_id }}" >> $GITHUB_ENV
 
@@ -146,6 +146,9 @@ jobs:
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
+
+      - name: Update npm
+        run: npm install -g npm@latest
 
       - name: npm version
         run: npm version ${{ env.NPM_VERSION }} --no-git-tag-version --allow-same-version
