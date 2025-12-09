@@ -116,8 +116,6 @@ jobs:
 
       - name: Npm publish
         run: npm publish  --access public  --tag next
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Tag commit
         uses: rickstaa/action-create-tag@v1
@@ -155,8 +153,6 @@ jobs:
 
       - name: Npm publish
         run: npm publish  --access public  --tag latest
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Tag commit
         uses: rickstaa/action-create-tag@v1
