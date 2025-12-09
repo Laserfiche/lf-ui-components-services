@@ -34,6 +34,9 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Update npm
+        run: npm install -g npm@latest
+
       - name: Npm ci
         run: npm ci
 
