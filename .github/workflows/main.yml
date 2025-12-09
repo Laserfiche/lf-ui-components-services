@@ -86,7 +86,7 @@ jobs:
 
   publish_to_npm_preview:
     runs-on: ubuntu-latest
-    environment: npm_preview
+    environment: npm_publish
     if: ${{ (github.run_attempt != 1) }}
     needs: [ build_and_test ] # wait for build to finish
     steps:
@@ -125,7 +125,7 @@ jobs:
 
   publish_to_npm_release:
     runs-on: ubuntu-latest
-    environment: npm_production
+    environment: npm_publish
     if: ${{ (github.run_attempt != 1) }}
     needs: [ build_and_test ]
     steps:
