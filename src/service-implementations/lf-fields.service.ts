@@ -13,63 +13,62 @@ import { LfDefaultFieldsService } from '../helper-types/lf-default-fields.servic
 import { convertApiToLfFieldInfo, convertApiToLfTemplateFieldInfo } from '../utils/types-utils.js';
 import { IRepositoryApiClientEx } from '../helper-types/repository-api-ex.js';
 import {
-  GetDynamicFieldLogicValueRequest,
-  ODataValueOfIListOfTemplateFieldInfo,
-  ODataValueOfIListOfWFieldInfo,
-  ODataValueOfIListOfWTemplateInfo,
-  WFieldInfo,
-  WTemplateInfo,
-  TemplateFieldInfo as ApiTemplateFieldInfo,
-} from '@laserfiche/lf-repository-api-client';
+  ListDynamicFieldValuesRequest,
+  TemplateFieldDefinitionCollectionResponse,
+  FieldDefinitionCollectionResponse,
+  TemplateDefinitionCollectionResponse,
+  FieldDefinition,
+  TemplateDefinition,
+  TemplateFieldDefinition as ApiTemplateFieldInfo,
+} from '@laserfiche/lf-repository-api-client-v2';
 
 export class LfFieldsService implements LfFieldContainerService {
-  private cachedFieldDefinitions: WFieldInfo[] | undefined;
+  private cachedFieldDefinitions: FieldDefinition[] | undefined;
   private cachedTemplateFields: { id: number | string; fieldInfos: ApiTemplateFieldInfo[] } | undefined;
   private cachedTemplateDefinitions: TemplateInfo[] | undefined;
   private templateChanged: boolean = false;
 
-  constructor(private repoClient: IRepositoryApiClientEx, private lfDefaultFieldsService?: LfDefaultFieldsService) {}
+  constructor(private repoClient: IRepositoryApiClientEx, private lfDefaultFieldsService?: LfDefaultFieldsService) { }
 
   async getAllFieldDefinitionsAsync(): Promise<LfFieldInfo[]> {
-    const fieldDefinitions: WFieldInfo[] = (await this.getUnfilteredFieldDefinitionsAsync()) ?? [];
+    const fieldDefinitions: FieldDefinition[] = (await this.getUnfilteredFieldDefinitionsAsync()) ?? [];
     const lfFieldDefinitions: LfFieldInfo[] = fieldDefinitions.map(convertApiToLfFieldInfo);
     return lfFieldDefinitions;
   }
 
   async getTemplateDefinitionAsync(templateIdentifier: number | string): Promise<TemplateInfo | undefined> {
-    let templateDefinition: WTemplateInfo | undefined;
-    const repoId = await this.repoClient.getCurrentRepoId();
+    let templateDefinition: TemplateDefinition | undefined;
+    const repositoryId = await this.repoClient.getCurrentRepoId();
     if (typeof templateIdentifier === 'string') {
-      const templateDefinitions: ODataValueOfIListOfWTemplateInfo =
-        await this.repoClient?.templateDefinitionsClient.getTemplateDefinitions({
-          repoId,
+      const templateDefinitions: TemplateDefinitionCollectionResponse =
+        await this.repoClient?.templateDefinitionsClient.listTemplateDefinitions({
+          repositoryId,
           templateName: templateIdentifier,
         });
-      templateDefinition = templateDefinitions.value[0];
+      templateDefinition = templateDefinitions.value?.[0];
     } else {
-      templateDefinition = await this.repoClient?.templateDefinitionsClient.getTemplateDefinitionById({
-        repoId,
+      templateDefinition = await this.repoClient?.templateDefinitionsClient.getTemplateDefinition({
+        repositoryId,
         templateId: templateIdentifier,
       });
     }
-    if (!templateDefinition.displayName) {
-      templateDefinition.displayName = templateDefinition.name;
+    if (!templateDefinition?.displayName) {
+      templateDefinition!.displayName = templateDefinition?.name;
     }
     return templateDefinition as TemplateInfo;
   }
 
-  async getUnfilteredFieldDefinitionsAsync(): Promise<WFieldInfo[]> {
+  async getUnfilteredFieldDefinitionsAsync(): Promise<FieldDefinition[]> {
     if (this.cachedFieldDefinitions) {
       return this.cachedFieldDefinitions;
     } else {
-      const repoId = await this.repoClient.getCurrentRepoId();
-      const response: ODataValueOfIListOfWFieldInfo = await this.repoClient.fieldDefinitionsClient.getFieldDefinitions({
-        repoId,
+      const repositoryId = await this.repoClient.getCurrentRepoId();
+      const response: FieldDefinitionCollectionResponse = await this.repoClient.fieldDefinitionsClient.listFieldDefinitions({
+        repositoryId,
       });
-      this.cachedFieldDefinitions = response.value;
-      return response.value;
+      this.cachedFieldDefinitions = response.value ?? [];
+      return response.value ?? [];
     }
-    return [];
   }
 
   async getDefaultFieldValuesAsync(): Promise<FieldValue[]> {
@@ -80,10 +79,10 @@ export class LfFieldsService implements LfFieldContainerService {
 
   async getAvailableTemplatesAsync(): Promise<TemplateInfo[]> {
     if (!this.cachedTemplateDefinitions) {
-      const repoId = await this.repoClient.getCurrentRepoId();
-      const templateInfo: ODataValueOfIListOfWTemplateInfo =
-        await this.repoClient.templateDefinitionsClient.getTemplateDefinitions({ repoId });
-      const templates = templateInfo.value as WTemplateInfo[];
+      const repositoryId = await this.repoClient.getCurrentRepoId();
+      const templateInfo: TemplateDefinitionCollectionResponse =
+        await this.repoClient.templateDefinitionsClient.listTemplateDefinitions({ repositoryId });
+      const templates = templateInfo.value as TemplateDefinition[];
       templates.forEach((template) => {
         if (!template.displayName) {
           template.displayName = template.name;
@@ -97,29 +96,27 @@ export class LfFieldsService implements LfFieldContainerService {
   async getTemplateFieldsAsync(templateIdentifier: number | string): Promise<TemplateFieldInfo[]> {
     let apiTemplateFieldInfos: ApiTemplateFieldInfo[] = [];
     if (this.cachedTemplateFields && this.cachedTemplateFields.id === templateIdentifier) {
-      // eslint-disable-next-line no-restricted-syntax
       console.debug(`Using cached template fields for template ${templateIdentifier}`);
       apiTemplateFieldInfos = this.cachedTemplateFields.fieldInfos;
     } else {
-      const repoId = await this.repoClient.getCurrentRepoId();
+      const repositoryId = await this.repoClient.getCurrentRepoId();
       if (typeof templateIdentifier === 'string') {
-        const apiTemplateResponse: ODataValueOfIListOfTemplateFieldInfo =
-          await this.repoClient.templateDefinitionsClient.getTemplateFieldDefinitionsByTemplateName({
-            repoId,
+        const apiTemplateResponse: TemplateFieldDefinitionCollectionResponse =
+          await this.repoClient.templateDefinitionsClient.listTemplateFieldDefinitionsByTemplateName({
+            repositoryId,
             templateName: templateIdentifier,
           });
 
         apiTemplateFieldInfos = apiTemplateResponse?.value ?? [];
       } else {
-        const apiTemplateResponse: ODataValueOfIListOfTemplateFieldInfo =
-          await this.repoClient?.templateDefinitionsClient.getTemplateFieldDefinitions({
-            repoId,
+        const apiTemplateResponse: TemplateFieldDefinitionCollectionResponse =
+          await this.repoClient?.templateDefinitionsClient.listTemplateFieldDefinitionsByTemplateId({
+            repositoryId,
             templateId: templateIdentifier,
           });
         apiTemplateFieldInfos = apiTemplateResponse?.value ?? [];
       }
       this.cachedTemplateFields = { id: templateIdentifier, fieldInfos: apiTemplateFieldInfos };
-      // eslint-disable-next-line no-restricted-syntax
       console.debug(`Cached ${apiTemplateFieldInfos.length} template fields for template ${templateIdentifier}`);
     }
     const templateFieldInfos: TemplateFieldInfo[] = apiTemplateFieldInfos.map(convertApiToLfTemplateFieldInfo);
@@ -131,24 +128,25 @@ export class LfFieldsService implements LfFieldContainerService {
     currentValues: FieldValues
   ): Promise<{ [fieldId: number]: string[] }> {
     if (!this.repoClient) {
-      return {};
+      return Promise.resolve({});
     }
 
     const currentDynamicValues: { [key: string]: string } = this.getDynamicFieldValues(currentValues);
-    const dynamicRequest: GetDynamicFieldLogicValueRequest = new GetDynamicFieldLogicValueRequest();
-    dynamicRequest.templateId = templateId;
-    dynamicRequest.fieldValues = currentDynamicValues;
+    const dynamicRequest: ListDynamicFieldValuesRequest = new ListDynamicFieldValuesRequest({
+      templateId: templateId,
+      fieldValues: currentDynamicValues
+    });
 
-    // Have to call get_dynamic_field_values on an entry but we don't have an entry yet
+    // Have to call listDynamicFieldValues on an entry but we don't have an entry yet
     const hardcodedRootEntryId: number = 1;
-    const repoId = await this.repoClient.getCurrentRepoId();
-    const response = await this.repoClient.entriesClient.getDynamicFieldValues({
-      repoId,
+    const repositoryId = await this.repoClient.getCurrentRepoId();
+    const response = await this.repoClient.entriesClient.listDynamicFieldValues({
+      repositoryId,
       entryId: hardcodedRootEntryId,
       request: dynamicRequest,
     });
-    const optionsByName: { [key: string]: string[] } = response;
-    const optionsById: { [fieldId: number]: string[] } = {};
+    const optionsByName = response;
+     const optionsById: { [fieldId: number]: string[] } = {};
     const fieldInfos: TemplateFieldInfo[] = await this.getTemplateFieldsAsync(templateId);
 
     for (const fieldName in optionsByName) {
@@ -165,16 +163,16 @@ export class LfFieldsService implements LfFieldContainerService {
   }
 
   private async getDefaultValuesAsync(): Promise<{ value: FieldValue; definition: LfFieldInfo }[]> {
-    const fieldInfos: WFieldInfo[] = this.getAllCachedFieldInfos();
+    const fieldInfos: FieldDefinition[] = this.getAllCachedFieldInfos();
     const values: { value: FieldValue; definition: LfFieldInfo }[] =
       (await this.lfDefaultFieldsService?.getDefaultFieldInfoAsync(fieldInfos)) ?? [];
     return values;
   }
 
   private getAllCachedFieldInfos() {
-    const fieldDefinitions: WFieldInfo[] = this.cachedFieldDefinitions ?? [];
-    const templateDefinitions: ApiTemplateFieldInfo[] = this.cachedTemplateFields?.fieldInfos ?? [];
-    const fieldInfos: WFieldInfo[] = [...fieldDefinitions, ...templateDefinitions];
+    const fieldDefinitions: FieldDefinition[] = this.cachedFieldDefinitions ?? [];
+    const templateFieldDefinitions: ApiTemplateFieldInfo[] = this.cachedTemplateFields?.fieldInfos ?? [];
+    const fieldInfos: FieldDefinition[] = [...fieldDefinitions, ...templateFieldDefinitions];
     return fieldInfos;
   }
 

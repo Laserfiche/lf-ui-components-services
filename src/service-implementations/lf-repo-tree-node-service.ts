@@ -10,10 +10,10 @@ import {
   Folder,
   Shortcut,
   RecordSeries,
-  ODataValueContextOfIListOfEntry,
+  EntryCollectionResponse,
   EntryType,
-  FindEntryResult,
-} from '@laserfiche/lf-repository-api-client';
+  GetEntryByPathResponse,
+} from '@laserfiche/lf-repository-api-client-v2';
 import { IRepositoryApiClientEx } from '../helper-types/repository-api-ex.js';
 import { allSupportedRepositoryColumnIds } from '../helper-types/lf-repo-browser-types';
 import {
@@ -23,12 +23,12 @@ import {
   LfTreeNodeService,
   PropertyValue,
 } from '@laserfiche/types-lf-ui-components';
-import path, { parse } from 'path';
 
 export const nodeAttrName_extension = 'extension';
-export const nodeAttrName_elecDocumentSize = 'elecDocumentSize';
+export const nodeAttrName_elecDocumentSize = 'electronicDocumentSize';
 export const nodeAttrName_templateName = 'templateName';
 export const nodeAttrName_creationTime = 'creationTime';
+export const nodeAttrName_lastModifiedTime = 'lastModifiedTime';
 const rootFolderId: number = 1;
 export class LfRepoTreeNodeService implements LfTreeNodeService {
   /**
@@ -124,7 +124,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    * ```
    */
   async getParentTreeNodeAsync(treeNode: LfRepoTreeNode): Promise<LfRepoTreeNode | undefined> {
-    const repoId: string = await this.repoClient.getCurrentRepoId();
+    const repositoryId: string = await this.repoClient.getCurrentRepoId();
     if (treeNode.id === '1') {
       return undefined;
     }
@@ -133,14 +133,14 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     }
 
     try {
-      const parentPath = this.getParentPath(treeNode.path);
+      const parentPath: string | undefined = this.getParentPath(treeNode.path);
       if (parentPath) {
-        const parentEntry: FindEntryResult = await this.repoClient.entriesClient.getEntryByPath({
-          repoId,
-          fullPath: parentPath,
-        });
-        if (parentEntry.entry) {
-          const foundParentEntry = parentEntry.entry;
+        const parentEntry: GetEntryByPathResponse = await this.repoClient.entriesClient.getEntryByPath({
+            repositoryId,
+            fullPath: parentPath,
+          });
+          if (parentEntry.entry) {
+            const foundParentEntry = parentEntry.entry;
           foundParentEntry.fullPath = parentPath;
           if (foundParentEntry.id === 1) {
             const repoName = await this.repoClient.getCurrentRepoName();
@@ -212,14 +212,24 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     nextPage?: string,
     orderBy?: ColumnOrderBy
   ): Promise<LfTreeNodePage> {
-    let listChildrenEntriesResponse: ODataValueContextOfIListOfEntry;
+    let listChildrenEntriesResponse: EntryCollectionResponse;
     if (!nextPage) {
       listChildrenEntriesResponse = await this.getFolderChildrenFirstPageAsync(folder, orderBy);
     } else {
-      listChildrenEntriesResponse = await this.repoClient.entriesClient.getEntryListingNextLink({
-        nextLink: nextPage,
-        maxPageSize: 100,
-      });
+      const repositoryId: string = await this.repoClient.getCurrentRepoId();
+      let entryId: number;
+      if (folder.targetId) {
+        entryId = folder.targetId;
+      } else {
+        entryId = parseInt(folder.id, 10);
+      }
+      const requestParameters = getFolderChildrenDefaultParameters(
+        repositoryId,
+        entryId,
+        this.columnIds,
+        orderBy,
+      );
+      listChildrenEntriesResponse = await this.repoClient.entriesClient.listEntries(requestParameters);
     }
     const dataMap = this.parseFolderChildrenResponse(folder, listChildrenEntriesResponse);
     const nextPageLink: string | undefined = listChildrenEntriesResponse.odataNextLink;
@@ -246,9 +256,9 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    */
   async getRootTreeNodeAsync(): Promise<LfRepoTreeNode> {
     const repoName: string = await this.repoClient.getCurrentRepoName();
-    const repoId: string = await this.repoClient.getCurrentRepoId();
+    const repositoryId: string = await this.repoClient.getCurrentRepoId();
     const rootEntry: Entry = await this.repoClient.entriesClient.getEntry({
-      repoId,
+      repositoryId,
       entryId: rootFolderId,
     });
     const treeNode = this.createRootFolderNode(repoName, rootEntry);
@@ -278,27 +288,27 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
    * ```
    */
   async getTreeNodeByIdentifierAsync(identifier: string): Promise<LfTreeNode | undefined> {
-    const repoId: string = await this.repoClient.getCurrentRepoId();
+    const repositoryId: string = await this.repoClient.getCurrentRepoId();
     const entryId: number | undefined = this.getLfEntryId(identifier);
     let entryFound: Entry;
     if (entryId) {
       entryFound = await this.repoClient.entriesClient.getEntry({
         entryId: entryId,
-        repoId: repoId,
+        repositoryId: repositoryId,
       });
     } else {
-      entryFound = await this.getEntryByPath(identifier, repoId);
+      entryFound = await this.getEntryByPath(identifier, repositoryId);
     }
     const treeNode: LfTreeNode = await this.createTreeNodeAsync(entryFound);
     return treeNode;
   }
 
   /** throws if entry not found */
-  private async getEntryByPath(pathToNode: string, repoId: string) : Promise<Entry>{
+  private async getEntryByPath(pathToNode: string, repositoryId: string): Promise<Entry> {
     let entryFound: Entry;
-    const findEntryResult: FindEntryResult = await this.repoClient.entriesClient.getEntryByPath({
+    const findEntryResult: GetEntryByPathResponse = await this.repoClient.entriesClient.getEntryByPath({
       fullPath: pathToNode,
-      repoId: repoId,
+      repositoryId: repositoryId,
     });
     if (findEntryResult.entry) {
       entryFound = findEntryResult.entry;
@@ -313,7 +323,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     if (identifier.startsWith('\\')) {
       return undefined;
     }
-    let entryId: number = parseInt(identifier, 10);
+    const entryId: number = parseInt(identifier, 10);
     if (Number.isInteger(entryId)) {
       return entryId;
     } else {
@@ -323,7 +333,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
 
   private async createTreeNodeAsync(entryFound: Entry): Promise<LfTreeNode> {
     let treeNode: LfTreeNode;
-    let isRoot: boolean = entryFound.id === 1;
+    const isRoot: boolean = entryFound.id === 1;
     if (isRoot) {
       const repoName: string = await this.repoClient.getCurrentRepoName();
       treeNode = this.createRootFolderNode(repoName, entryFound);
@@ -427,8 +437,8 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     let displayValue: string = value ? value.toString() : undefined;
 
     switch (columnId) {
-      case 'creationTime':
-      case 'lastModifiedTime': {
+      case nodeAttrName_creationTime:
+      case nodeAttrName_lastModifiedTime: {
         const date = new Date(value);
         displayValue = new Intl.DateTimeFormat('en-US', {
           year: 'numeric',
@@ -440,7 +450,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
         }).format(date);
         break;
       }
-      case 'elecDocumentSize': {
+      case nodeAttrName_elecDocumentSize: {
         if (value) {
           displayValue = StringUtils.convertBytesToString(value as number, 2);
         }
@@ -531,28 +541,28 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
   private async getFolderChildrenFirstPageAsync(
     folder: LfRepoTreeNode,
     orderBy?: ColumnOrderBy
-  ): Promise<ODataValueContextOfIListOfEntry> {
+  ): Promise<EntryCollectionResponse> {
     let entryId: number;
     if (folder.targetId) {
       entryId = folder.targetId;
     } else {
       entryId = parseInt(folder.id, 10);
     }
-    const repoId: string = await this.repoClient.getCurrentRepoId();
+    const repositoryId: string = await this.repoClient.getCurrentRepoId();
     if (orderBy && !allSupportedRepositoryColumnIds.includes(orderBy.columnId)) {
       orderBy = undefined;
       console.error(`Cannot order by unsupported column: ${orderBy.columnId}`);
     }
 
-    const requestParameters = getFolderChildrenDefaultParameters(repoId, entryId, this.columnIds, orderBy);
-    const listChildrenEntriesResponse: ODataValueContextOfIListOfEntry =
-      await this.repoClient.entriesClient.getEntryListing(requestParameters);
+    const requestParameters = getFolderChildrenDefaultParameters(repositoryId, entryId, this.columnIds, orderBy);
+    const listChildrenEntriesResponse: EntryCollectionResponse =
+      await this.repoClient.entriesClient.listEntries(requestParameters);
     return listChildrenEntriesResponse;
   }
 
   private parseFolderChildrenResponse(
     parent: LfRepoTreeNode,
-    listChildrenEntriesResponse: ODataValueContextOfIListOfEntry
+    listChildrenEntriesResponse: EntryCollectionResponse
   ): LfRepoTreeNode[] {
     const dataMap: LfRepoTreeNode[] = [];
     const childrenEntries: Entry[] | undefined = listChildrenEntriesResponse.value;
@@ -567,7 +577,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     return dataMap;
   }
 
-  private getParentPath(path: string): string {
+  private getParentPath(path: string): string | undefined {
     if (path === '\\') {
       return undefined;
     }

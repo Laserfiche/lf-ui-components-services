@@ -2,11 +2,11 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 import { LfFieldInfo, TemplateFieldInfo, FieldType, FieldFormat } from '@laserfiche/types-lf-ui-components';
-import { WFieldInfo, WFieldType, WFieldFormat, TemplateFieldInfo as ApiTemplateFieldInfo } from '@laserfiche/lf-repository-api-client';
+import { FieldDefinition, FieldType as WFieldType, FieldFormat as WFieldFormat, TemplateFieldDefinition } from '@laserfiche/lf-repository-api-client-v2';
 import { CoreUtils } from '@laserfiche/lf-js-utils';
 
 /** @internal */
-export function convertApiToLfFieldInfo(val: WFieldInfo): LfFieldInfo {
+export function convertApiToLfFieldInfo(val: FieldDefinition): LfFieldInfo {
   const id = CoreUtils.validateDefined(val.id, 'id');
   const name = CoreUtils.validateDefined(val.name, 'name')!;
   const displayName: string = CoreUtils.validateDefined(val.displayName, 'displayName', name);
@@ -29,10 +29,10 @@ export function convertApiToLfFieldInfo(val: WFieldInfo): LfFieldInfo {
 }
 
 /** @internal */
-export function convertLfToApiFieldInfo(val: LfFieldInfo): WFieldInfo {
+export function convertLfToApiFieldInfo(val: LfFieldInfo): FieldDefinition {
   const fieldType = convertLfToApiFieldType(val.fieldType);
   const format = val.format !== undefined ? convertLfToApiFieldFormat(val.format) : undefined;
-  const result: WFieldInfo = new WFieldInfo({
+  const result: FieldDefinition = new FieldDefinition({
     ...val,
     fieldType,
     format,
@@ -46,13 +46,13 @@ export function convertLfToApiFieldInfo(val: LfFieldInfo): WFieldInfo {
 }
 
 /** @internal */
-export function convertLfToApiTemplateFieldInfo(val: TemplateFieldInfo): ApiTemplateFieldInfo {
+export function convertLfToApiTemplateFieldInfo(val: TemplateFieldInfo): TemplateFieldDefinition {
   const result = convertLfToApiFieldInfo(val);
   return result;
 }
 
 /** @internal */
-export function convertApiToLfTemplateFieldInfo(val: ApiTemplateFieldInfo): TemplateFieldInfo {
+export function convertApiToLfTemplateFieldInfo(val: TemplateFieldDefinition): TemplateFieldInfo {
   const result = convertApiToLfFieldInfo(val);
   return result;
 }

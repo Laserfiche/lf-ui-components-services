@@ -1,7 +1,7 @@
 // Copyright (c) Laserfiche.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-import { EntryType } from "@laserfiche/lf-repository-api-client";
+import { EntryType } from "@laserfiche/lf-repository-api-client-v2";
 import { LfTreeNode, LfTreeNodePage } from "@laserfiche/types-lf-ui-components";
 
 /**
@@ -25,7 +25,7 @@ export interface LfRepoTreeNode extends LfTreeNode {
 export const allSupportedRepositoryColumnIds: string[] = [
   'name',
   'id',
-  'elecDocumentSize',
+  'electronicDocumentSize',
   'extension',
   'isElectronicDocument',
   'isRecord',
