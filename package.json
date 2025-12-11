@@ -10,7 +10,7 @@
   "scripts": {
     "test": "jest",
     "test:ci": "npm run test -- --watchAll=false --reporters=default --reporters=jest-junit",
-    "lint": "npx eslint",
+    "lint": "eslint",
     "build": "tsc",
     "generate-doc": "npx typedoc src/index.ts --out ./doc --excludePrivate"
   },
