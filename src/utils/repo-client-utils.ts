@@ -5,16 +5,21 @@ import { ColumnOrderBy } from '@laserfiche/types-lf-ui-components';
 
 /** @internal */
 export function getFolderChildrenDefaultParameters(
-  repoId: string,
+  repositoryId: string,
   folderId: number,
   columnIDs?: string[],
-  orderBy?: ColumnOrderBy
+  orderBy?: ColumnOrderBy,
+  culture?: string,
+  formatFieldValues?: boolean,
+  top?: number,
+  skip?: number,
+  count?: boolean
 ): {
-  repoId: string;
+  repositoryId: string;
   entryId: number;
   groupByEntryType?: boolean;
   fields?: string[];
-  formatFields?: boolean;
+  formatFieldValues?: boolean;
   prefer?: string;
   culture?: string;
   select?: string;
@@ -33,7 +38,7 @@ export function getFolderChildrenDefaultParameters(
     orderbyValue = `${orderBy.columnId} ${orderBy.isDesc ? 'desc' : 'asc'}`;
 
     if (!selectList.includes(orderBy.columnId)) {
-      selectList.push(orderBy.columnId)
+      selectList.push(orderBy.columnId);
     }
   } else {
     orderbyValue = 'name asc';
@@ -41,12 +46,17 @@ export function getFolderChildrenDefaultParameters(
   const select = selectList.join(',');
 
   const requestParameters = {
-    repoId,
+    repositoryId,
     entryId: folderId,
     orderby: orderbyValue, // sort by name, ascending
     select,
     groupByEntryType: true, // puts all folders before all files,
     prefer: 'odata.maxpagesize=100',
+    culture,
+    formatFieldValues: formatFieldValues ?? false,
+    top,
+    skip,
+    count,
   };
   return requestParameters;
 }

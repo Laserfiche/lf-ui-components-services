@@ -1,9 +1,9 @@
 // Copyright (c) Laserfiche.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-import { WFieldInfo } from '@laserfiche/lf-repository-api-client';
+import { FieldDefinition } from '@laserfiche/lf-repository-api-client-v2';
 import { FieldValue, LfFieldInfo } from '@laserfiche/types-lf-ui-components';
 
 export abstract class LfDefaultFieldsService {
-    abstract getDefaultFieldInfoAsync(fieldInfos: WFieldInfo[]): Promise<{ value: FieldValue; definition: LfFieldInfo }[]>;
+    abstract getDefaultFieldInfoAsync(fieldInfos: FieldDefinition[]): Promise<{ value: FieldValue; definition: LfFieldInfo }[]>;
 }

@@ -1,35 +1,35 @@
 // Copyright (c) Laserfiche.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-import { FieldValues, FieldType, TemplateFieldInfo } from '@laserfiche/types-lf-ui-components';
+import { FieldValues, TemplateFieldInfo } from '@laserfiche/types-lf-ui-components';
 import { LfFieldsService } from './lf-fields.service.js';
-import { ODataValueContextOfIListOfTemplateFieldInfo, TemplateFieldInfo as ApiTemplateFieldInfo, WFieldType } from '@laserfiche/lf-repository-api-client';
+import { TemplateFieldDefinitionCollectionResponse, TemplateFieldDefinition as ApiTemplateFieldInfo, FieldType, ListDynamicFieldValuesRequest } from '@laserfiche/lf-repository-api-client-v2';
 import { RepositoryApiClientMockBuilder } from './repository-api-client-mock-builder.js';
 
 
-function createApiTemplateFieldInfo(data) {
+function createApiTemplateFieldInfo(data: Partial<ApiTemplateFieldInfo>): ApiTemplateFieldInfo {
   return new ApiTemplateFieldInfo(data);
 }
 
-function createODataValueContextOfIListOfTemplateFieldInfo(data) {
-  return new ODataValueContextOfIListOfTemplateFieldInfo(data);
+function createTemplateFieldDefinitionCollectionResponse(data: { value: ApiTemplateFieldInfo[] }): TemplateFieldDefinitionCollectionResponse {
+  return new TemplateFieldDefinitionCollectionResponse(data);
 }
 
 const mockTemplateFields: ApiTemplateFieldInfo[] = [
-  createApiTemplateFieldInfo({ id: 1, name: 'test', fieldType: WFieldType.String, displayName: 'test' }),
-  createApiTemplateFieldInfo({ id: 2, name: 'test', fieldType: WFieldType.String, displayName: 'test' }),
+  createApiTemplateFieldInfo({ id: 1, name: 'test', fieldType: FieldType.String, displayName: 'test' }),
+  createApiTemplateFieldInfo({ id: 2, name: 'test', fieldType: FieldType.String, displayName: 'test' }),
 ];
 
 const mockRepoClient = new RepositoryApiClientMockBuilder()
   .withEntriesClient({
-    getDynamicFieldValues: jest.fn((args: { repoId: string, entryId: number }) => {
-      return Promise.resolve({})
+    listDynamicFieldValues: jest.fn((args: { repositoryId: string, entryId: number, request: ListDynamicFieldValuesRequest }) => {
+      return Promise.resolve({});
     }),
   })
   .withTemplateDefinitionsClient({
-    getTemplateFieldDefinitionsByTemplateName: jest.fn((args: {
-      repoId: string;
-      templateName: string;
+    listTemplateDefinitions: jest.fn((args: {
+      repositoryId: string;
+      templateName?: string;
       prefer?: string;
       culture?: string;
       select?: string;
@@ -37,9 +37,9 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
       top?: number;
       skip?: number;
       count?: boolean;
-    }) => Promise.resolve(createODataValueContextOfIListOfTemplateFieldInfo({ value: mockTemplateFields }))),
-    getTemplateFieldDefinitions: jest.fn((args: {
-      repoId: string;
+    }) => Promise.resolve(createTemplateFieldDefinitionCollectionResponse({ value: mockTemplateFields }))),
+    listTemplateFieldDefinitionsByTemplateId: jest.fn((args: {
+      repositoryId: string;
       templateId: number;
       prefer?: string;
       culture?: string;
@@ -49,8 +49,19 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
       skip?: number;
       count?: boolean;
     }) => {
-      return Promise.resolve(createODataValueContextOfIListOfTemplateFieldInfo({ value: mockTemplateFields }));
-    })
+      return Promise.resolve(createTemplateFieldDefinitionCollectionResponse({ value: mockTemplateFields }));
+    }),
+    listTemplateFieldDefinitionsByTemplateName: jest.fn((args: {
+      repositoryId: string;
+      templateName: string;
+      prefer?: string;
+      culture?: string;
+      select?: string;
+      orderby?: string;
+      top?: number;
+      skip?: number;
+      count?: boolean;
+    }) => Promise.resolve(createTemplateFieldDefinitionCollectionResponse({ value: mockTemplateFields }))),
   })
   .withGetCurrentRepoId(async () => { return 'r-23456789' })
   .withGetCurrentRepoName(async () => { return 'Test Name' })
@@ -70,9 +81,9 @@ describe('LfFieldsService', () => {
     // Arrange
     const templateId = 123;
     let actualFieldValues: { [key: string]: string };
-    mockRepoClient.entriesClient.getDynamicFieldValues = jest.fn(async ({ repoId, entryId, request }) => {
-      actualFieldValues = request!.fieldValues!;
-      return {}
+    mockRepoClient.entriesClient.listDynamicFieldValues = jest.fn(async ({ repositoryId, entryId, request }) => {
+      actualFieldValues = request.fieldValues!;
+      return {};
     });
 
     service.getTemplateFieldsAsync = jest.fn().mockResolvedValue([
@@ -100,7 +111,7 @@ describe('LfFieldsService', () => {
       'County': [],
       'City': [],
     };
-    mockRepoClient!.entriesClient.getDynamicFieldValues = jest.fn(() => Promise.resolve(optionsByName));
+    mockRepoClient!.entriesClient.listDynamicFieldValues = jest.fn(() => Promise.resolve(optionsByName));
 
     const testReturn: TemplateFieldInfo[] = [
       { id: 11, name: 'State', fieldType: FieldType.String, displayName: 'State' },
@@ -131,7 +142,7 @@ describe('LfFieldsService', () => {
 
     // Assert
     const expectedNumTimesCalled = 1;
-    expect(mockRepoClient.templateDefinitionsClient.getTemplateFieldDefinitions).toHaveBeenCalledTimes(
+    expect(mockRepoClient.templateDefinitionsClient.listTemplateFieldDefinitionsByTemplateId).toHaveBeenCalledTimes(
       expectedNumTimesCalled
     );
   });
@@ -142,7 +153,7 @@ describe('LfFieldsService', () => {
     const secondTemplateId = 234;
 
     // @ts-ignore completely reset the mock back to its initial state
-    mockRepoClient.templateDefinitionsClient.getTemplateFieldDefinitions.mockReset();
+    mockRepoClient.templateDefinitionsClient.listTemplateFieldDefinitionsByTemplateId.mockReset();
 
     await service.getTemplateFieldsAsync(firstTemplateId);
 
@@ -151,7 +162,7 @@ describe('LfFieldsService', () => {
 
     // Assert
     const expectedNumTimesCalled = 2;
-    expect(mockRepoClient.templateDefinitionsClient.getTemplateFieldDefinitions).toHaveBeenCalledTimes(
+    expect(mockRepoClient.templateDefinitionsClient.listTemplateFieldDefinitionsByTemplateId).toHaveBeenCalledTimes(
       expectedNumTimesCalled
     );
   });
@@ -168,7 +179,7 @@ describe('LfFieldsService', () => {
 
     // Assert
     const expectedNumTimesCalled = 2;
-    expect(mockRepoClient.templateDefinitionsClient.getTemplateFieldDefinitionsByTemplateName).toHaveBeenCalledTimes(
+    expect(mockRepoClient.templateDefinitionsClient.listTemplateFieldDefinitionsByTemplateName).toHaveBeenCalledTimes(
       expectedNumTimesCalled
     );
   });

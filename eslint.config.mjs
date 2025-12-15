@@ -30,7 +30,7 @@ export default defineConfig([
       parser: tsParser,
     },
 
-    ignores: ["**/*.ts"],
+    ignores: ["dist/**"],
 
     rules: {
       "@typescript-eslint/ban-types": "off",

@@ -7,16 +7,11 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js'],
   reporters: ['default', 'jest-junit'],
   transform: {
-    '^.+\\.ts$': 'ts-jest',
+    '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
     "^.+\\.js$": "babel-jest",
   },
   testRegex: '(/__tests__/.*|(\\.|/)(spec))\\.ts$',
   testEnvironment: 'jsdom',
-  globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.test.json'
-    },
-  },
   transformIgnorePatterns: [
     "/node_modules/?!(@laserfiche)"
   ],

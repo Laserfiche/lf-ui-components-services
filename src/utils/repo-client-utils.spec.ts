@@ -6,7 +6,7 @@ import { ColumnOrderBy } from '@laserfiche/types-lf-ui-components';
 import {getFolderChildrenDefaultParameters}  from './repo-client-utils';
 
 describe('LfRepoClientUtil', () => {
-  const repoId = 'testRepoId';
+  const repositoryId = 'testRepoId';
   const folderId = 1;
   const orderBy: ColumnOrderBy = {
     columnId: 'test',
@@ -19,7 +19,7 @@ describe('LfRepoClientUtil', () => {
       columnId: 'test',
       isDesc: false,
     };
-    const expectedParams = getFolderChildrenDefaultParameters(repoId, folderId, undefined, _orderBy);
+    const expectedParams = getFolderChildrenDefaultParameters(repositoryId, folderId, undefined, _orderBy);
     expect(expectedParams.orderby).toEqual(
      'test asc'
     );
@@ -29,7 +29,7 @@ describe('LfRepoClientUtil', () => {
   });
 
   it('should mirror the isDesc property received', () => {
-    const expectedParams = getFolderChildrenDefaultParameters(repoId, folderId, undefined, orderBy);
+    const expectedParams = getFolderChildrenDefaultParameters(repositoryId, folderId, undefined, orderBy);
     expect(expectedParams.orderby).toEqual(
      'test desc'
     );
@@ -40,7 +40,7 @@ describe('LfRepoClientUtil', () => {
 
   it('should give default value for orderby if not provided', () => {
 
-    const expectedParams = getFolderChildrenDefaultParameters(repoId, folderId);
+    const expectedParams = getFolderChildrenDefaultParameters(repositoryId, folderId);
     expect(expectedParams.orderby).toEqual(
      'name asc'
     );
@@ -51,7 +51,7 @@ describe('LfRepoClientUtil', () => {
 
   it('should append to select when columnIds provided.', () => {
     const columnIDs: string[] = ['test0', 'test1', 'test2'];
-    const expectedParams = getFolderChildrenDefaultParameters(repoId, folderId, columnIDs);
+    const expectedParams = getFolderChildrenDefaultParameters(repositoryId, folderId, columnIDs);
     expect(expectedParams.orderby).toEqual(
      'name asc'
     );
@@ -62,7 +62,7 @@ describe('LfRepoClientUtil', () => {
 
   it('should handle empty array for columnID as if it were undefined', () => {
     const columnIDs: string[] = [];
-    const expectedParams = getFolderChildrenDefaultParameters(repoId, folderId, columnIDs);
+    const expectedParams = getFolderChildrenDefaultParameters(repositoryId, folderId, columnIDs);
     expect(expectedParams.orderby).toEqual(
      'name asc'
     );
@@ -73,7 +73,7 @@ describe('LfRepoClientUtil', () => {
 
   it('should append to select when columnIds and orderBy provided.', () => {
     const columnIDs: string[] = ['test0', 'test1', 'test2'];
-    const expectedParams = getFolderChildrenDefaultParameters(repoId, folderId, columnIDs, orderBy);
+    const expectedParams = getFolderChildrenDefaultParameters(repositoryId, folderId, columnIDs, orderBy);
     expect(expectedParams.orderby).toEqual(
      'test desc'
     );
@@ -82,4 +82,8 @@ describe('LfRepoClientUtil', () => {
     );
   });
 
+ it('should set formatFieldValues to false by default', () => {
+   const expectedParams = getFolderChildrenDefaultParameters(repositoryId, folderId);
+   expect(expectedParams.formatFieldValues).toBe(false);
+ });
 })

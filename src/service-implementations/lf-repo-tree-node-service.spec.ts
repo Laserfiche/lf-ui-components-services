@@ -11,38 +11,38 @@ import {
 import { LfRepoTreeNode } from '../helper-types/lf-repo-browser-types';
 import {
   Entry,
-  PostEntryChildrenRequest,
+  CreateEntryRequest,
   EntryType,
-  ODataValueContextOfIListOfEntry,
+  EntryCollectionResponse,
   Document,
   Shortcut,
   Folder,
-} from '@laserfiche/lf-repository-api-client';
+} from '@laserfiche/lf-repository-api-client-v2';
 import { RepositoryApiClientMockBuilder } from './repository-api-client-mock-builder';
-import { FindEntryResult } from '@laserfiche/lf-repository-api-client';
+import { GetEntryByPathResponse } from '@laserfiche/lf-repository-api-client-v2';
 import * as RepoClientUtils from '../utils/repo-client-utils';
 import { LfTreeNode, PropertyValue } from '@laserfiche/types-lf-ui-components';
 
 const getFolderChildrenDefaultParametersSpy = jest.spyOn(RepoClientUtils, 'getFolderChildrenDefaultParameters');
 
-function createFolder(data) {
+function createFolder(data: Partial<Folder>): Folder {
   return new Folder(data);
 }
 
-function createDocument(data) {
+function createDocument(data: Partial<Document>): Document {
   return new Document(data);
 }
 
-function createShortcut(data) {
+function createShortcut(data: Partial<Shortcut>): Shortcut {
   return new Shortcut(data);
 }
 
-function createResultEntryListing(data) {
-  return new ODataValueContextOfIListOfEntry(data);
+function createResultEntryListing(data: { value: Entry[]; odataNextLink?: string }): EntryCollectionResponse {
+  return new EntryCollectionResponse(data);
 }
 
-function createFindEntryResult(data): FindEntryResult {
-  return new FindEntryResult(data);
+function createFindEntryResult(data: { entry?: Entry; ancestorEntry?: Entry }): GetEntryByPathResponse {
+  return new GetEntryByPathResponse(data);
 }
 
 const dummyRootEntry: Folder = createFolder({
@@ -62,9 +62,9 @@ const dummyDocumentEntryDocument: Document = createDocument({
   name: 'DummyDocument',
   entryType: EntryType.Document,
   templateName: 'hi',
-  elecDocumentSize: 20000,
+  electronicDocumentSize: 20000,
   extension: 'docx',
-  creationTime: '2000-05-11T00:00:00',
+  creationTime: new Date('2000-05-11T00:00:00.000'),
 });
 
 const dummyInvalidEntry: Folder = createFolder({
@@ -193,38 +193,27 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
     return 'Test Name';
   })
   .withEntriesClient({
-    getEntryListing: jest.fn(
+    listEntries: jest.fn(
       (args: {
-        repoId: string;
+        repositoryId: string;
         entryId: number;
         groupByEntryType?: boolean;
         fields?: string[];
-        formatFields?: boolean;
+        formatFieldValues?: boolean;
         prefer?: string;
         culture?: string;
         select?: string;
         orderby?: string;
-        top?: number;
-        skip?: number;
-        count?: boolean;
       }) => {
         return Promise.resolve(
           createResultEntryListing({
             value: mockChildren.slice(0, 20),
-            odataNextLink: 'a test link returned by getEntryListing',
+            odataNextLink: 'a test link returned by listEntries',
           })
         );
       }
     ),
-    getEntryListingNextLink: jest.fn((args: { nextLink: string; maxPageSize?: number }) => {
-      return Promise.resolve(
-        createResultEntryListing({
-          value: mockChildren.slice(0, 20),
-          odataNextLink: 'a test link returned by getEntryListingNextLink',
-        })
-      );
-    }),
-    getEntry: jest.fn((args: { repoId: string; entryId: number }) => {
+    getEntry: jest.fn((args: { repositoryId: string; entryId: number }) => {
       let matchedChild: Entry;
       for (const child of mockChildren) {
         if (child.id === args.entryId) {
@@ -234,7 +223,7 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
       }
       return Promise.resolve(mockChildren[0]);
     }),
-    createOrCopyEntry: jest.fn((args: { repoId: string; entryId: number; request: PostEntryChildrenRequest }) => {
+    createEntry: jest.fn((args: { repositoryId: string; entryId: number; request: CreateEntryRequest }) => {
       const newFolder: Entry = new Folder({
         id: 100,
         name: args.request.name,
@@ -244,7 +233,7 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
       mockChildren.push(newFolder);
       return Promise.resolve(newFolder);
     }),
-    getEntryByPath: jest.fn((args: { repoId: string; fullPath: string; fallbackToClosestAncestor?: boolean }) => {
+    getEntryByPath: jest.fn((args: { repositoryId: string; fullPath: string; fallbackToClosestAncestor?: boolean }) => {
       const entry: Entry | undefined = mockChildren.find((child) => child.fullPath === args.fullPath);
       if (entry) {
         return Promise.resolve(
@@ -386,7 +375,7 @@ describe('LfRepoTreeNodeService', () => {
     expectedNode.attributes.set(nodeAttrName_extension, { value: 'docx', displayValue: 'docx' });
     expectedNode.attributes.set(nodeAttrName_templateName, { value: 'hi', displayValue: 'hi' });
     expectedNode.attributes.set(nodeAttrName_creationTime, {
-      value: '2000-05-11T00:00:00',
+      value: new Date('2000-05-11T00:00:00'),
       displayValue: '5/11/2000, 12:00:00 AM',
     });
     service.columnIds = [
@@ -450,7 +439,7 @@ describe('LfRepoTreeNodeService', () => {
     expect(rootNodes).toEqual(expectedNode);
   });
 
-  it('getFolderChildrenAsync with undefined nextPage should call API getEntryListing ', async () => {
+  it('getFolderChildrenAsync with undefined nextPage should call API getFolderChildrenDefaultParameters', async () => {
     // Arrange
     service.viewableEntryTypes = [EntryType.Folder, EntryType.Document];
 
@@ -459,38 +448,11 @@ describe('LfRepoTreeNodeService', () => {
 
     // Assert
     expect(childrenNodes.page.length).toEqual(20);
-    expect(childrenNodes.nextPage).toEqual('a test link returned by getEntryListing');
+    expect(childrenNodes.nextPage).toEqual('a test link returned by listEntries');
     childrenNodes.page.forEach((childNode, i) => {
       expect(childNode.name).toEqual(mockChildren[i].name);
     });
-  });
-
-  it('getFolderChildrenAsync with nextPage should call API getEntryListingNextLink ', async () => {
-    // Arrange
-    service.viewableEntryTypes = [EntryType.Folder, EntryType.Document];
-
-    // Act
-    const childrenNodes = await service.getFolderChildrenAsync({ id: '1', path: '//' } as LfRepoTreeNode, '3');
-
-    // Assert
-    expect(childrenNodes.page.length).toEqual(20);
-    expect(childrenNodes.nextPage).toEqual('a test link returned by getEntryListingNextLink');
-    childrenNodes.page.forEach((childNode, i) => {
-      expect(childNode.name).toEqual(mockChildren[i].name);
-    });
-  });
-
-  it('getFolderChildrenAsync will call getFolderChildrenDefaultParameters with columnIds', async () => {
-    // Arrange
-    service.viewableEntryTypes = [EntryType.Folder, EntryType.Document];
-    const columnIds = ['testid0', 'testid1'];
-    service.columnIds = columnIds;
-    const repoId = await mockRepoClient.getCurrentRepoId();
-    // Act
-    await service.getFolderChildrenAsync({ id: '1', path: '//' } as LfRepoTreeNode);
-
-    // Assert
-    expect(getFolderChildrenDefaultParametersSpy).toHaveBeenCalledWith(repoId, 1, columnIds, undefined);
+    expect(getFolderChildrenDefaultParametersSpy).toHaveBeenCalledWith(await mockRepoClient.getCurrentRepoId(), 1, service.columnIds, undefined);
   });
 
   it('getParentTreeNodeAsync should return undefined if called on rootNode', async () => {
