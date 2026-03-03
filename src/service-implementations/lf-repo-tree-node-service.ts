@@ -136,11 +136,11 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       const parentPath: string | undefined = this.getParentPath(treeNode.path);
       if (parentPath) {
         const parentEntry: GetEntryByPathResponse = await this.repoClient.entriesClient.getEntryByPath({
-            repositoryId,
-            fullPath: parentPath,
-          });
-          if (parentEntry.entry) {
-            const foundParentEntry = parentEntry.entry;
+          repositoryId,
+          fullPath: parentPath,
+        });
+        if (parentEntry.entry) {
+          const foundParentEntry = parentEntry.entry;
           foundParentEntry.fullPath = parentPath;
           if (foundParentEntry.id === 1) {
             const repoName = await this.repoClient.getCurrentRepoName();
@@ -216,20 +216,10 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     if (!nextPage) {
       listChildrenEntriesResponse = await this.getFolderChildrenFirstPageAsync(folder, orderBy);
     } else {
-      const repositoryId: string = await this.repoClient.getCurrentRepoId();
-      let entryId: number;
-      if (folder.targetId) {
-        entryId = folder.targetId;
-      } else {
-        entryId = parseInt(folder.id, 10);
-      }
-      const requestParameters = getFolderChildrenDefaultParameters(
-        repositoryId,
-        entryId,
-        this.columnIds,
-        orderBy,
-      );
-      listChildrenEntriesResponse = await this.repoClient.entriesClient.listEntries(requestParameters);
+      listChildrenEntriesResponse = await this.repoClient.entriesClient.listEntriesNextLink({
+        nextLink: nextPage,
+        maxPageSize: 100,
+      });
     }
     const dataMap = this.parseFolderChildrenResponse(folder, listChildrenEntriesResponse);
     const nextPageLink: string | undefined = listChildrenEntriesResponse.odataNextLink;
