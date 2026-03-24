@@ -27,6 +27,7 @@ export class LfFieldsService implements LfFieldContainerService {
   private cachedTemplateFields: { id: number | string; fieldInfos: ApiTemplateFieldInfo[] } | undefined;
   private cachedTemplateDefinitions: TemplateInfo[] | undefined;
   private templateChanged: boolean = false;
+  private defaultPageSize: number = 100;
 
   constructor(private repoClient: IRepositoryApiClientEx, private lfDefaultFieldsService?: LfDefaultFieldsService) { }
 
@@ -79,16 +80,22 @@ export class LfFieldsService implements LfFieldContainerService {
 
   async getAvailableTemplatesAsync(): Promise<TemplateInfo[]> {
     if (!this.cachedTemplateDefinitions) {
-      const repositoryId = await this.repoClient.getCurrentRepoId();
-      const templateInfo: TemplateDefinitionCollectionResponse =
-        await this.repoClient.templateDefinitionsClient.listTemplateDefinitions({ repositoryId });
-      const templates = templateInfo.value as TemplateDefinition[];
-      templates.forEach((template) => {
-        if (!template.displayName) {
-          template.displayName = template.name;
+      let resultTemplateDefinitions: TemplateDefinition[] = [];
+      const callback = async (response: TemplateDefinitionCollectionResponse): Promise<boolean> => {
+        if (!response.value || response.value.length === 0) {
+          return false;
         }
-      });
-      this.cachedTemplateDefinitions = templateInfo.value as TemplateInfo[];
+
+        resultTemplateDefinitions = [...resultTemplateDefinitions, ...response.value]
+        return true;
+      };
+
+      const repositoryId = await this.repoClient.getCurrentRepoId();
+      await this.repoClient.templateDefinitionsClient.listTemplateDefinitionsForEach({ callback, repositoryId, maxPageSize: this.defaultPageSize});
+
+      // transform the result into TemplateInfo objects
+      const resultTemplateInfo = resultTemplateDefinitions.map((template) => ({...template, displayName: template.displayName ?? template.name} as TemplateInfo));
+      this.cachedTemplateDefinitions = resultTemplateInfo;
     }
     return this.cachedTemplateDefinitions;
   }
