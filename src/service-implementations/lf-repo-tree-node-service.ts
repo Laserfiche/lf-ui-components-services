@@ -368,10 +368,10 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     switch (targetEntryType) {
       case EntryType.Folder:
       case EntryType.RecordSeries:
-        treeNode = this.createFolderNode(entryName, path, entry.id ?? 0, entry.entryType ?? EntryType.Folder, icon);
+        treeNode = this.createFolderNode(entryName, path, entry.id ?? rootFolderId, entry.entryType ?? EntryType.Folder, icon);
         break;
       case EntryType.Document:
-        treeNode = this.createLeafNode(entryName, path, entry.id ?? 0, entry.entryType ?? EntryType.Document, icon);
+        treeNode = this.createLeafNode(entryName, path, entry.id ?? rootFolderId, entry.entryType ?? EntryType.Document, icon);
         break;
       default:
         throw new Error(`Unsupported entry type for entry: ${entry.id}`);
