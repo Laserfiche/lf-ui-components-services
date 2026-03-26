@@ -344,9 +344,9 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     let treeNode: LfRepoTreeNode | undefined;
     let entryName: string | undefined = entry.name;
     if (!entryName || entryName.length === 0) {
-      entryName = entry.id.toString();
+      entryName = entry.id?.toString() ?? '';
     }
-    let path: string = entry.fullPath;
+    let path: string | undefined = entry.fullPath;
     if (!path && parent) {
       path = this.getFullPath(parent, entryName);
     }
@@ -355,7 +355,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       throw new Error(`Unable to determine path of entry: ${entry.id}`);
     }
 
-    const targetEntryType: EntryType = (entry as Shortcut).targetType
+    const targetEntryType: EntryType | undefined = (entry as Shortcut).targetType
       ? (entry as Shortcut).targetType
       : entry.entryType;
 
@@ -368,10 +368,10 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     switch (targetEntryType) {
       case EntryType.Folder:
       case EntryType.RecordSeries:
-        treeNode = this.createFolderNode(entryName, path, entry.id, entry.entryType, icon);
+        treeNode = this.createFolderNode(entryName, path, entry.id ?? 0, entry.entryType ?? EntryType.Folder, icon);
         break;
       case EntryType.Document:
-        treeNode = this.createLeafNode(entryName, path, entry.id, entry.entryType, icon);
+        treeNode = this.createLeafNode(entryName, path, entry.id ?? 0, entry.entryType ?? EntryType.Document, icon);
         break;
       default:
         throw new Error(`Unsupported entry type for entry: ${entry.id}`);
@@ -382,7 +382,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     return treeNode;
   }
 
-  private getSingleIconForEntryType(entryType: EntryType, parent?: LfRepoTreeNode, extension?: string): string {
+  private getSingleIconForEntryType(entryType?: EntryType, parent?: LfRepoTreeNode, extension?: string): string {
     switch (entryType) {
       case EntryType.Folder: {
         const isParentShortcutRecordSeries =
@@ -415,21 +415,24 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
   }
 
   private isViewable(entry: Entry): boolean {
-    return (
-      (this.viewableEntryTypes?.includes(entry.entryType) && entry.entryType !== EntryType.Shortcut) ||
+    const entryType = entry.entryType;
+    const targetEntryType = (entry as Shortcut).targetType;
+
+    return !!(
+      (entryType && this.viewableEntryTypes?.includes(entryType) && entryType !== EntryType.Shortcut) ||
       (this.viewableEntryTypes?.includes(EntryType.Shortcut) &&
-        entry.entryType === EntryType.Shortcut &&
-        this.viewableEntryTypes?.includes((entry as Shortcut).targetType))
+        entryType === EntryType.Shortcut &&
+        targetEntryType && this.viewableEntryTypes?.includes(targetEntryType))
     );
   }
 
   private valueToPropertyValue(value: string | Date | number | undefined, columnId: string | undefined): PropertyValue {
-    let displayValue: string = value ? value.toString() : undefined;
+    let displayValue: string | undefined = value ? value.toString() : undefined;
 
     switch (columnId) {
       case nodeAttrName_creationTime:
       case nodeAttrName_lastModifiedTime: {
-        const date = new Date(value);
+        const date = value ? new Date(value) : new Date();
         displayValue = new Intl.DateTimeFormat('en-US', {
           year: 'numeric',
           month: 'numeric',
@@ -453,9 +456,9 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
   }
 
   private setColumnAttributesForEntry(entry: Document | Folder | Shortcut | RecordSeries, node: LfRepoTreeNode) {
-    if (this.columnIds) {
+    if (this.columnIds && node.attributes) {
       for (const columnId of this.columnIds) {
-        node.attributes.set(columnId, this.valueToPropertyValue(entry[columnId], columnId));
+        node.attributes.set(columnId, this.valueToPropertyValue((entry as any)[columnId], columnId));
       }
     }
   }
@@ -540,8 +543,8 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     }
     const repositoryId: string = await this.repoClient.getCurrentRepoId();
     if (orderBy && !allSupportedRepositoryColumnIds.includes(orderBy.columnId)) {
-      orderBy = undefined;
       console.error(`Cannot order by unsupported column: ${orderBy.columnId}`);
+      orderBy = undefined;
     }
 
     const requestParameters = getFolderChildrenDefaultParameters(repositoryId, entryId, this.columnIds, orderBy);
