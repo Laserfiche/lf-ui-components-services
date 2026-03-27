@@ -341,10 +341,14 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
   }
 
   private createNonRootLfRepoTreeNode(entry: Entry, parent?: LfRepoTreeNode): LfRepoTreeNode {
+    if (!entry.id) {
+      throw new Error('Entry id is undefined');
+    }
+
     let treeNode: LfRepoTreeNode | undefined;
     let entryName: string | undefined = entry.name;
     if (!entryName || entryName.length === 0) {
-      entryName = entry.id?.toString() ?? '';
+      entryName = entry.id.toString();
     }
     let path: string | undefined = entry.fullPath;
     if (!path && parent) {
@@ -359,7 +363,7 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
       ? (entry as Shortcut).targetType
       : entry.entryType;
 
-    if (!targetEntryType) {
+    if (!targetEntryType || !entry.entryType) {
       throw new Error(`Entry type is undefined for entry: ${entry.id}`);
     }
 
@@ -368,10 +372,10 @@ export class LfRepoTreeNodeService implements LfTreeNodeService {
     switch (targetEntryType) {
       case EntryType.Folder:
       case EntryType.RecordSeries:
-        treeNode = this.createFolderNode(entryName, path, entry.id ?? rootFolderId, entry.entryType ?? EntryType.Folder, icon);
+        treeNode = this.createFolderNode(entryName, path, entry.id, entry.entryType, icon);
         break;
       case EntryType.Document:
-        treeNode = this.createLeafNode(entryName, path, entry.id ?? rootFolderId, entry.entryType ?? EntryType.Document, icon);
+        treeNode = this.createLeafNode(entryName, path, entry.id, entry.entryType, icon);
         break;
       default:
         throw new Error(`Unsupported entry type for entry: ${entry.id}`);
