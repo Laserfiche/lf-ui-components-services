@@ -41,6 +41,6 @@
   "peerDependencies": {
     "@laserfiche/lf-js-utils": "^4.0.13",
     "@laserfiche/lf-repository-api-client-v2": "^1.0.9",
-    "@laserfiche/types-lf-ui-components": "^18.0.6"
+    "@laserfiche/types-lf-ui-components": "^18.0.7"
   }
 }

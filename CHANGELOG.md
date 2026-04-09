@@ -6,6 +6,12 @@ Licensed under the MIT License. See LICENSE in the project root for license info
  - Updated services to use the Repository API v2 instead of Repository API v1
  - Please pin `lf-ui-components-services` to version `18.0.2` if your project is still using Repository API v1
 
+### Chore & Maintenance
+ - Updated `types-lf-ui-components` to use the latest version
+
+### Fixes
+ - `LfFieldsService`: fixed bug where getAvailableTemplatesAsync does not return all available Laserfiche templates.
+
 ## 18.0.2
 
 ### Chore & Maintenance
