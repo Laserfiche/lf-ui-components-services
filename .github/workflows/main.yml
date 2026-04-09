@@ -109,7 +109,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: set NpmPackageVersion environment
-        run: echo "NpmPackageVersion=${{ env.NPM_VERSION }}-preview-${{ github.run_id }}" >> $GITHUB_ENV
+        run: echo "NpmPackageVersion=${{ env.NPM_VERSION }}--preview-${{ github.run_id }}" >> $GITHUB_ENV
 
       - name: npm version
         run: npm version ${{ env.NpmPackageVersion }} --no-git-tag-version
