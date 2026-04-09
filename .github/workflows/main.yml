@@ -115,7 +115,7 @@ jobs:
         run: npm version ${{ env.NpmPackageVersion }} --no-git-tag-version
 
       - name: Npm publish
-        run: npm publish  --access public  --tag next
+        run: npm publish --provenance --access public --tag next
 
       - name: Tag commit
         uses: rickstaa/action-create-tag@v1
@@ -149,7 +149,7 @@ jobs:
         run: npm version ${{ env.NPM_VERSION }} --no-git-tag-version --allow-same-version
 
       - name: Npm publish
-        run: npm publish  --access public  --tag latest
+        run: npm publish --provenance --access public --tag latest
 
       - name: Tag commit
         uses: rickstaa/action-create-tag@v1
