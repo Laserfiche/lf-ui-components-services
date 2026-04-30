@@ -101,7 +101,7 @@ export class LfFieldsService implements LfFieldContainerService {
   }
 
   async getTemplateFieldsAsync(templateIdentifier: number | string): Promise<TemplateFieldInfo[]> {
-    let apiTemplateFieldInfos: ApiTemplateFieldInfo[] = [];
+    let apiTemplateFieldInfos: ApiTemplateFieldInfo[];
     if (this.cachedTemplateFields && this.cachedTemplateFields.id === templateIdentifier) {
       console.debug(`Using cached template fields for template ${templateIdentifier}`);
       apiTemplateFieldInfos = this.cachedTemplateFields.fieldInfos;
