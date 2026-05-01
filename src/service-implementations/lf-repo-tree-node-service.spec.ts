@@ -213,6 +213,14 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
         );
       }
     ),
+    listEntriesNextLink: jest.fn((args: { nextLink: string; maxPageSize?: number }) => {
+      return Promise.resolve(
+        createResultEntryListing({
+          value: mockChildren.slice(0, 20),
+          odataNextLink: 'a test link returned by listEntriesNextLink',
+        })
+      );
+    }),
     getEntry: jest.fn((args: { repositoryId: string; entryId: number }) => {
       let matchedChild: Entry;
       for (const child of mockChildren) {
@@ -239,7 +247,7 @@ const mockRepoClient = new RepositoryApiClientMockBuilder()
         return Promise.resolve(
           createFindEntryResult({
             entry: entry,
-          })
+          }),
         );
       } else {
         return Promise.reject(new Error('Entry not Found 404'));
@@ -452,7 +460,27 @@ describe('LfRepoTreeNodeService', () => {
     childrenNodes.page.forEach((childNode, i) => {
       expect(childNode.name).toEqual(mockChildren[i].name);
     });
-    expect(getFolderChildrenDefaultParametersSpy).toHaveBeenCalledWith(await mockRepoClient.getCurrentRepoId(), 1, service.columnIds, undefined);
+    expect(getFolderChildrenDefaultParametersSpy).toHaveBeenCalledWith(
+      await mockRepoClient.getCurrentRepoId(),
+      1,
+      service.columnIds,
+      undefined,
+    );
+  });
+
+  it('getFolderChildrenAsync with nextPage should call API listEntriesNextLink ', async () => {
+    // Arrange
+    service.viewableEntryTypes = [EntryType.Folder, EntryType.Document];
+
+    // Act
+    const childrenNodes = await service.getFolderChildrenAsync({ id: '1', path: '//' } as LfRepoTreeNode, '3');
+
+    // Assert
+    expect(childrenNodes.page.length).toEqual(20);
+    expect(childrenNodes.nextPage).toEqual('a test link returned by listEntriesNextLink');
+    childrenNodes.page.forEach((childNode, i) => {
+      expect(childNode.name).toEqual(mockChildren[i].name);
+    });
   });
 
   it('getParentTreeNodeAsync should return undefined if called on rootNode', async () => {
