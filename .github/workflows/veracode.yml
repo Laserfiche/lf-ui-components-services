@@ -15,9 +15,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.sha }}
+
+      - name: Echo build number
+        run: echo ${{github.run_id}}
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
 
       - name: "Delete spec files"
         run: find . -type f -name '*.spec.ts' -delete
@@ -29,7 +37,7 @@ jobs:
         run: tar -czvf ./veracode/ui-components-services.tar.gz ./src
 
       - name: Veracode Upload And Scan (Static Application Security Testing)
-        uses: veracode/veracode-uploadandscan-action@0.2.10
+        uses: veracode/veracode-uploadandscan-action@0.2.11
         with:
           appname: "lf-ui-components-services"
           createprofile: true
