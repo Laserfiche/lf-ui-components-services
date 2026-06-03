@@ -1,8 +1,20 @@
 // Copyright (c) Laserfiche.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-import { LfFieldInfo, TemplateFieldInfo, FieldType, FieldFormat } from '@laserfiche/types-lf-ui-components';
-import { FieldDefinition, FieldType as WFieldType, FieldFormat as WFieldFormat, TemplateFieldDefinition } from '@laserfiche/lf-repository-api-client-v2';
+import {
+  LfFieldInfo,
+  TemplateFieldInfo,
+  FieldType,
+  FieldFormat,
+  LfTagDefinition,
+} from '@laserfiche/types-lf-ui-components';
+import {
+  FieldDefinition,
+  FieldType as WFieldType,
+  FieldFormat as WFieldFormat,
+  TemplateFieldDefinition,
+  TagDefinition,
+} from '@laserfiche/lf-repository-api-client-v2';
 import { CoreUtils } from '@laserfiche/lf-js-utils';
 
 /** @internal */
@@ -18,11 +30,28 @@ export function convertApiToLfFieldInfo(val: FieldDefinition): LfFieldInfo {
     id,
     displayName,
     fieldType,
-    format
+    format,
   };
 
   if (result.format === undefined) {
     delete result.format;
+  }
+
+  return result;
+}
+
+/** @internal */
+export function convertTagDefinition(val: TagDefinition): LfTagDefinition {
+  const result: LfTagDefinition = {
+    id: val.id ?? -1,
+    name: val.name ?? '',
+    displayName: val.displayName ?? val.name ?? '',
+    description: val.description,
+    isSecure: val.isSecure ?? false,
+  };
+
+   if (result.description === undefined) {
+    delete result.description;
   }
 
   return result;
