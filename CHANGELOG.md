@@ -1,10 +1,11 @@
 <!--Copyright Laserfiche.
 Licensed under the MIT License. See LICENSE in the project root for license information.-->
 
-## 21.0.2
+## 21.1.0
 
 ### Chore & Maintenance
  - Added `LfRepoTagsService`.
+ - Updated `types-lf-ui-components` to use the latest version 21.1
 
 ## 21.0.0
 
