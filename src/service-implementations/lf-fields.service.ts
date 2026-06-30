@@ -29,7 +29,10 @@ export class LfFieldsService implements LfFieldContainerService {
   private templateChanged: boolean = false;
   private defaultPageSize: number = 100;
 
-  constructor(private repoClient: IRepositoryApiClientEx, private lfDefaultFieldsService?: LfDefaultFieldsService) { }
+  constructor(
+    private repoClient: IRepositoryApiClientEx,
+    private lfDefaultFieldsService?: LfDefaultFieldsService,
+  ) {}
 
   async getAllFieldDefinitionsAsync(): Promise<LfFieldInfo[]> {
     const fieldDefinitions: FieldDefinition[] = (await this.getUnfilteredFieldDefinitionsAsync()) ?? [];
@@ -64,9 +67,10 @@ export class LfFieldsService implements LfFieldContainerService {
       return this.cachedFieldDefinitions;
     } else {
       const repositoryId = await this.repoClient.getCurrentRepoId();
-      const response: FieldDefinitionCollectionResponse = await this.repoClient.fieldDefinitionsClient.listFieldDefinitions({
-        repositoryId,
-      });
+      const response: FieldDefinitionCollectionResponse =
+        await this.repoClient.fieldDefinitionsClient.listFieldDefinitions({
+          repositoryId,
+        });
       this.cachedFieldDefinitions = response.value ?? [];
       return response.value ?? [];
     }
@@ -86,15 +90,21 @@ export class LfFieldsService implements LfFieldContainerService {
           return false;
         }
 
-        resultTemplateDefinitions = [...resultTemplateDefinitions, ...response.value]
+        resultTemplateDefinitions = [...resultTemplateDefinitions, ...response.value];
         return true;
       };
 
       const repositoryId = await this.repoClient.getCurrentRepoId();
-      await this.repoClient.templateDefinitionsClient.listTemplateDefinitionsForEach({ callback, repositoryId, maxPageSize: this.defaultPageSize});
+      await this.repoClient.templateDefinitionsClient.listTemplateDefinitionsForEach({
+        callback,
+        repositoryId,
+        maxPageSize: this.defaultPageSize,
+      });
 
       // transform the result into TemplateInfo objects
-      const resultTemplateInfo = resultTemplateDefinitions.map((template) => ({...template, displayName: template.displayName ?? template.name} as TemplateInfo));
+      const resultTemplateInfo = resultTemplateDefinitions.map(
+        (template) => ({ ...template, displayName: template.displayName ?? template.name }) as TemplateInfo,
+      );
       this.cachedTemplateDefinitions = resultTemplateInfo;
     }
     return this.cachedTemplateDefinitions;
@@ -132,7 +142,7 @@ export class LfFieldsService implements LfFieldContainerService {
 
   async getDynamicFieldValueOptionsAsync(
     templateId: number,
-    currentValues: FieldValues
+    currentValues: FieldValues,
   ): Promise<{ [fieldId: number]: string[] }> {
     if (!this.repoClient) {
       return Promise.resolve({});
@@ -141,19 +151,29 @@ export class LfFieldsService implements LfFieldContainerService {
     const currentDynamicValues: { [key: string]: string } = this.getDynamicFieldValues(currentValues);
     const dynamicRequest: ListDynamicFieldValuesRequest = new ListDynamicFieldValuesRequest({
       templateId: templateId,
-      fieldValues: currentDynamicValues
+      fieldValues: currentDynamicValues,
     });
 
     // Have to call listDynamicFieldValues on an entry but we don't have an entry yet
     const hardcodedRootEntryId: number = 1;
     const repositoryId = await this.repoClient.getCurrentRepoId();
-    const response = await this.repoClient.entriesClient.listDynamicFieldValues({
-      repositoryId,
-      entryId: hardcodedRootEntryId,
-      request: dynamicRequest,
-    });
+    let response;
+    const optionsById: { [fieldId: number]: string[] } = {};
+    try {
+      response = await this.repoClient.entriesClient.listDynamicFieldValues({
+        repositoryId,
+        entryId: hardcodedRootEntryId,
+        request: dynamicRequest,
+      });
+    } catch (error: any) {
+      if (error.status === '500' && error.message?.includes('9597')) {
+        // 9597: LFCR_E_FORM_LOGIC_RULES_ENGINE_ERROR
+        console.error('getDynamicFieldValueOptionsAsync: returning empty dynamic field options', error);
+        return optionsById;
+      }
+      throw error;
+    }
     const optionsByName = response;
-     const optionsById: { [fieldId: number]: string[] } = {};
     const fieldInfos: TemplateFieldInfo[] = await this.getTemplateFieldsAsync(templateId);
 
     for (const fieldName in optionsByName) {
