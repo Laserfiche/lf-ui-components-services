@@ -37,11 +37,12 @@ jobs:
         run: tar -czvf ./veracode/ui-components-services.tar.gz ./src
 
       - name: Veracode Upload And Scan (Static Application Security Testing)
-        uses: veracode/veracode-uploadandscan-action@0.2.11
+        uses: veracode/uploadandscan-action@v0.2.2
         with:
           appname: "lf-ui-components-services"
           createprofile: true
           filepath: "veracode"
+          version: "${{ github.run_id }}"
           vid: "${{ secrets.VERACODE_API_ID }}"
           vkey: "${{ secrets.VERACODE_API_KEY }}"
 
