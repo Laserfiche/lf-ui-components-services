@@ -1,5 +1,10 @@
 <!--Copyright Laserfiche.
 Licensed under the MIT License. See LICENSE in the project root for license information.-->
+## 21.1.1
+
+### Fixes
+
+- `LfFieldsService`: silently return empty options when `getDynamicFieldValueOptionsAsync` encounters an HTTP 500 with error code `[9597]` (`LFCR_E_FORM_LOGIC_RULES_ENGINE_ERROR`); all other errors are re-thrown.
 
 ## 21.1.0
 
