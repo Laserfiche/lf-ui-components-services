@@ -166,7 +166,7 @@ export class LfFieldsService implements LfFieldContainerService {
         request: dynamicRequest,
       });
     } catch (error: any) {
-      if (error.status === '500' && error.message?.includes('9597')) {
+      if (error.status === 500 && (error.message?.includes('9597') ?? false)) {
         // 9597: LFCR_E_FORM_LOGIC_RULES_ENGINE_ERROR
         console.error('getDynamicFieldValueOptionsAsync: returning empty dynamic field options', error);
         return optionsById;
