@@ -56,8 +56,8 @@ export class LfFieldsService implements LfFieldContainerService {
         templateId: templateIdentifier,
       });
     }
-    if (!templateDefinition?.displayName) {
-      templateDefinition!.displayName = templateDefinition?.name;
+    if (templateDefinition && !templateDefinition.displayName) {
+      templateDefinition.displayName = templateDefinition.name;
     }
     return templateDefinition as TemplateInfo;
   }

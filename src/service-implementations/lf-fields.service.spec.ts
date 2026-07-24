@@ -131,6 +131,32 @@ describe('LfFieldsService', () => {
     });
   });
 
+  it('get template definition: when no template definition is found for the id, then it returns undefined instead of throwing', async () => {
+    // Arrange
+    const templateId = 2147483646;
+    mockRepoClient.templateDefinitionsClient.getTemplateDefinition = jest.fn().mockResolvedValue(undefined);
+
+    // Act
+    const result = await service.getTemplateDefinitionAsync(templateId);
+
+    // Assert
+    expect(result).toBeUndefined();
+  });
+
+  it('get template definition: when a template definition is found without a display name, then it falls back to the name', async () => {
+    // Arrange
+    const templateId = 123;
+    mockRepoClient.templateDefinitionsClient.getTemplateDefinition = jest
+      .fn()
+      .mockResolvedValue({ id: templateId, name: 'MyTemplate' });
+
+    // Act
+    const result = await service.getTemplateDefinitionAsync(templateId);
+
+    // Assert
+    expect(result).toEqual({ id: templateId, name: 'MyTemplate', displayName: 'MyTemplate' });
+  });
+
   it('caches template fields', async () => {
     // Arrange
     const templateId = 123;
