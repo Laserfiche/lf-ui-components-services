@@ -157,6 +157,48 @@ describe('LfFieldsService', () => {
     expect(result).toEqual({ id: templateId, name: 'MyTemplate', displayName: 'MyTemplate' });
   });
 
+  it('get template definition: when the server returns 403/9013 for the auto-select template id, then it returns undefined instead of throwing', async () => {
+    // Arrange
+    const autoSelectTemplateId = 2147483646;
+    mockRepoClient.templateDefinitionsClient.getTemplateDefinition = jest
+      .fn()
+      .mockRejectedValue({ status: 403, message: 'Access denied. [9013]' });
+
+    // Act
+    const result = await service.getTemplateDefinitionAsync(autoSelectTemplateId);
+
+    // Assert
+    expect(result).toBeUndefined();
+  });
+
+  it('get template definition: when a non-auto-select template id fails, then it still throws', async () => {
+    // Arrange
+    const templateId = 123;
+    mockRepoClient.templateDefinitionsClient.getTemplateDefinition = jest
+      .fn()
+      .mockRejectedValue({ status: 403, message: 'Access denied. [9013]' });
+
+    // Act & Assert
+    await expect(service.getTemplateDefinitionAsync(templateId)).rejects.toEqual({
+      status: 403,
+      message: 'Access denied. [9013]',
+    });
+  });
+
+  it('get template definition: when the auto-select template id fails with an unrelated error, then it still returns undefined instead of throwing', async () => {
+    // Arrange
+    const autoSelectTemplateId = 2147483646;
+    mockRepoClient.templateDefinitionsClient.getTemplateDefinition = jest
+      .fn()
+      .mockRejectedValue({ status: 500, message: 'Internal server error' });
+
+    // Act
+    const result = await service.getTemplateDefinitionAsync(autoSelectTemplateId);
+
+    // Assert
+    expect(result).toBeUndefined();
+  });
+
   it('caches template fields', async () => {
     // Arrange
     const templateId = 123;
