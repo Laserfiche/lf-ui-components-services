@@ -1,5 +1,11 @@
 <!--Copyright Laserfiche.
 Licensed under the MIT License. See LICENSE in the project root for license information.-->
+## 21.1.2
+
+### Fixes
+
+- `LfFieldsService`: `getTemplateDefinitionAsync` returns `undefined` for `<Automatically select template>` when it fails to resolve the template.
+
 ## 21.1.1
 
 ### Fixes
