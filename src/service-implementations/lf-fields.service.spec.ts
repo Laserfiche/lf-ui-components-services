@@ -157,12 +157,12 @@ describe('LfFieldsService', () => {
     expect(result).toEqual({ id: templateId, name: 'MyTemplate', displayName: 'MyTemplate' });
   });
 
-  it('get template definition: when the server returns 403/9013 for the auto-select template id, then it returns undefined instead of throwing', async () => {
+  it('get template definition: when the server fails to resolve the auto-select template id, then it returns undefined instead of throwing', async () => {
     // Arrange
     const autoSelectTemplateId = 2147483646;
     mockRepoClient.templateDefinitionsClient.getTemplateDefinition = jest
       .fn()
-      .mockRejectedValue({ status: 403, message: 'Access denied. [9013]' });
+      .mockRejectedValue(new Error('some unknown error'));
 
     // Act
     const result = await service.getTemplateDefinitionAsync(autoSelectTemplateId);
