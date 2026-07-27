@@ -22,6 +22,8 @@ import {
   TemplateFieldDefinition as ApiTemplateFieldInfo,
 } from '@laserfiche/lf-repository-api-client-v2';
 
+const WELL_KNOWN_AUTOMATICALLY_SELECTED_TEMPLATE_ID = 2147483646;
+
 export class LfFieldsService implements LfFieldContainerService {
   private cachedFieldDefinitions: FieldDefinition[] | undefined;
   private cachedTemplateFields: { id: number | string; fieldInfos: ApiTemplateFieldInfo[] } | undefined;
@@ -51,13 +53,19 @@ export class LfFieldsService implements LfFieldContainerService {
         });
       templateDefinition = templateDefinitions.value?.[0];
     } else {
-      templateDefinition = await this.repoClient?.templateDefinitionsClient.getTemplateDefinition({
-        repositoryId,
-        templateId: templateIdentifier,
-      });
+      try {
+        templateDefinition = await this.repoClient?.templateDefinitionsClient.getTemplateDefinition({
+          repositoryId,
+          templateId: templateIdentifier,
+        });
+      } catch (error: any) {
+        if (templateIdentifier !== WELL_KNOWN_AUTOMATICALLY_SELECTED_TEMPLATE_ID) {
+          throw error;
+        }
+      }
     }
-    if (!templateDefinition?.displayName) {
-      templateDefinition!.displayName = templateDefinition?.name;
+    if (templateDefinition && !templateDefinition.displayName) {
+      templateDefinition.displayName = templateDefinition.name;
     }
     return templateDefinition as TemplateInfo;
   }

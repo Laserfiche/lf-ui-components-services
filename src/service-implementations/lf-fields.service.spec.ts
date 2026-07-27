@@ -131,6 +131,60 @@ describe('LfFieldsService', () => {
     });
   });
 
+  it('get template definition: when no template definition is found for the id, then it returns undefined instead of throwing', async () => {
+    // Arrange
+    const templateId = 2147483646;
+    mockRepoClient.templateDefinitionsClient.getTemplateDefinition = jest.fn().mockResolvedValue(undefined);
+
+    // Act
+    const result = await service.getTemplateDefinitionAsync(templateId);
+
+    // Assert
+    expect(result).toBeUndefined();
+  });
+
+  it('get template definition: when a template definition is found without a display name, then it falls back to the name', async () => {
+    // Arrange
+    const templateId = 123;
+    mockRepoClient.templateDefinitionsClient.getTemplateDefinition = jest
+      .fn()
+      .mockResolvedValue({ id: templateId, name: 'MyTemplate' });
+
+    // Act
+    const result = await service.getTemplateDefinitionAsync(templateId);
+
+    // Assert
+    expect(result).toEqual({ id: templateId, name: 'MyTemplate', displayName: 'MyTemplate' });
+  });
+
+  it('get template definition: when the server fails to resolve the auto-select template id, then it returns undefined instead of throwing', async () => {
+    // Arrange
+    const autoSelectTemplateId = 2147483646;
+    mockRepoClient.templateDefinitionsClient.getTemplateDefinition = jest
+      .fn()
+      .mockRejectedValue({ status: 500, message: 'Internal server error' });
+
+    // Act
+    const result = await service.getTemplateDefinitionAsync(autoSelectTemplateId);
+
+    // Assert
+    expect(result).toBeUndefined();
+  });
+
+  it('get template definition: when a non-auto-select template id fails, then it still throws', async () => {
+    // Arrange
+    const templateId = 123;
+    mockRepoClient.templateDefinitionsClient.getTemplateDefinition = jest
+      .fn()
+      .mockRejectedValue({ status: 403, message: 'Access denied. [9013]' });
+
+    // Act & Assert
+    await expect(service.getTemplateDefinitionAsync(templateId)).rejects.toEqual({
+      status: 403,
+      message: 'Access denied. [9013]',
+    });
+  });
+
   it('caches template fields', async () => {
     // Arrange
     const templateId = 123;
