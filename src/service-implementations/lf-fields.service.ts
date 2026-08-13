@@ -72,13 +72,13 @@ export class LfFieldsService implements LfFieldContainerService {
 
   async getUnfilteredFieldDefinitionsAsync(): Promise<FieldDefinition[]> {
     if (!this.cachedFieldDefinitions) {
-      let resultFieldDefinitions: FieldDefinition[] = [];
+      const resultFieldDefinitions: FieldDefinition[] = [];
       const callback = async (response: FieldDefinitionCollectionResponse): Promise<boolean> => {
         if (!response.value || response.value.length === 0) {
           return false;
         }
 
-        resultFieldDefinitions = [...resultFieldDefinitions, ...response.value];
+        resultFieldDefinitions.push(...response.value);
         return true;
       };
 
@@ -102,13 +102,13 @@ export class LfFieldsService implements LfFieldContainerService {
 
   async getAvailableTemplatesAsync(): Promise<TemplateInfo[]> {
     if (!this.cachedTemplateDefinitions) {
-      let resultTemplateDefinitions: TemplateDefinition[] = [];
+      const resultTemplateDefinitions: TemplateDefinition[] = [];
       const callback = async (response: TemplateDefinitionCollectionResponse): Promise<boolean> => {
         if (!response.value || response.value.length === 0) {
           return false;
         }
 
-        resultTemplateDefinitions = [...resultTemplateDefinitions, ...response.value];
+        resultTemplateDefinitions.push(...response.value);
         return true;
       };
 
