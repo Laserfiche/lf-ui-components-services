@@ -3,8 +3,15 @@
 
 import { FieldValues, TemplateFieldInfo } from '@laserfiche/types-lf-ui-components';
 import { LfFieldsService } from './lf-fields.service.js';
-import { TemplateFieldDefinitionCollectionResponse, TemplateFieldDefinition as ApiTemplateFieldInfo, FieldType, ListDynamicFieldValuesRequest } from '@laserfiche/lf-repository-api-client-v2';
+import { TemplateFieldDefinitionCollectionResponse, TemplateFieldDefinition as ApiTemplateFieldInfo, FieldDefinition, FieldType, ListDynamicFieldValuesRequest } from '@laserfiche/lf-repository-api-client-v2';
 import { RepositoryApiClientMockBuilder } from './repository-api-client-mock-builder.js';
+import { IRepositoryApiClientEx } from '../helper-types/repository-api-ex.js';
+
+type ListFieldDefinitionsForEachArgs = {
+  repositoryId: string;
+  maxPageSize?: number;
+  callback: (response: { value?: FieldDefinition[] }) => Promise<boolean>;
+};
 
 
 function createApiTemplateFieldInfo(data: Partial<ApiTemplateFieldInfo>): ApiTemplateFieldInfo {
@@ -236,5 +243,77 @@ describe('LfFieldsService', () => {
     expect(mockRepoClient.templateDefinitionsClient.listTemplateFieldDefinitionsByTemplateName).toHaveBeenCalledTimes(
       expectedNumTimesCalled
     );
+  });
+});
+
+describe('LfFieldsService.getUnfilteredFieldDefinitionsAsync', () => {
+  it('gets all pages of field definitions', async () => {
+    const listFieldDefinitionsForEach = jest.fn(async ({ callback }: ListFieldDefinitionsForEachArgs) => {
+      await callback({
+        value: [new FieldDefinition({ id: 1, name: 'field-1', displayName: 'Field 1', fieldType: FieldType.String })],
+      });
+      await callback({
+        value: [new FieldDefinition({ id: 2, name: 'field-2', displayName: 'Field 2', fieldType: FieldType.String })],
+      });
+    });
+
+    const repoClient = {
+      getCurrentRepoId: jest.fn(async () => 'r-23456789'),
+      fieldDefinitionsClient: {
+        listFieldDefinitionsForEach,
+      },
+    } as unknown as IRepositoryApiClientEx;
+
+    const service = new LfFieldsService(repoClient);
+
+    const result = await service.getUnfilteredFieldDefinitionsAsync();
+
+    expect(listFieldDefinitionsForEach).toHaveBeenCalledWith(
+      expect.objectContaining({ repositoryId: 'r-23456789' })
+    );
+    expect(result.map((field) => field.name)).toEqual(['field-1', 'field-2']);
+  });
+
+  it('stops paging when callback receives an empty page', async () => {
+    let shouldContinueOnEmptyPage: boolean | undefined;
+    const listFieldDefinitionsForEach = jest.fn(async ({ callback }: ListFieldDefinitionsForEachArgs) => {
+      shouldContinueOnEmptyPage = await callback({ value: [] });
+    });
+
+    const repoClient = {
+      getCurrentRepoId: jest.fn(async () => 'r-23456789'),
+      fieldDefinitionsClient: {
+        listFieldDefinitionsForEach,
+      },
+    } as unknown as IRepositoryApiClientEx;
+
+    const service = new LfFieldsService(repoClient);
+
+    const result = await service.getUnfilteredFieldDefinitionsAsync();
+
+    expect(result).toEqual([]);
+    expect(shouldContinueOnEmptyPage).toBe(false);
+  });
+
+  it('caches field definitions after the first call', async () => {
+    const listFieldDefinitionsForEach = jest.fn(async ({ callback }: ListFieldDefinitionsForEachArgs) => {
+      await callback({
+        value: [new FieldDefinition({ id: 1, name: 'field-1', displayName: 'Field 1', fieldType: FieldType.String })],
+      });
+    });
+
+    const repoClient = {
+      getCurrentRepoId: jest.fn(async () => 'r-23456789'),
+      fieldDefinitionsClient: {
+        listFieldDefinitionsForEach,
+      },
+    } as unknown as IRepositoryApiClientEx;
+
+    const service = new LfFieldsService(repoClient);
+
+    await service.getUnfilteredFieldDefinitionsAsync();
+    await service.getUnfilteredFieldDefinitionsAsync();
+
+    expect(listFieldDefinitionsForEach).toHaveBeenCalledTimes(1);
   });
 });
