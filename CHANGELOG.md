@@ -6,7 +6,7 @@ Licensed under the MIT License. See LICENSE in the project root for license info
 
 - `LfFieldsService`:
   - `getTemplateDefinitionAsync` returns `undefined` for `<Automatically select template>` when it fails to resolve the template.
-  - `getAllFieldDefinitionsAsync` now returns every field definition in the repository instead of only the first page.
+  - `getUnfilteredFieldDefinitionsAsync` now returns every field definition in the repository instead of only the first page.
 
 ## 21.1.1
 

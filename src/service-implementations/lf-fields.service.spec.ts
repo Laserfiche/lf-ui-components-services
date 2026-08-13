@@ -246,7 +246,7 @@ describe('LfFieldsService', () => {
   });
 });
 
-describe('LfFieldsService.getAllFieldDefinitionsAsync', () => {
+describe('LfFieldsService.getUnfilteredFieldDefinitionsAsync', () => {
   it('gets all pages of field definitions', async () => {
     const listFieldDefinitionsForEach = jest.fn(async ({ callback }: ListFieldDefinitionsForEachArgs) => {
       await callback({
@@ -266,7 +266,7 @@ describe('LfFieldsService.getAllFieldDefinitionsAsync', () => {
 
     const service = new LfFieldsService(repoClient);
 
-    const result = await service.getAllFieldDefinitionsAsync();
+    const result = await service.getUnfilteredFieldDefinitionsAsync();
 
     expect(listFieldDefinitionsForEach).toHaveBeenCalledWith(
       expect.objectContaining({ repositoryId: 'r-23456789' })
